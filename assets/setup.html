@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GCode AI Setup</title>
+  <style>
+    :root {
+      --bg: #030712;
+      --cyan: #38bdf8;
+      --purple: #a855f7;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 40%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+        linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 28px 28px, 28px 28px;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 24px 44px;
+      perspective: 1200px;
+    }
+
+    /* Ambient Bokeh Particles */
+    .bokeh-field {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .bokeh-dot {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, transparent 70%);
+      filter: blur(2px);
+      animation: floatDot 8s ease-in-out infinite alternate;
+    }
+
+    .bokeh-dot:nth-child(1) { width: 140px; height: 140px; top: 15%; left: 8%; opacity: 0.15; animation-duration: 9s; }
+    .bokeh-dot:nth-child(2) { width: 180px; height: 180px; bottom: 25%; right: 10%; opacity: 0.12; animation-duration: 11s; }
+    .bokeh-dot:nth-child(3) { width: 6px; height: 6px; top: 32%; right: 25%; opacity: 0.7; }
+    .bokeh-dot:nth-child(4) { width: 8px; height: 8px; top: 58%; left: 18%; opacity: 0.6; }
+    .bokeh-dot:nth-child(5) { width: 5px; height: 5px; top: 22%; right: 35%; opacity: 0.5; }
+    .bokeh-dot:nth-child(6) { width: 7px; height: 7px; bottom: 35%; right: 30%; opacity: 0.65; }
+
+    @keyframes floatDot {
+      0% { transform: translateY(0) scale(0.9); }
+      100% { transform: translateY(-16px) scale(1.1); }
+    }
+
+    /* Main Center Hero Area */
+    .hero-stage {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: auto;
+      margin-bottom: auto;
+      width: 100%;
+    }
+
+    /* Orbital Atomic Core */
+    .orb-stage {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      margin-bottom: 38px;
+    }
+
+    .orb-glow {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.28) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%);
+      filter: blur(24px);
+      animation: glowPulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { transform: scale(0.85); opacity: 0.6; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* Circular Backdrop Disc behind Icon */
+    .icon-backdrop-disc {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #172554 0%, #030712 85%);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      z-index: 2;
+    }
+
+    /* Central App Icon */
+    .icon-center-box {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      z-index: 5;
+    }
+
+    .icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Orbital Rings matching IMG-20261014-WA8200.jpg */
+    /* Ring 1 - Cyan Neon Sweep Ring */
+    .ring-cyan {
+      position: absolute;
+      width: 185px;
+      height: 185px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top: 2.8px solid #00f0ff;
+      border-bottom: 2.8px solid #0284c7;
+      filter: drop-shadow(0 0 8px #00f0ff);
+      will-change: transform;
+      animation: rotateOrbit1 6s linear infinite;
+      z-index: 3;
+    }
+
+    /* Ring 2 - Purple Neon Sweep Ring */
+    .ring-purple {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-left: 2.6px solid #c084fc;
+      border-right: 2.6px solid #a855f7;
+      filter: drop-shadow(0 0 8px #a855f7);
+      will-change: transform;
+      animation: rotateOrbit2 7.5s linear infinite;
+      z-index: 4;
+    }
+
+    /* Ring 3 - Violet/Purple Dashed Orbit Ring */
+    .ring-dashed {
+      position: absolute;
+      width: 165px;
+      height: 165px;
+      border-radius: 50%;
+      border: 2px dashed rgba(168, 85, 247, 0.85);
+      filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
+      will-change: transform;
+      animation: rotateOrbit3 9s linear infinite;
+      z-index: 3;
+    }
+
+    @keyframes rotateOrbit1 {
+      0% { transform: rotateX(68deg) rotateY(18deg) rotateZ(0deg); }
+      100% { transform: rotateX(68deg) rotateY(18deg) rotateZ(360deg); }
+    }
+
+    @keyframes rotateOrbit2 {
+      0% { transform: rotateX(32deg) rotateY(60deg) rotateZ(360deg); }
+      100% { transform: rotateX(32deg) rotateY(60deg) rotateZ(0deg); }
+    }
+
+    @keyframes rotateOrbit3 {
+      0% { transform: rotateX(55deg) rotateY(-40deg) rotateZ(0deg); }
+      100% { transform: rotateX(55deg) rotateY(-40deg) rotateZ(360deg); }
+    }
+
+    /* Sleek Modern Title matching Image */
+    .brand-title {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      background: linear-gradient(180deg, #ffffff 15%, #bae6fd 60%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.5));
+      text-align: center;
+    }
+
+    /* Bottom Status Stage */
+    .bottom-stage {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 4%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8, #67e8f9);
+      border-radius: 6px;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+      transition: width 0.3s ease;
+    }
+
+    .status-caption {
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+      font-weight: 500;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Bokeh -->
+  <div class="bokeh-field">
+    <div class="bokeh-dot"></div>
+    <div class="bokeh-dot"></div>
+    <div class="bokeh-dot"></div>
+    <div class="bokeh-dot"></div>
+    <div class="bokeh-dot"></div>
+    <div class="bokeh-dot"></div>
+  </div>
+
+  <!-- Hero Central Section -->
+  <div class="hero-stage">
+    <div class="orb-stage">
+      <div class="orb-glow"></div>
+      <div class="icon-backdrop-disc"></div>
+      <div class="ring-cyan"></div>
+      <div class="ring-purple"></div>
+      <div class="ring-dashed"></div>
+      <div class="icon-center-box">
+        <img src="icon.png" class="icon-img" alt="GCode AI">
+      </div>
+    </div>
+
+    <div class="brand-title">GCode AI</div>
+  </div>
+
+  <!-- Bottom Progress & Status -->
+  <div class="bottom-stage">
+    <div class="progress-track">
+      <div class="progress-fill" id="bar-fill"></div>
+    </div>
+    <div class="status-caption" id="status-val">Unpacking System...</div>
+  </div>
+
+  <script>
+    window.updateProgress = function(percent, currentMB, totalMB, stageMsg) {
+      const p = Math.min(100, Math.max(0, percent));
+      const fillEl = document.getElementById("bar-fill");
+      const statEl = document.getElementById("status-val");
+
+      if (fillEl) fillEl.style.width = p + "%";
+      if (statEl) {
+        if (stageMsg && stageMsg.trim()) {
+          statEl.textContent = stageMsg;
+        } else if (p >= 98) {
+          statEl.textContent = "Starting AI Engine...";
+        } else if (p >= 60) {
+          statEl.textContent = "Loading Environment...";
+        } else if (p >= 20) {
+          statEl.textContent = "Unpacking System...";
+        } else {
+          statEl.textContent = "Initializing...";
+        }
+      }
+    };
+  </script>
+</body>
+</html>

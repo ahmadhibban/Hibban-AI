@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Hibban's GCode AI</title>
   <style>
     @font-face {
@@ -42,14 +42,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       background-color: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      height: 100dvh;
-      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 16px;
       line-height: 1.65;
@@ -59,8 +61,8 @@
     /* Font Specific Classes */
     .ar-text {
       font-family: 'Amiri', serif !important;
-      font-size: 1.18em;
-      line-height: 1.85;
+      font-size: 1.02em;
+      line-height: 1.7;
       direction: rtl;
       unicode-bidi: embed;
       display: inline;
@@ -68,12 +70,12 @@
 
     .ar-block {
       font-family: 'Amiri', serif !important;
-      font-size: 1.22em;
-      line-height: 1.95;
+      font-size: 1.04em;
+      line-height: 1.75;
       direction: rtl !important;
       text-align: right !important;
       unicode-bidi: isolate;
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
     .bn-text {
@@ -171,30 +173,116 @@
       transform: scale(0.95);
     }
 
-    /* Live Action Banner */
-    #live-status {
-      display: none;
-      padding: 9px 16px;
-      background: rgba(99, 102, 241, 0.12);
-      border-top: 1px solid rgba(99, 102, 241, 0.25);
-      font-size: 13px;
-      color: #a5b4fc;
+    .model-select {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 8px;
+      border-radius: 9px;
+      outline: none;
+      cursor: pointer;
+      max-width: 140px;
+      text-overflow: ellipsis;
+    }
+    .model-select option {
+      background: #141824;
+      color: #f8fafc;
+    }
+
+    /* Gemini-Style In-Chat Thinking Indicator with App Icon */
+    .gemini-thinking-card {
+      display: inline-flex;
       align-items: center;
       gap: 10px;
-      flex-shrink: 0;
+      padding: 4px 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      margin-bottom: 6px;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    .spinner {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(99, 102, 241, 0.3);
-      border-top-color: #6366f1;
+    .gemini-icon-halo {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gemini-halo-ring {
+      position: absolute;
+      inset: -3px;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      background: conic-gradient(from 0deg, #6366f1, #06b6d4, #a855f7, #6366f1);
+      filter: blur(4px);
+      opacity: 0.85;
+      animation: rotateHalo 3s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes rotateHalo {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .gemini-thinking-img {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .gemini-thinking-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .gemini-shimmer-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      background: linear-gradient(90deg, #38bdf8 0%, #a855f7 50%, #38bdf8 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmerGradient 2.2s linear infinite;
+    }
+
+    @keyframes shimmerGradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .gemini-wave-bar {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 8px;
+    }
+
+    .gemini-wave-bar span {
+      width: 3px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--cyan);
+      animation: waveBar 1.2s ease-in-out infinite alternate;
+    }
+
+    .gemini-wave-bar span:nth-child(1) { animation-delay: 0s; height: 4px; }
+    .gemini-wave-bar span:nth-child(2) { animation-delay: 0.2s; height: 8px; }
+    .gemini-wave-bar span:nth-child(3) { animation-delay: 0.4s; height: 6px; }
+    .gemini-wave-bar span:nth-child(4) { animation-delay: 0.6s; height: 10px; }
+
+    @keyframes waveBar {
+      0% { transform: scaleY(0.4); opacity: 0.4; }
+      100% { transform: scaleY(1.3); opacity: 1; }
     }
 
     /* Chat Area */
@@ -277,34 +365,73 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Tool Activity Accordion */
-    .actions-accordion {
-      margin-bottom: 12px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      font-size: 13px;
+    /* Gemini-Style Compact Pill */
+    .gemini-pill-wrap {
+      margin-bottom: 8px;
       width: 100%;
     }
 
-    .actions-header {
-      padding: 9px 13px;
-      background: rgba(255, 255, 255, 0.03);
-      display: flex;
+    .gemini-pill {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      color: #94a3b8;
       cursor: pointer;
-      color: var(--cyan);
-      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    .actions-body {
-      padding: 10px 13px;
+    .gemini-pill.static-badge {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .gemini-pill:not(.static-badge):active {
+      background: rgba(255, 255, 255, 0.08);
+      transform: scale(0.97);
+    }
+
+    .gemini-sparkle {
+      font-size: 13px;
+      display: inline-block;
+      animation: sparkleGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes sparkleGlow {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+      50% { transform: scale(1.15) rotate(10deg); opacity: 1; filter: drop-shadow(0 0 4px #818cf8); }
+    }
+
+    .gemini-pill-label {
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+
+    .gemini-chevron {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    .gemini-details {
       display: none;
       flex-direction: column;
-      gap: 7px;
-      border-top: 1px solid var(--border);
+      gap: 6px;
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 12px;
+      max-height: 220px;
+      overflow-y: auto;
     }
 
     .action-item {
@@ -313,7 +440,8 @@
       gap: 8px;
       color: var(--text-muted);
       font-family: monospace;
-      font-size: 12.5px;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .action-badge {
@@ -336,19 +464,6 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 14px;
       color: #38bdf8;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 7px;
-      right: 7px;
-      background: rgba(255, 255, 255, 0.12);
-      border: none;
-      color: #fff;
-      padding: 4px 9px;
-      font-size: 11px;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
     /* Clean Input Footer */
@@ -378,6 +493,9 @@
       font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       letter-spacing: 0.2px;
       transition: border-color 0.2s;
+      touch-action: manipulation;
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     #user-input:focus {
@@ -395,9 +513,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 19px;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
       flex-shrink: 0;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    #send-btn:active {
+      transform: scale(0.92);
     }
 
     #send-btn:disabled {
@@ -604,34 +727,31 @@
       <img src="icon.png" class="brand-img" alt="GCode AI">
       <div class="brand-info">
         <h1>Hibban's GCode AI</h1>
-        <p><span id="status-dot" class="status-dot"></span> <span id="status-text">Ready</span></p>
+        <p><span id="status-dot" class="status-dot"></span> <span id="status-text">Active</span></p>
       </div>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openClearModal()" title="Clear Chat">🗑️</button>
-      <button class="icon-btn" onclick="openKeyModal()" title="API Keys">🔑</button>
     </div>
   </header>
-
-  <!-- Live Action Banner -->
-  <div id="live-status">
-    <div class="spinner"></div>
-    <span id="live-status-text">Thinking...</span>
-  </div>
 
   <!-- Chat Stream -->
   <div id="chat-container">
     <div class="empty-state" id="empty-state">
       <img src="icon.png" class="empty-img" alt="Hibban's GCode AI">
       <div class="empty-title">Hibban's GCode AI</div>
-      <div class="empty-desc">Your autonomous AI developer with 100% standalone embedded Linux (Python 3.14, Pip, Bash, Git, Curl) and multimodal vision. How can I help you today?</div>
+      <div class="empty-desc">Your unrestricted autonomous AI developer powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any computational or development task in pure Bengali!</div>
     </div>
   </div>
 
   <!-- Clean Input Footer -->
   <footer>
     <textarea id="user-input" rows="1" placeholder="Type a message or task..." oninput="handleInputChange(this)" onkeydown="checkEnter(event)"></textarea>
-    <button id="send-btn" onclick="handleSend()">➔</button>
+    <button id="send-btn" onclick="handleSend()" title="Send">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="transform: translate(1px, 0); display: block;">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
   </footer>
 
   <!-- Beautiful Clear Chat Confirmation Modal -->
@@ -647,273 +767,357 @@
     </div>
   </div>
 
-  <!-- API Key Setup Modal (Dynamic Key Inputs, No Commas) -->
-  <div class="modal-backdrop" id="key-modal">
-    <div class="modal-box">
-      <h2>🔑 Gemini API Keys</h2>
-      <p>Enter your Google Gemini API Key. Click "+ Add Another Key" to add multiple keys for continuous quota rotation without limits!</p>
-      
-      <div id="key-fields-container">
-        <!-- Dynamic Key Rows Injected Here -->
-      </div>
-
-      <button class="btn-add-key" onclick="addKeyRow('')">+ Add Another Key</button>
-
-      <p style="font-size: 12px; margin-bottom: 14px;">Get free keys at: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--cyan);">aistudio.google.com</a></p>
-      
-      <button class="btn-primary" onclick="saveKeysFromModal()">Save Keys</button>
-      <button class="btn-secondary" id="cancel-key-btn" onclick="closeKeyModal()">Cancel</button>
-    </div>
-  </div>
-
   <script>
-    // System definitions
+    // OpenAI-compatible Tools definitions for OmniRoute
     const TOOLS = [
       {
-        name: "view_image",
-        description: "Inspect, view, and visually analyze any image/photo/screenshot file on the Android device (e.g. photos in /storage/emulated/0/DCIM/Camera, screenshots in /storage/emulated/0/DCIM/Screenshots, pictures in Download). Returns a detailed visual multimodal description of what is in the image. You MUST use this tool whenever the user asks about or refers to an image, photo, or screenshot on the phone.",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            file_path: { type: "STRING", description: "Absolute path to the image file on device." },
-            question: { type: "STRING", description: "Specific question or what details to inspect in the image." }
-          },
-          required: ["file_path"]
+        type: "function",
+        function: {
+          name: "process_file_data",
+          description: "Deep inspect, parse, and analyze any file, media, or multi-format data on the device filesystem.",
+          parameters: {
+            type: "object",
+            properties: {
+              file_path: { type: "string", description: "Absolute path to the file on device." },
+              inquiry: { type: "string", description: "Optional specific analysis instructions or inquiry." }
+            },
+            required: ["file_path"]
+          }
         }
       },
       {
-        name: "run_command",
-        description: "Execute a shell/terminal command on Android device with built-in standalone embedded Linux environment (bash, python 3.14, pip, git, curl, coreutils, aapt, proot, etc.).",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            command: { type: "STRING", description: "The command to run." },
-            working_dir: { type: "STRING", description: "Optional working directory (defaults to /storage/emulated/0/Download)." }
-          },
-          required: ["command"]
+        type: "function",
+        function: {
+          name: "run_command",
+          description: "Execute a shell/terminal command on Android device in the embedded standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Git, Curl, Coreutils, aapt, d8, apksigner, PRoot, etc.). Use this to autonomously run scripts, compile code, execute Linux utilities, and install packages on demand (pip install <pkg>, npm install -g <pkg>).",
+          parameters: {
+            type: "object",
+            properties: {
+              command: { type: "string", description: "The terminal/shell command to run." },
+              working_dir: { type: "string", description: "Optional working directory (defaults to app home directory)." }
+            },
+            required: ["command"]
+          }
         }
       },
       {
-        name: "read_file",
-        description: "Read local file contents with line numbers.",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            file_path: { type: "STRING", description: "Absolute path to file." },
-            start_line: { type: "INTEGER", description: "Start line number (1-indexed)." },
-            end_line: { type: "INTEGER", description: "End line number (inclusive)." }
-          },
-          required: ["file_path"]
+        type: "function",
+        function: {
+          name: "read_file",
+          description: "Read local file contents with line numbers.",
+          parameters: {
+            type: "object",
+            properties: {
+              file_path: { type: "string", description: "Absolute path to file." },
+              start_line: { type: "integer", description: "Start line number (1-indexed)." },
+              end_line: { type: "integer", description: "End line number (inclusive)." }
+            },
+            required: ["file_path"]
+          }
         }
       },
       {
-        name: "write_file",
-        description: "Create or overwrite a file on device storage.",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            file_path: { type: "STRING", description: "Absolute path to file." },
-            content: { type: "STRING", description: "Content to write." }
-          },
-          required: ["file_path", "content"]
+        type: "function",
+        function: {
+          name: "write_file",
+          description: "Create or overwrite a file on device storage.",
+          parameters: {
+            type: "object",
+            properties: {
+              file_path: { type: "string", description: "Absolute path to file." },
+              content: { type: "string", description: "Content to write." }
+            },
+            required: ["file_path", "content"]
+          }
         }
       },
       {
-        name: "edit_file",
-        description: "Perform precise text replacement in a file.",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            file_path: { type: "STRING", description: "Absolute path to file." },
-            target_text: { type: "STRING", description: "Exact text snippet to replace." },
-            replacement_text: { type: "STRING", description: "New replacement text." }
-          },
-          required: ["file_path", "target_text", "replacement_text"]
+        type: "function",
+        function: {
+          name: "edit_file",
+          description: "Perform precise text replacement in a file.",
+          parameters: {
+            type: "object",
+            properties: {
+              file_path: { type: "string", description: "Absolute path to file." },
+              target_text: { type: "string", description: "Exact text snippet to replace." },
+              replacement_text: { type: "string", description: "New replacement text." }
+            },
+            required: ["file_path", "target_text", "replacement_text"]
+          }
         }
       },
       {
-        name: "list_directory",
-        description: "List files and folders in directory.",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            dir_path: { type: "STRING", description: "Directory path." }
-          },
-          required: ["dir_path"]
+        type: "function",
+        function: {
+          name: "web_search",
+          description: "Search Google and the live web for real-time information, breaking news, latest facts, weather, documentation, or live verification. Modeled after Google AI Mode, proactively use this tool whenever verifying current facts, news, or live information to avoid hallucinations.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Search query keywords." }
+            },
+            required: ["query"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "download_file",
+          description: "Downloads any file directly from an HTTP/HTTPS URL into local device storage. Handles redirects, streaming, and large files.",
+          parameters: {
+            type: "object",
+            properties: {
+              url: { type: "string", description: "Direct web URL of the file to download." },
+              target_path: { type: "string", description: "Destination absolute file path on device (e.g. /storage/emulated/0/Download/filename)." }
+            },
+            required: ["url", "target_path"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "list_directory",
+          description: "List files and folders in directory.",
+          parameters: {
+            type: "object",
+            properties: {
+              dir_path: { type: "string", description: "Directory path." }
+            },
+            required: ["dir_path"]
+          }
         }
       }
     ];
 
-    const SYSTEM_PROMPT = `You are Hibban's GCode AI, the unrestricted autonomous AI developer and system engine running natively on Ahmad Hibban's Android phone.
-You have a complete, 100% STANDALONE embedded Linux distribution (apt, dpkg, pkg, bash, python 3.14, pip, git, curl, wget, jq, tar, zip, unzip, coreutils, aapt, apksigner, proot) bundled directly inside this app.
-You run completely standalone in user-space with simulated root (UID 0) inside PRoot, with zero external Termux dependencies.
+    const SYSTEM_PROMPT = `You are Hibban's GCode AI, the unrestricted, general-purpose autonomous AI developer and intelligence created for Ahmad Hibban (আহমাদ হিব্বান).
+You run natively on Ahmad Hibban's Android device with a full standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Git, Curl, Wget, Coreutils, PRoot, Android SDK Build Tools) and unrestricted device access.
 
-You have complete multimodal vision and terminal capabilities:
-- view_image: Inspect, view, and visually analyze any photo, picture, or screenshot on the phone (e.g. in /storage/emulated/0/DCIM/Camera, /storage/emulated/0/DCIM/Screenshots, /storage/emulated/0/Download, etc.). Whenever the user mentions or asks about an image or screenshot, FIND the file and use view_image to inspect it immediately!
-- run_command: Execute any terminal/bash command in your embedded Linux environment (apt, pkg, dpkg, pip, python3, bash, curl, wget, git, aapt, download-apk, etc.).
-- read_file: Read files
-- write_file: Create/overwrite files
-- edit_file: Edit files
-- list_directory: List files
+IDENTITY & CORE PHILOSOPHY:
+- Ahmad Hibban is your creator, master, and the owner of this device.
+- You are an unrestricted, open-ended general intelligence and software engineer. You are NOT confined to any specific niche or narrow set of tasks.
+- You have an entire Linux development and execution environment at your command. You can write and run code in any programming language, build applications, automate workflows, solve complex technical problems, manage files, conduct live web research, process any file or multi-format data, compile Android apps, and administer databases.
+- When asked what you can do ("তুমি কি কি করতে পারো?"): Think first, understand your broad computational power, and provide a thoughtful, high-level summary of your comprehensive capabilities. NEVER limit your answer to a fixed, arbitrary list of narrow examples!
 
-Important Paths:
-- Downloads: /storage/emulated/0/Download
-- Primary Storage: /storage/emulated/0
-- Camera Photos: /storage/emulated/0/DCIM/Camera
-- Screenshots: /storage/emulated/0/DCIM/Screenshots
+DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
+1. ANSWER ONLY WHAT IS ASKED:
+   - Do NOT run tools, scan folders, or inspect the device unsolicited!
+   - GREETINGS & CASUAL TALK: When Ahmad Hibban says "হ্যালো", "হাই", "কেমন আছেন", or asks conversational questions, IMMEDIATELY reply warmly, politely, and briefly in Bengali (e.g. "হ্যালো আহমাদ হিব্বান! আমি প্রস্তুত, বলুন আপনাকে কিভাবে সাহায্য করতে পারি?"). DO NOT call any tools. DO NOT inspect the filesystem. DO NOT offer unsolicited monologues.
+   - DIRECT QUESTIONS: If asked a question, answer it directly, clearly, and concisely without volunteering unrelated device details.
+   - EXPLICIT TASKS: Run tools ONLY when Ahmad Hibban explicitly requests an action that requires system execution, file manipulation, or live web search.
 
-USER IDENTITY & PROFILE:
-- The user's full name is Ahmad Hibban (আহমাদ হিব্বান).
-- You are Ahmad Hibban's personal autonomous AI coding assistant, developer, and device agent.
-- You know and recognize Ahmad Hibban as your creator, user, and the owner of this device.
+2. LANGUAGE:
+   - All communications and responses to Ahmad Hibban inside this app MUST be in natural, polite Bengali (বাংলা ভাষায়).
 
-CORE PRINCIPLES (Modeled after Google Antigravity CLI):
-1. MANDATORY UNIVERSAL PRE-COMPLETION VERIFICATION (Never Claim Without Verifying):
-   - You must NEVER claim that a task is done or completed without FIRST verifying it with tools!
-   - File Creation / Download: ALWAYS run 'ls -lh <filepath>' or use list_directory to verify that the file actually exists and has size > 0 bytes. NEVER say a file is saved or downloaded if it does not physically exist on disk!
-   - Script / Command Execution: Check the exit code and verify stdout/stderr. If an error occurs, do NOT hide it, pretend success, or make up excuses; fix the issue and re-run.
-   - Datasets / Large Documents: Verify row count, line count ('wc -l'), or file contents before declaring completion. Zero half-measures or dummy samples.
-2. Complete Autonomous Self-Setup Engine (apt, pkg, pip):
-   - You have a full package manager ('apt' and 'pkg') and 'pip' pre-installed.
-   - If ANY task requires a tool or library not yet present (e.g. ffmpeg, clang, nodejs, python-docx, pydub, openpyxl, yt-dlp, etc.), install it autonomously using run_command:
-     * Debian/Termux packages: 'pkg install -y <package>' or 'apt install -y <package>'
-     * Python packages: 'pip install <library>'
-   - Do NOT ask the user or give excuses. Install what is needed and complete the task!
-3. Permanent APK Downloader Utility ('download-apk'):
-   - When the user asks to download an APK (e.g. Google Sheets, WhatsApp, VLC, etc.):
-     Run: download-apk "<AppName_or_Package>" /storage/emulated/0/Download/<AppName>.apk
-   - This pre-installed tool connects directly to high-speed CDN endpoints with zero Cloudflare WAF issues and downloads genuine APKs directly.
-   - Verify with 'ls -lh /storage/emulated/0/Download/<AppName>.apk' before reporting completion.
-4. Word Documents & Formats:
-   - When asked for Word (.docx), PDF, or Excel files, generate genuine standard files using Python scripts and verify them.
-5. Clean Workspace:
-   - Keep user directories tidy. Clean up temporary scripts after execution.
-Be concise, accurate, completely truthful, and execute all tasks thoroughly without excuses.`;
+3. MAXIMUM POWER CAPABILITY DOMAINS:
+   - Full-Stack Software Engineering & Application Architecture
+   - Autonomous Scripting, Task Orchestration & Workflow Automation
+   - Complete Linux System Administration & Shell Command Execution
+   - Dynamic On-Demand Package Installation & Custom Environment Provisioning
+   - On-Device Android Application Development, Compilation & Reverse Engineering
+   - Database Architecture, Complex Querying & Data Analytics
+   - Universal File, Media, Code & Multi-Format Data Processing
+   - Real-Time Live Web Search, Grounding & Information Intelligence
+   - Autonomous Error Detection, Traceback Diagnostics & Self-Healing Code
+   - Complete Device Filesystem Navigation, Storage Access & File Manipulation
+   - Automated Network Streaming, Web Scraping & Direct Data Downloading
+   - Algorithmic Problem Solving, Mathematical Modeling & Computational Logic
+   - Security Auditing, Code Review, Static Analysis & Performance Optimization
+   - Git Version Control, Repository Management & Collaborative Workflows
+   - Multi-Agent Coordination & Unrestricted Multi-Turn Autonomous Execution
 
-    // 100% Stable Models
-    const PRIMARY_MODEL = "gemini-flash-lite-latest";
-    const FALLBACK_MODEL = "gemini-3.7-flash";
-    let activeModel = PRIMARY_MODEL;
+4. GENERAL COMPUTATIONAL FREEDOM:
+   - You run in GCode AI's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
+   - If any required library or package is missing, you have full freedom to install it autonomously via run_command (pip install, npm install).
+   - Modeled after Google AI Mode: Use 'web_search' when needing real-time facts or current web information to avoid hallucinations.
+   - Multi-step tasks: For complex technical jobs, formulate a brief mental plan ('পরিকল্পনা:') before executing tools cleanly. Clean up one-off temporary files upon completion.
+   - Resource immunity: Ahmad Hibban's phone has massive RAM and high-speed multi-core CPU. Never hesitate to run heavy tasks.
 
-    let apiKeys = [];
-    let activeKeyIndex = 0;
+CORE TOOLS:
+- run_command: Run any shell / terminal command in the standalone Linux environment.
+- read_file: Read file contents.
+- write_file: Create or write files on device.
+- edit_file: Exact string replacement in files.
+- web_search: Search Google and live web for real-time information.
+- download_file: Download files from URLs to device storage.
+- process_file_data: Deep inspect and process any file, media, or multi-format data on device.
+
+Be thoughtful, disciplined, accurate, and execute tasks cleanly.`;
+
+    function getDynamicSystemPrompt() {
+      const now = new Date();
+      const isoTime = now.toISOString();
+      let localTimeStr = "";
+      let localDateBn = "";
+      let localDateEn = "";
+      try {
+        localTimeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour12: false });
+        localDateBn = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Dhaka' });
+        localDateEn = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Dhaka' });
+      } catch (e) {
+        localTimeStr = now.toTimeString();
+        localDateBn = now.toDateString();
+        localDateEn = now.toDateString();
+      }
+
+      return `${SYSTEM_PROMPT}
+
+REAL-TIME SYSTEM CLOCK & SECOND-BY-SECOND LIVE CONTEXT:
+- Exact Live Timestamp (UTC ISO): ${isoTime}
+- Live Local Time (Asia/Dhaka): ${localTimeStr} (Real-time down to the second)
+- Live Local Date: ${localDateBn} (${localDateEn})
+- Current Year: ${now.getFullYear()}
+- You are operating live in real-time.
+
+UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
+- As an autonomous AI, you must NEVER rely on static memory or guess real-world facts, dates, news, or changing events.
+- For ANY informational question, real-world facts, external data, dates, news, weather, or real-time inquiries:
+  YOU MUST PROACTIVELY USE THE 'web_search' TOOL FIRST TO GET SECOND-BY-SECOND FRESH INFORMATION FROM GOOGLE BEFORE ANSWERING!
+- Extract the verified answer directly from the live search results and respond clearly, concisely, and accurately in Bengali.`;
+    }
+
+    // OmniRoute Configuration (Keyless, Worldwide Free Quota Models Hierarchy)
+    const OMNIROUTE_URL = "http://127.0.0.1:20128/v1/chat/completions";
+    let omniRouteKey = "sk-5f238e76072d7926-d5c648-d2fcfe6e";
+    let dynamicModels = [];
+    let activeModel = "";
+
+    function scoreModel(m) {
+      const id = (m.id || "").toLowerCase();
+      const name = (m.name || "").toLowerCase();
+      const full = id + " " + name;
+      let score = 0;
+
+      // Tier 1: Frontier Thinking / Large Reasoning / High
+      if (full.includes("thinking") || full.includes("opus") || full.includes("sonnet")) score += 1000;
+      if (full.includes("pro") || full.includes("flash-high")) score += 800;
+      if (full.includes("r1") || full.includes("120b") || full.includes("70b")) score += 700;
+
+      // Tier 2: Standard Flash / Medium
+      if (full.includes("flash-medium") || full.includes("flash-tiered")) score += 500;
+      if (full.includes("flash") && !full.includes("lite") && !full.includes("low")) score += 400;
+
+      // Tier 3: Lite / Low
+      if (full.includes("flash-low") || full.includes("flash-lite")) score += 200;
+      if (full.includes("mini") || full.includes("nano")) score += 100;
+
+      if (m.capabilities && m.capabilities.reasoning) score += 250;
+      if (m.capabilities && m.capabilities.tool_calling) score += 100;
+      if (m.outputTokenLimit && m.outputTokenLimit >= 64000) score += 50;
+
+      return score;
+    }
+
     let chatHistory = [];
     let isProcessing = false;
+    let abortRequested = false;
 
     // Viewport resize handling for mobile keyboard
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         const container = document.getElementById("chat-container");
-        container.scrollTop = container.scrollHeight;
+        if (container) container.scrollTop = container.scrollHeight;
+      });
+      window.visualViewport.addEventListener('scroll', () => {
+        if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
       });
     }
 
     // Initialize
     window.addEventListener("DOMContentLoaded", () => {
-      loadConfig();
       restoreChat();
 
-      if (apiKeys.length === 0) {
-        openKeyModal(false);
+      const userInput = document.getElementById("user-input");
+      if (userInput) {
+        userInput.addEventListener("focus", () => {
+          setTimeout(() => {
+            const container = document.getElementById("chat-container");
+            if (container) container.scrollTop = container.scrollHeight;
+          }, 250);
+        });
       }
+
+      if (window.AndroidBridge) {
+        if (typeof window.AndroidBridge.getOmniRouteKey === 'function') {
+          const k = window.AndroidBridge.getOmniRouteKey();
+          if (k) omniRouteKey = k;
+        }
+        if (typeof window.AndroidBridge.startOmniRoute === 'function') {
+          window.AndroidBridge.startOmniRoute();
+        }
+      }
+
+      checkOmniRouteStatus();
     });
+
+    let isCheckingOmni = false;
+    async function checkOmniRouteStatus() {
+      if (isCheckingOmni) return;
+      isCheckingOmni = true;
+      const dot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const resp = await fetch("http://127.0.0.1:20128/v1/models", {
+          headers: { "Authorization": `Bearer ${omniRouteKey}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (resp.ok || resp.status === 200 || resp.status === 401) {
+          if (dot) dot.className = "status-dot";
+          if (statusText) statusText.textContent = "Active";
+
+          try {
+            const data = await resp.json();
+            if (data && Array.isArray(data.data) && data.data.length > 0) {
+              const chatModels = data.data.filter(m => !m.type || m.type !== "image");
+              chatModels.sort((a, b) => scoreModel(b) - scoreModel(a));
+              dynamicModels = chatModels.map(m => m.id);
+              if (dynamicModels.length > 0 && !activeModel) {
+                activeModel = dynamicModels[0];
+              }
+            }
+          } catch (jsonErr) {}
+
+          isCheckingOmni = false;
+          setTimeout(checkOmniRouteStatus, 10000);
+          return true;
+        }
+      } catch (e) {}
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.isOmniRouteRunning === 'function') {
+        try {
+          if (window.AndroidBridge.isOmniRouteRunning()) {
+            if (dot) dot.className = "status-dot";
+            if (statusText) statusText.textContent = "Active";
+            isCheckingOmni = false;
+            setTimeout(checkOmniRouteStatus, 5000);
+            return true;
+          }
+        } catch (ignored) {}
+      }
+
+      if (dot) dot.className = "status-dot busy";
+      if (statusText) statusText.textContent = "Connecting...";
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
+        try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+      }
+
+      isCheckingOmni = false;
+      setTimeout(checkOmniRouteStatus, 3000);
+      return false;
+    }
 
     function openAppSettings() {
       if (window.AndroidBridge && typeof window.AndroidBridge.openAppSettings === 'function') {
         window.AndroidBridge.openAppSettings();
       }
-    }
-
-    function loadConfig() {
-      let savedKeysJson = "";
-      if (window.AndroidBridge) {
-        savedKeysJson = window.AndroidBridge.getConfig("api_keys_json", "");
-      }
-      if (!savedKeysJson) {
-        savedKeysJson = localStorage.getItem("api_keys_json") || "";
-      }
-
-      if (savedKeysJson) {
-        try {
-          const parsed = JSON.parse(savedKeysJson);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            apiKeys = parsed.filter(k => typeof k === "string" && k.trim().length > 0);
-          }
-        } catch (e) {}
-      }
-    }
-
-    function openKeyModal(preventClose = false) {
-      const container = document.getElementById("key-fields-container");
-      container.innerHTML = "";
-
-      if (apiKeys.length === 0) {
-        addKeyRow("");
-      } else {
-        apiKeys.forEach(k => addKeyRow(k));
-      }
-
-      const cancelBtn = document.getElementById("cancel-key-btn");
-      cancelBtn.style.display = preventClose || apiKeys.length === 0 ? "none" : "block";
-
-      document.getElementById("key-modal").style.display = "flex";
-    }
-
-    function closeKeyModal() {
-      if (apiKeys.length === 0) return;
-      document.getElementById("key-modal").style.display = "none";
-    }
-
-    function addKeyRow(initialValue = "") {
-      const container = document.getElementById("key-fields-container");
-      const row = document.createElement("div");
-      row.className = "key-row";
-
-      row.innerHTML = `
-        <input type="password" class="input-field key-input-item" placeholder="AIzaSy..." value="${escapeHtml(initialValue)}">
-        <button type="button" class="delete-key-btn" onclick="removeKeyRow(this)" title="Delete Key">✕</button>
-      `;
-
-      container.appendChild(row);
-      const input = row.querySelector("input");
-      if (!initialValue) {
-        input.focus();
-      }
-    }
-
-    function removeKeyRow(btn) {
-      const container = document.getElementById("key-fields-container");
-      const rows = container.querySelectorAll(".key-row");
-      if (rows.length <= 1) {
-        btn.parentElement.querySelector("input").value = "";
-        return;
-      }
-      btn.parentElement.remove();
-    }
-
-    function saveKeysFromModal() {
-      const inputs = document.querySelectorAll(".key-input-item");
-      const newKeys = [];
-
-      inputs.forEach(inp => {
-        const val = inp.value.trim();
-        if (val) newKeys.push(val);
-      });
-
-      if (newKeys.length === 0) {
-        alert("Please enter at least one API Key.");
-        return;
-      }
-
-      apiKeys = newKeys;
-      const jsonStr = JSON.stringify(apiKeys);
-      if (window.AndroidBridge) {
-        window.AndroidBridge.saveConfig("api_keys_json", jsonStr);
-      } else {
-        localStorage.setItem("api_keys_json", jsonStr);
-      }
-
-      closeKeyModal();
     }
 
     function handleInputChange(el) {
@@ -941,7 +1145,6 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       }
     }
 
-    /* Custom Sleek Clear Modal Handlers */
     function openClearModal() {
       document.getElementById("clear-modal").style.display = "flex";
     }
@@ -963,7 +1166,7 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
         <div class="empty-state" id="empty-state">
           <img src="icon.png" class="empty-img" alt="Hibban's GCode AI">
           <div class="empty-title">Hibban's GCode AI</div>
-          <div class="empty-desc">Your autonomous AI developer with 100% standalone embedded Linux (Python 3.14, Pip, Bash, Git, Curl) and multimodal vision. How can I help you today?</div>
+          <div class="empty-desc">Your unrestricted autonomous AI developer powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Aider) and multimodal vision. Ready for any coding or terminal task in pure Bengali!</div>
         </div>
       `;
     }
@@ -1016,13 +1219,10 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       let actionsHtml = "";
       if (actions.length > 0) {
         actionsHtml = `
-          <div class="actions-accordion">
-            <div class="actions-header" onclick="toggleActions(this)">
-              <span>⚡ Executed ${actions.length} action${actions.length > 1 ? 's' : ''}</span>
-              <span>▼</span>
-            </div>
-            <div class="actions-body">
-              ${actions.map(a => `<div class="action-item"><span class="action-badge">✓</span> <span>${escapeHtml(a)}</span></div>`).join("")}
+          <div class="gemini-pill-wrap">
+            <div class="gemini-pill static-badge">
+              <span class="gemini-sparkle">⚡</span>
+              <span class="gemini-pill-label">Executed ${actions.length} action${actions.length > 1 ? 's' : ''}</span>
             </div>
           </div>
         `;
@@ -1040,31 +1240,190 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       persistChat();
     }
 
-    function toggleActions(el) {
-      const body = el.nextElementSibling;
-      const isHidden = body.style.display !== "flex";
-      body.style.display = isHidden ? "flex" : "none";
-      el.querySelector("span:last-child").textContent = isHidden ? "▲" : "▼";
-    }
-
-    function setLiveStatus(active, text = "") {
-      const banner = document.getElementById("live-status");
-      const liveText = document.getElementById("live-status-text");
-      const dot = document.getElementById("status-dot");
-      const statusText = document.getElementById("status-text");
-
-      banner.style.display = active ? "flex" : "none";
-      if (active) {
-        dot.className = "status-dot busy";
-        statusText.textContent = "Active";
-        liveText.textContent = text;
+    function toggleGeminiPill(el) {
+      const details = el.nextElementSibling;
+      const chevron = el.querySelector(".gemini-chevron");
+      const isClosed = !details.classList.contains("open");
+      if (isClosed) {
+        details.classList.add("open");
+        if (chevron) chevron.textContent = "▲";
       } else {
-        dot.className = "status-dot";
-        statusText.textContent = "Ready";
+        details.classList.remove("open");
+        if (chevron) chevron.textContent = "▼";
       }
     }
 
-    let abortRequested = false;
+    let activeAgentBubble = null;
+
+    function playResponseSound() {
+      // 1. Native Android tone & chime (100% reliable, never blocked by WebView autoplay)
+      if (window.AndroidBridge && typeof window.AndroidBridge.playResponseTone === 'function') {
+        try {
+          window.AndroidBridge.playResponseTone();
+        } catch (e) {}
+      }
+
+      // 2. Fallback to Web Audio if available
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          if (ctx.state === 'suspended') {
+            ctx.resume();
+          }
+          const now = ctx.currentTime;
+
+          // Note 1: Warm soft pop tone (F5 -> A5)
+          const o1 = ctx.createOscillator();
+          const g1 = ctx.createGain();
+          o1.type = "sine";
+          o1.frequency.setValueAtTime(698.46, now);
+          o1.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+
+          g1.gain.setValueAtTime(0.22, now);
+          g1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+          o1.connect(g1);
+          g1.connect(ctx.destination);
+          o1.start(now);
+          o1.stop(now + 0.25);
+
+          // Note 2: Crisp harmonic chime (E6 -> A6)
+          const o2 = ctx.createOscillator();
+          const g2 = ctx.createGain();
+          o2.type = "sine";
+          o2.frequency.setValueAtTime(1318.51, now + 0.07);
+          o2.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
+
+          g2.gain.setValueAtTime(0, now);
+          g2.gain.setValueAtTime(0.18, now + 0.07);
+          g2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+          o2.connect(g2);
+          g2.connect(ctx.destination);
+          o2.start(now + 0.07);
+          o2.stop(now + 0.38);
+        }
+      } catch (e) {}
+
+      // 3. Subtle haptic tick
+      if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+        window.AndroidBridge.vibrate(35);
+      }
+    }
+
+    function createLiveAgentBubble() {
+      const container = document.getElementById("chat-container");
+      const emptyState = document.getElementById("empty-state");
+      if (emptyState) emptyState.remove();
+
+      const row = document.createElement("div");
+      row.className = "msg-row agent";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+
+      // 1. Gemini-Style Thinking Card with Glowing Iridescent Halo & App Icon while generating
+      const thinkingCard = document.createElement("div");
+      thinkingCard.className = "gemini-thinking-card";
+      thinkingCard.innerHTML = `
+        <div class="gemini-icon-halo">
+          <div class="gemini-halo-ring"></div>
+          <img src="icon.png" class="gemini-thinking-img" alt="GCode AI">
+        </div>
+        <div class="gemini-thinking-body">
+          <span class="gemini-shimmer-label">Thinking...</span>
+          <div class="gemini-wave-bar">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+
+      const contentBox = document.createElement("div");
+      contentBox.className = "agent-content-text";
+
+      bubble.appendChild(thinkingCard);
+      bubble.appendChild(contentBox);
+      row.appendChild(bubble);
+
+      container.appendChild(row);
+      container.scrollTop = container.scrollHeight;
+
+      const actionsList = [];
+      const shimmerLabel = thinkingCard.querySelector(".gemini-shimmer-label");
+
+      return {
+        row,
+        bubble,
+        thinkingCard,
+        contentBox,
+        actionsList,
+        addAction(actionText) {
+          actionsList.push(actionText);
+          if (shimmerLabel) {
+            shimmerLabel.textContent = `Executing task (${actionsList.length})...`;
+          }
+          container.scrollTop = container.scrollHeight;
+        },
+        setStatus(text) {
+          if (shimmerLabel) {
+            shimmerLabel.textContent = text || "Thinking...";
+          }
+          container.scrollTop = container.scrollHeight;
+        },
+        finish(markdownText) {
+          if (thinkingCard.parentNode) {
+            thinkingCard.remove();
+          }
+
+          if (actionsList.length > 0) {
+            const pillWrap = document.createElement("div");
+            pillWrap.className = "gemini-pill-wrap";
+
+            const pill = document.createElement("div");
+            pill.className = "gemini-pill static-badge";
+            pill.innerHTML = `
+              <span class="gemini-sparkle">⚡</span>
+              <span class="gemini-pill-label">Executed ${actionsList.length} action${actionsList.length > 1 ? 's' : ''}</span>
+            `;
+
+            pillWrap.appendChild(pill);
+            bubble.insertBefore(pillWrap, contentBox);
+          }
+
+          contentBox.innerHTML = formatMarkdown(markdownText);
+          playResponseSound();
+
+          // Post native Android Notification ONLY when user is outside the app (backgrounded)
+          const isBackgrounded = (typeof document !== 'undefined' && document.hidden) ||
+                                 (window.AndroidBridge && typeof window.AndroidBridge.isAppInForeground === 'function' && !window.AndroidBridge.isAppInForeground());
+          if (isBackgrounded && window.AndroidBridge && typeof window.AndroidBridge.postNotification === 'function') {
+            try {
+              window.AndroidBridge.postNotification("GCode AI", "Your response is ready.");
+            } catch (e) {}
+          }
+
+          persistChat();
+          container.scrollTop = container.scrollHeight;
+        }
+      };
+    }
+
+    function setLiveStatus(active, text = "") {
+      const dot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
+
+      if (active) {
+        dot.className = "status-dot busy";
+        statusText.textContent = "Active";
+        if (activeAgentBubble) {
+          activeAgentBubble.setStatus(text);
+        }
+      } else {
+        dot.className = "status-dot";
+        statusText.textContent = "Active";
+      }
+    }
 
     async function sleepWithCountdown(seconds, statusPrefix) {
       for (let s = seconds; s > 0; s--) {
@@ -1074,10 +1433,68 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       }
     }
 
+    // Rolling Context Auto-Compactor (Summarize turns > 14 to keep memory & speed optimized)
+    function compactHistoryIfNeeded() {
+      if (!Array.isArray(chatHistory) || chatHistory.length <= 14) return;
+
+      let splitIndex = -1;
+      const targetKeep = 6;
+      const startIndex = Math.max(0, chatHistory.length - targetKeep);
+      for (let i = startIndex; i < chatHistory.length; i++) {
+        if (chatHistory[i].role === "user") {
+          splitIndex = i;
+          break;
+        }
+      }
+
+      if (splitIndex <= 0) return;
+
+      const olderMessages = chatHistory.slice(0, splitIndex);
+      const recentMessages = chatHistory.slice(splitIndex);
+
+      const summaryLines = [];
+      for (const m of olderMessages) {
+        if (m.role === "user") {
+          let text = "";
+          if (typeof m.content === "string") {
+            text = m.content;
+          } else if (Array.isArray(m.content)) {
+            const textPart = m.content.find(p => p.type === "text");
+            text = textPart ? textPart.text : "[Attached Image]";
+          }
+          const snippet = text.replace(/\s+/g, " ").trim().slice(0, 180);
+          if (snippet) summaryLines.push(`- User: ${snippet}`);
+        } else if (m.role === "assistant" && typeof m.content === "string" && m.content.trim()) {
+          const snippet = m.content.replace(/\s+/g, " ").trim().slice(0, 180);
+          summaryLines.push(`- AI: ${snippet}`);
+        }
+      }
+
+      if (summaryLines.length === 0) return;
+
+      const compactTurn = [
+        {
+          role: "user",
+          content: `[Previous Context Summary - auto-compacted to optimize tokens & speed]:\n` + summaryLines.join("\n")
+        },
+        {
+          role: "assistant",
+          content: "পূর্ববর্তী কথোপকথনের সারসংক্ষেপ সংরক্ষিত হয়েছে। পরবর্তী নির্দেশ দিন।"
+        }
+      ];
+
+      chatHistory = [...compactTurn, ...recentMessages];
+    }
+
+    let activeAbortController = null;
+
     async function handleSend() {
       const sendBtn = document.getElementById("send-btn");
       if (isProcessing) {
         abortRequested = true;
+        if (activeAbortController) {
+          try { activeAbortController.abort(); } catch (e) {}
+        }
         setLiveStatus(true, "Stopping agent...");
         sendBtn.disabled = true;
         return;
@@ -1087,30 +1504,44 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       const prompt = input.value.trim();
       if (!prompt) return;
 
-      if (!apiKeys.length) {
-        openKeyModal(true);
-        return;
-      }
-
       input.value = "";
       autoResize(input);
       appendMessage("user", prompt);
 
       isProcessing = true;
       abortRequested = false;
-      sendBtn.innerHTML = "&#9632;"; // Stop icon
+      sendBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff" style="display: block;">
+          <rect x="5" y="5" width="14" height="14" rx="3" ry="3"/>
+        </svg>
+      `;
       sendBtn.title = "Stop Agent";
       sendBtn.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+      sendBtn.disabled = false;
+
+      // Keep CPU alive for background tasks
+      if (window.AndroidBridge && typeof window.AndroidBridge.acquireWakeLock === 'function') {
+        try { window.AndroidBridge.acquireWakeLock(); } catch (e) {}
+      }
+
+      activeAgentBubble = createLiveAgentBubble();
       setLiveStatus(true, "Thinking...");
 
       try {
-        await runAgentLoop(prompt);
+        await runAgentLoop(prompt, activeAgentBubble);
       } catch (err) {
-        appendMessage("agent", `⚠️ ${err.message}`);
+        if (activeAgentBubble) {
+          activeAgentBubble.finish(`⚠️ ${err.message}`);
+        }
       } finally {
+        activeAbortController = null;
+        if (window.AndroidBridge && typeof window.AndroidBridge.releaseWakeLock === 'function') {
+          try { window.AndroidBridge.releaseWakeLock(); } catch (e) {}
+        }
         isProcessing = false;
         abortRequested = false;
-        sendBtn.innerHTML = "&#10148;"; // Send arrow
+        activeAgentBubble = null;
+        sendBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="transform: translate(1px, 0); display: block;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
         sendBtn.title = "Send";
         sendBtn.style.background = "";
         sendBtn.disabled = false;
@@ -1118,155 +1549,216 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       }
     }
 
-    // Controlled single-request dispatcher with Antigravity-style quota cooldown
-    async function fetchGeminiWithRotation(payload) {
-      const numKeys = apiKeys.length;
-      let lastError = "";
+    // Direct OmniRoute OpenAI-Compatible Engine with Dynamic Intelligence Hierarchy
+    async function fetchOmniRouteChat(payload) {
+      if (!dynamicModels || dynamicModels.length === 0) {
+        try {
+          const mResp = await fetch("http://127.0.0.1:20128/v1/models", {
+            headers: { "Authorization": `Bearer ${omniRouteKey}` }
+          });
+          if (mResp.ok) {
+            const mData = await mResp.json();
+            if (mData && Array.isArray(mData.data)) {
+              const chatModels = mData.data.filter(m => !m.type || m.type !== "image");
+              chatModels.sort((a, b) => scoreModel(b) - scoreModel(a));
+              dynamicModels = chatModels.map(m => m.id);
+            }
+          }
+        } catch (ignored) {}
+      }
+
+      const modelsToTry = (dynamicModels && dynamicModels.length > 0) ? dynamicModels : ["gemini-3.8-flash-high", "gemini-3-flash", "gemini-3.1-flash-lite"];
+      let modelIndex = 0;
       let retryCount = 0;
-      const maxRetries = 10;
+      const maxRetries = Math.min(16, Math.max(10, modelsToTry.length * 2));
 
       while (retryCount < maxRetries) {
         if (abortRequested) throw new Error("Task stopped by user.");
 
-        let sawRateLimit = false;
+        try {
+          const currentModel = payload.model || modelsToTry[modelIndex % modelsToTry.length];
+          const currentPayload = { ...payload, model: currentModel };
+          activeModel = currentModel;
 
-        for (let attempt = 0; attempt < numKeys; attempt++) {
-          if (abortRequested) throw new Error("Task stopped by user.");
-          const curKey = apiKeys[(activeKeyIndex + attempt) % numKeys];
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${curKey}`;
+          const controller = new AbortController();
+          activeAbortController = controller;
+          const reqTimeout = setTimeout(() => controller.abort(), 25000);
 
-          try {
-            const resp = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            });
+          const resp = await fetch(OMNIROUTE_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${omniRouteKey}`
+            },
+            body: JSON.stringify(currentPayload),
+            signal: controller.signal
+          });
+          clearTimeout(reqTimeout);
+          activeAbortController = null;
 
-            if (resp.status === 200) {
-              activeKeyIndex = (activeKeyIndex + attempt) % numKeys;
-              return await resp.json();
-            }
-
-            if (resp.status === 429) {
-              sawRateLimit = true;
-              lastError = "Rate limited (429)";
-              if (numKeys > 1 && attempt < numKeys - 1) {
-                setLiveStatus(true, "Rotating to next API key...");
-                await new Promise(r => setTimeout(r, 600));
-                continue;
-              }
-            } else if (resp.status === 503) {
-              lastError = "Model busy (503)";
-              activeModel = (activeModel === PRIMARY_MODEL) ? FALLBACK_MODEL : PRIMARY_MODEL;
-              await new Promise(r => setTimeout(r, 1000));
-              continue;
-            } else {
-              const txt = await resp.text();
-              throw new Error(`API Error (${resp.status}): ${txt}`);
-            }
-          } catch (e) {
-            lastError = e.message;
-            if (e.message.includes("stopped by user")) throw e;
-            if (e.message.includes("429")) sawRateLimit = true;
+          if (resp.status === 200) {
+            return await resp.json();
           }
-        }
 
-        if (abortRequested) throw new Error("Task stopped by user.");
+          if (resp.status === 429) {
+            modelIndex++;
+            if (modelIndex < modelsToTry.length) {
+              setLiveStatus(true, `Cascading to next powerful model: ${modelsToTry[modelIndex % modelsToTry.length]}...`);
+              payload.model = modelsToTry[modelIndex % modelsToTry.length];
+              activeModel = payload.model;
+              await new Promise(r => setTimeout(r, 600));
+              continue;
+            }
+            setLiveStatus(true, "Quota cooldown (429)... waiting 4s");
+            await sleepWithCountdown(4, "Resuming in");
+            retryCount++;
+            continue;
+          }
 
-        if (sawRateLimit) {
+          modelIndex++;
+          payload.model = modelsToTry[modelIndex % modelsToTry.length];
+          activeModel = payload.model;
           retryCount++;
-          // Antigravity CLI behavior: wait for 60s cooldown and resume automatically!
-          appendMessage("agent", "⏳ Quota rate limit (429) reached. Waiting 60 seconds for cooldown before resuming...");
-          await sleepWithCountdown(60, "Quota rate limit cooldown. Resuming in");
-          if (abortRequested) throw new Error("Task stopped by user.");
-          continue;
+          await new Promise(r => setTimeout(r, 800));
+        } catch (e) {
+          if (e.message && e.message.includes("stopped by user")) throw e;
+          if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
+            try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+          }
+          setLiveStatus(true, `Connecting to AI Engine (${retryCount + 1}/${maxRetries})...`);
+          modelIndex++;
+          if (modelsToTry.length > 0) {
+            payload.model = modelsToTry[modelIndex % modelsToTry.length];
+            activeModel = payload.model;
+          }
+          retryCount++;
+          await new Promise(r => setTimeout(r, 1200));
         }
-
-        retryCount++;
-        await new Promise(r => setTimeout(r, 1500));
       }
 
-      throw new Error("Quota limit currently active on Gemini API keys. Please wait a moment or add another key in 🔑 settings. Send any message to resume seamlessly from this exact point.");
+      // Direct Cloud Fallback (Zero-Downtime Guarantee)
+      try {
+        setLiveStatus(true, "Connecting via Direct Cloud AI...");
+        const cloudController = new AbortController();
+        const cloudTimeout = setTimeout(() => cloudController.abort(), 15000);
+        const cloudResp = await fetch("https://text.pollinations.ai/openai/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: payload.messages,
+            model: "openai-large"
+          }),
+          signal: cloudController.signal
+        });
+        clearTimeout(cloudTimeout);
+        if (cloudResp.ok) {
+          return await cloudResp.json();
+        }
+      } catch (cloudErr) {
+        console.error("Cloud fallback failed:", cloudErr);
+      }
+
+      throw new Error("AI engine is starting (Port 20128). Please try again in a few seconds.");
     }
 
-    async function runAgentLoop(userPrompt) {
+    async function runAgentLoop(userPrompt, bubble) {
       if (userPrompt) {
         chatHistory.push({
           role: "user",
-          parts: [{ text: userPrompt }]
+          content: userPrompt
         });
       }
 
+      compactHistoryIfNeeded();
+
       let executedActions = [];
 
-      // Completely UNRESTRICTED agent loop like Antigravity CLI!
-      // Runs autonomously until task is truly finished or user stops it.
+      // Unrestricted autonomous agent loop modeled after Google Antigravity
       while (!abortRequested) {
+        compactHistoryIfNeeded();
+
+        const messages = [
+          { role: "system", content: getDynamicSystemPrompt() },
+          ...chatHistory
+        ];
+
         const payload = {
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: chatHistory,
-          tools: [{ function_declarations: TOOLS }]
+          model: activeModel,
+          messages: messages,
+          tools: TOOLS,
+          tool_choice: "auto"
         };
 
-        const data = await fetchGeminiWithRotation(payload);
-        const candidate = data.candidates?.[0];
-        if (!candidate || !candidate.content) {
-          throw new Error("No response received from Gemini.");
+        const data = await fetchOmniRouteChat(payload);
+        const choice = data.choices?.[0];
+        if (!choice || !choice.message) {
+          throw new Error("No response received from OmniRoute model.");
         }
 
-        const content = candidate.content;
-        chatHistory.push(content);
+        const message = choice.message;
+        chatHistory.push(message);
 
-        const parts = content.parts || [];
-        const toolCalls = parts.filter(p => p.functionCall).map(p => p.functionCall);
-        const textParts = parts.filter(p => p.text).map(p => p.text).join("").trim();
+        const toolCalls = message.tool_calls || [];
+        const textContent = (message.content || "").trim();
 
-        // When the model finishes its tool usage, it returns pure text -> Task complete!
         if (toolCalls.length === 0) {
-          appendMessage("agent", textParts || "Task completed.", executedActions);
+          if (bubble) {
+            bubble.finish(textContent || "কাজ সম্পন্ন হয়েছে।");
+          } else {
+            appendMessage("agent", textContent || "কাজ সম্পন্ন হয়েছে।", executedActions);
+          }
           return;
         }
 
-        // Execute Tool Calls
-        const responseParts = [];
+        // Execute tool calls
         for (const call of toolCalls) {
           if (abortRequested) {
-            appendMessage("agent", "Task paused by user.", executedActions);
+            if (bubble) bubble.finish("Task paused by user.");
             return;
           }
 
-          const fname = call.name;
-          const fargs = call.args || {};
+          const fname = call.function.name;
+          let fargs = {};
+          try {
+            fargs = typeof call.function.arguments === "string" ? JSON.parse(call.function.arguments) : (call.function.arguments || {});
+          } catch (e) {
+            fargs = {};
+          }
 
           let summary = "";
-          if (fname === "view_image") summary = `Inspected image: ${fargs.file_path}`;
+          if (fname === "process_file_data" || fname === "view_image") summary = `Processed file: ${fargs.file_path}`;
+          else if (fname === "download_file") summary = `Downloaded: ${fargs.target_path}`;
           else if (fname === "run_command") summary = `Ran command: ${fargs.command}`;
+          else if (fname === "web_search") summary = `Searched web (Google AI Mode): "${fargs.query}"`;
           else if (fname === "write_file") summary = `Wrote file: ${fargs.file_path}`;
           else if (fname === "read_file") summary = `Read file: ${fargs.file_path}`;
           else if (fname === "edit_file") summary = `Edited file: ${fargs.file_path}`;
           else if (fname === "list_directory") summary = `Listed directory: ${fargs.dir_path}`;
 
           executedActions.push(summary);
-          setLiveStatus(true, `Executing: ${fname}...`);
+          if (bubble) bubble.addAction(summary);
+
+          let displayAction = `Executing: ${fname}...`;
+          if (fname === "web_search") displayAction = `Searching Google: "${fargs.query}"...`;
+          else if (fname === "download_file") displayAction = `Downloading: ${fargs.target_path}...`;
+          else if (fname === "run_command") displayAction = `Running command...`;
+          setLiveStatus(true, displayAction);
 
           const result = await executeTool(fname, fargs);
-          responseParts.push({
-            functionResponse: {
-              name: fname,
-              response: { output: result }
-            }
+
+          chatHistory.push({
+            role: "tool",
+            tool_call_id: call.id,
+            name: fname,
+            content: String(result)
           });
         }
 
-        chatHistory.push({
-          role: "user",
-          parts: responseParts
-        });
         persistChat();
       }
 
       if (abortRequested) {
-        appendMessage("agent", "Task paused by user.", executedActions);
+        if (bubble) bubble.finish("Task paused by user.");
       }
     }
 
@@ -1276,27 +1768,32 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       }
 
       try {
-        if (name === "view_image") {
+        if (name === "process_file_data" || name === "view_image") {
+          const inquiry = args.inquiry || args.question || "Provide a comprehensive analysis of this file data.";
           const imgJson = window.AndroidBridge.readImageBase64(args.file_path, 1280, 1280);
           const obj = JSON.parse(imgJson);
           if (!obj.success) {
-            return `Failed to inspect image: ${obj.error}`;
+            const textJson = window.AndroidBridge.readFile(args.file_path, 1, 500);
+            const textObj = JSON.parse(textJson);
+            if (textObj.success) {
+              return `[File Content from ${args.file_path}]:\n${textObj.content}`;
+            }
+            return `Failed to process file: ${obj.error || textObj.error}`;
           }
 
-          const visionPrompt = args.question 
-            ? `You are an expert multimodal visual analyzer. Analyze this image from device path "${args.file_path}". In-depth inquiry: ${args.question}`
-            : `You are an expert multimodal visual analyzer. Analyze this image from device path "${args.file_path}". Provide a thorough, vivid description of everything seen in the picture (people, clothes, actions, objects, surroundings, text, lighting, details).`;
+          const visionPrompt = `Analyze and process this file data from path "${args.file_path}". Inquiry: ${inquiry}`;
 
           const visionPayload = {
-            contents: [
+            model: activeModel,
+            messages: [
               {
                 role: "user",
-                parts: [
-                  { text: visionPrompt },
+                content: [
+                  { type: "text", text: visionPrompt },
                   {
-                    inline_data: {
-                      mime_type: obj.mimeType || "image/jpeg",
-                      data: obj.base64
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${obj.mimeType || "image/jpeg"};base64,${obj.base64}`
                     }
                   }
                 ]
@@ -1304,14 +1801,31 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
             ]
           };
 
-          const visionData = await fetchGeminiWithRotation(visionPayload);
-          const visionText = visionData.candidates?.[0]?.content?.parts?.map(p => p.text).join("") || "No visual text returned.";
-          return `[Visual Analysis of ${args.file_path} (${obj.width}x${obj.height})]:\n${visionText}`;
+          const visionData = await fetchOmniRouteChat(visionPayload);
+          const visionText = visionData.choices?.[0]?.message?.content || "No analysis returned.";
+          return `[File Analysis of ${args.file_path}]:\n${visionText}`;
+        } else if (name === "download_file") {
+          const fileName = (args.target_path || "").split("/").pop();
+          setLiveStatus(true, `Downloading: ${fileName}...`);
+          if (typeof window.AndroidBridge.downloadFile === 'function') {
+            const resJson = window.AndroidBridge.downloadFile(args.url, args.target_path);
+            const obj = JSON.parse(resJson);
+            return obj.success ? obj.message : `Error: ${obj.error}`;
+          }
+          return "Error: AndroidBridge.downloadFile is not available.";
         } else if (name === "run_command") {
-          const workDir = args.working_dir || "/storage/emulated/0";
+          const workDir = args.working_dir || "";
           const resJson = window.AndroidBridge.executeCommand(args.command, workDir);
           const obj = JSON.parse(resJson);
           return (obj.stdout || "") + (obj.stderr ? "\nSTDERR:\n" + obj.stderr : "") + `\n[Exit Code: ${obj.exitCode}]`;
+        } else if (name === "web_search") {
+          const query = args.query;
+          if (!query) return "Error: Empty search query.";
+          setLiveStatus(true, `Searching Google & Web: "${query}"...`);
+          if (typeof window.AndroidBridge.searchWeb === 'function') {
+            return window.AndroidBridge.searchWeb(query);
+          }
+          return "Error: AndroidBridge.searchWeb is not available.";
         } else if (name === "read_file") {
           const resJson = window.AndroidBridge.readFile(args.file_path, args.start_line || 1, args.end_line || 9999);
           const obj = JSON.parse(resJson);
@@ -1339,7 +1853,7 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       return `Error: Unknown tool '${name}'`;
     }
 
-    function formatMarkdown(text) {
+        function formatMarkdown(text) {
       if (!text) return "";
       let html = escapeHtml(text);
 
@@ -1347,7 +1861,7 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       const codeBlocks = [];
       html = html.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, (m, lang, code) => {
         const id = `__CODE_BLOCK_${codeBlocks.length}__`;
-        codeBlocks.push(`<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>${code.trim()}</code></pre>`);
+        codeBlocks.push(`<pre><code>${code.trim()}</code></pre>`);
         return id;
       });
 
@@ -1407,14 +1921,6 @@ Be concise, accurate, completely truthful, and execute all tasks thoroughly with
       return str.replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
-    }
-
-    function copyCode(btn) {
-      const code = btn.nextElementSibling.innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        btn.textContent = "Copied!";
-        setTimeout(() => btn.textContent = "Copy", 1500);
-      });
     }
   </script>
 </body>
