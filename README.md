@@ -1,5 +1,5 @@
-# Hibban's GCode AI 🤖⚡
-### Autonomous AI Coding Assistant & Developer with 100% Standalone Embedded Linux Distribution & OmniRoute Gateway
+# Hibban AI 🤖⚡
+### Autonomous AI Developer & Universal Computing System with Standalone Linux & OmniRoute Gateway
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-API%2028%2B-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
@@ -7,12 +7,12 @@
 [![Node.js](https://img.shields.io/badge/Node.js-v26.4.0-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![OmniRoute](https://img.shields.io/badge/Gateway-OmniRoute%20v3.8.51-8A2BE2?style=flat-square)](https://github.com/ahmadhibban/GCode-AI)
 [![Virtualization](https://img.shields.io/badge/Engine-PRoot%20User--Space-orange?style=flat-square)](https://proot-me.github.io)
-[![Release](https://img.shields.io/badge/Release-v3.1.0-brightgreen?style=flat-square)](https://github.com/ahmadhibban/GCode-AI/releases/latest)
+[![Release](https://img.shields.io/badge/Release-v3.2.0-brightgreen?style=flat-square)](https://github.com/ahmadhibban/GCode-AI/releases/latest)
 [![Author](https://img.shields.io/badge/Author-Ahmad%20Hibban-4f46e5?style=flat-square)](https://github.com/ahmadhibban)
 
-> 🚀 **Direct APK Download**: [Download GCode_AI.apk (v3.1.0)](https://github.com/ahmadhibban/GCode-AI/releases/latest) — *Install directly on any Android ARM64 device.*
+> 🚀 **Direct APK Download**: [Download Hibban_AI.apk (Latest)](https://github.com/ahmadhibban/GCode-AI/releases/latest) — *Install directly on any Android ARM64 device.*
 
-**Hibban's GCode AI** is an autonomous AI software developer and pair-programming assistant running natively on Android devices. It embeds a complete, real Linux distribution directly inside the application, enabling true autonomous terminal execution, script compilation, filesystem manipulation, and multimodal vision without requiring Termux, root permissions, or any external cross-app dependencies.
+**Hibban AI** is an unrestricted autonomous AI software developer and pair-programming assistant running natively on Android devices. It embeds a complete, real Linux distribution directly inside the application, enabling true autonomous terminal execution, script compilation, filesystem manipulation, and multimodal vision without requiring Termux, root permissions, or any external cross-app dependencies.
 
 Developed with passion by **[Ahmad Hibban (আহমাদ হিব্বান)](https://github.com/ahmadhibban)**.
 
@@ -87,7 +87,7 @@ The prebuilt, signed APK is available in the **[Releases](https://github.com/ahm
 
 | Asset | Platform | Version | Status |
 | :--- | :--- | :--- | :--- |
-| **[GCode_AI.apk](https://github.com/ahmadhibban/GCode-AI/releases/latest)** | Android (ARM64, Android 5.0+) | **v3.1.0** | Stable Release |
+| **[Hibban_AI.apk](https://github.com/ahmadhibban/GCode-AI/releases/latest)** | Android (ARM64, Android 5.0+) | **Latest** | Stable Release |
 
 ---
 
@@ -128,7 +128,7 @@ To compile, package, and sign the standalone APK:
 ```bash
 bash build_apk.sh
 ```
-The output APK will be placed in `apk/GCode_AI.apk` and `/storage/emulated/0/Download/GCode_AI.apk`.
+The output APK will be placed in `apk/Hibban_AI.apk` and `/storage/emulated/0/Download/Hibban_AI.apk`.
 
 ---
 

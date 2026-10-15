@@ -70,6 +70,7 @@ public class MainActivity extends Activity {
         }
 
         checkAndRequestAllPermissions();
+        GCodeDaemonService.start(this);
         initWebView();
 
         File usrBash = new File(getFilesDir(), "usr/bin/bash");
@@ -80,14 +81,14 @@ public class MainActivity extends Activity {
         boolean isAlreadyExtracted = marker.exists() && libIcu.exists() && libCares.exists() && usrBash.exists() && usrBash.length() > 0;
 
         if (isAlreadyExtracted) {
-            ensureNodeLibsAndPermissions();
-            bridge.ensureOmniRouteAsync();
-            if (bridge.isOmniRouteRunning()) {
-                webView.loadUrl("file:///android_asset/index.html");
-            } else {
-                webView.loadUrl("file:///android_asset/setup.html");
-                waitForOmniRouteAndLaunch();
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ensureNodeLibsAndPermissions();
+                    bridge.ensureOmniRouteAsync();
+                }
+            }).start();
+            webView.loadUrl("file:///android_asset/index.html");
         } else {
             webView.loadUrl("file:///android_asset/setup.html");
             startFirstLaunchExtraction();
@@ -237,9 +238,6 @@ public class MainActivity extends Activity {
                 } catch (Throwable ignored) {}
             }
             cleanCnf.setReadable(true, false);
-
-            new ProcessBuilder("/system/bin/toybox", "chmod", "-R", "755", usrDir.getAbsolutePath())
-                    .start().waitFor();
         } catch (Throwable ignored) {}
     }
 
@@ -417,6 +415,7 @@ public class MainActivity extends Activity {
 
     private void initWebView() {
         webView = new WebView(this);
+        webView.setBackgroundColor(0xFF07090E);
         setContentView(webView);
 
         WebSettings ws = webView.getSettings();
@@ -473,24 +472,54 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(bridge, "AndroidBridge");
     }
 
-    private void checkAndRequestAllPermissions() {
+    public void checkAndRequestAllPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String[] perms = new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO
-            };
-            boolean needReq = false;
-            for (String p : perms) {
-                if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                    needReq = true;
-                    break;
+            List<String> permsList = new ArrayList<>();
+            permsList.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            permsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            permsList.add(Manifest.permission.READ_CONTACTS);
+            permsList.add(Manifest.permission.WRITE_CONTACTS);
+            permsList.add(Manifest.permission.READ_CALL_LOG);
+            permsList.add(Manifest.permission.WRITE_CALL_LOG);
+            permsList.add(Manifest.permission.CALL_PHONE);
+            permsList.add(Manifest.permission.READ_PHONE_STATE);
+            permsList.add(Manifest.permission.SEND_SMS);
+            permsList.add(Manifest.permission.READ_SMS);
+            permsList.add(Manifest.permission.RECEIVE_SMS);
+            permsList.add(Manifest.permission.RECORD_AUDIO);
+            permsList.add(Manifest.permission.CAMERA);
+            permsList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            permsList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+            if (Build.VERSION.SDK_INT >= 33) {
+                permsList.add("android.permission.POST_NOTIFICATIONS");
+                permsList.add("android.permission.READ_MEDIA_IMAGES");
+                permsList.add("android.permission.READ_MEDIA_VIDEO");
+                permsList.add("android.permission.READ_MEDIA_AUDIO");
+            }
+
+            List<String> needed = new ArrayList<>();
+            for (String p : permsList) {
+                try {
+                    if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                        needed.add(p);
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            if (!needed.isEmpty()) {
+                requestPermissions(needed.toArray(new String[0]), PERMISSION_REQ_CODE);
+            }
+
+            // Prompt battery optimization exemption for uninterrupted background execution
+            try {
+                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(android.content.Context.POWER_SERVICE);
+                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                    Intent bIntent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    bIntent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(bIntent);
                 }
-            }
-            if (needReq) {
-                requestPermissions(perms, PERMISSION_REQ_CODE);
-            }
+            } catch (Throwable ignored) {}
         }
 
         // Android 11+ (API 30+) Manage External Storage (All Files Access) via reflection
@@ -504,6 +533,19 @@ public class MainActivity extends Activity {
                     startActivity(intent);
                 }
             } catch (Throwable ignored) {}
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQ_CODE && webView != null) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.evaluateJavascript("if(window.onPermissionsUpdated) window.onPermissionsUpdated();", null);
+                }
+            });
         }
     }
 
@@ -536,7 +578,9 @@ public class MainActivity extends Activity {
         super.onResume();
         if (bridge != null) {
             bridge.setAppInForeground(true);
+            bridge.ensureOmniRouteAsync();
         }
+        GCodeDaemonService.start(this);
     }
 
     @Override
@@ -545,6 +589,7 @@ public class MainActivity extends Activity {
         if (bridge != null) {
             bridge.setAppInForeground(false);
         }
+        GCodeDaemonService.start(this);
     }
 
     @Override

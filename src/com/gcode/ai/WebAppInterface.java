@@ -1,23 +1,37 @@
 package com.gcode.ai;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.accessibilityservice.AccessibilityService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.media.ToneGenerator;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.TrafficStats;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.telephony.SmsManager;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import org.json.JSONArray;
@@ -268,7 +282,7 @@ public class WebAppInterface {
                 conn = (HttpURLConnection) u.openConnection();
                 conn.setInstanceFollowRedirects(false);
                 conn.setConnectTimeout(15000);
-                conn.setReadTimeout(30000);
+                conn.setReadTimeout(45000);
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36");
                 conn.setRequestProperty("Accept", "*/*");
 
@@ -674,7 +688,7 @@ public class WebAppInterface {
             if (wakeLock == null) {
                 PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
                 if (pm != null) {
-                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GCodeAI:TaskLock");
+                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HibbanAI:TaskLock");
                 }
             }
             if (wakeLock != null && !wakeLock.isHeld()) {
@@ -719,11 +733,11 @@ public class WebAppInterface {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
 
-            String channelId = "gcode_ai_notifications";
+            String channelId = "hibban_ai_notifications";
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel channel = new NotificationChannel(
                         channelId,
-                        "GCode AI Notifications",
+                        "Hibban AI Notifications",
                         NotificationManager.IMPORTANCE_HIGH
                 );
                 channel.setDescription("Completed AI tasks");
@@ -747,7 +761,7 @@ public class WebAppInterface {
                 nb = new android.app.Notification.Builder(context);
             }
 
-            String notifTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "GCode AI";
+            String notifTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Hibban AI";
             String notifText = (message != null && !message.trim().isEmpty()) ? message.trim() : "Your response is ready.";
 
             nb.setContentTitle(notifTitle)
@@ -1061,4 +1075,661 @@ public class WebAppInterface {
              .replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ");
         return s.replaceAll("\\s+", " ").trim();
     }
+
+    /**
+     * Generates an image using free, unmetered AI image generation API (Pollinations.ai)
+     * and saves it directly to local device storage.
+     */
+    @JavascriptInterface
+    public String generateImage(String prompt, String targetPath, int width, int height, String model) {
+        JSONObject result = new JSONObject();
+        if (prompt == null || prompt.trim().isEmpty()) {
+            try {
+                result.put("success", false);
+                result.put("error", "Image prompt cannot be empty.");
+            } catch (Exception ignored) {}
+            return result.toString();
+        }
+        try {
+            int w = (width > 0) ? width : 1024;
+            int h = (height > 0) ? height : 1024;
+            String m = (model != null && !model.trim().isEmpty()) ? model.trim() : "flux";
+            long seed = System.currentTimeMillis();
+
+            String encodedPrompt = URLEncoder.encode(prompt.trim(), "UTF-8");
+            String resolvedTarget = targetPath;
+            if (resolvedTarget == null || resolvedTarget.trim().isEmpty()) {
+                File dlDir = new File(Environment.getExternalStorageDirectory(), "Download");
+                if (!dlDir.exists()) dlDir.mkdirs();
+                resolvedTarget = new File(dlDir, "hibban_ai_" + System.currentTimeMillis() + ".jpg").getAbsolutePath();
+            }
+
+            // Waterfall fallback models: preferred -> turbo -> pollinations (without watermark)
+            String[] candidateModels = new String[] { m, "turbo", "pollinations" };
+            String lastError = "Image generation failed";
+            String successfulUrl = "";
+
+            for (String cm : candidateModels) {
+                // Strictly disable watermarks using nologo=true, no-logo=true, and nofeed=true
+                String imageUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt 
+                        + "?width=" + w + "&height=" + h + "&model=" + cm + "&nologo=true&no-logo=true&nofeed=true&seed=" + seed;
+
+                String dlRes = downloadFile(imageUrl, resolvedTarget);
+                try {
+                    JSONObject dlObj = new JSONObject(dlRes);
+                    if (dlObj.optBoolean("success", false)) {
+                        File checkF = new File(resolvedTarget);
+                        if (checkF.exists() && checkF.length() > 500) {
+                            successfulUrl = imageUrl;
+                            break;
+                        }
+                    } else {
+                        lastError = dlObj.optString("error", "HTTP error on model " + cm);
+                    }
+                } catch (Throwable parseErr) {
+                    lastError = parseErr.getMessage();
+                }
+            }
+
+            File finalF = new File(resolvedTarget);
+            if (finalF.exists() && finalF.length() > 500) {
+                result.put("success", true);
+                result.put("path", resolvedTarget);
+                result.put("prompt", prompt.trim());
+                result.put("url", successfulUrl);
+                result.put("message", "Image successfully generated and saved without watermark to: " + resolvedTarget);
+            } else {
+                result.put("success", false);
+                result.put("error", lastError);
+            }
+            return result.toString();
+        } catch (Throwable t) {
+            try {
+                result.put("success", false);
+                result.put("error", "Image generation failed: " + t.getMessage());
+            } catch (Exception ignored) {}
+            return result.toString();
+        }
+    }
+
+    // ==========================================
+    // SYSTEM TELEMETRY & HARDWARE CONTROL APIS
+    // ==========================================
+
+    @JavascriptInterface
+    public String getBatteryTelemetry() {
+        JSONObject res = new JSONObject();
+        try {
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = context.registerReceiver(null, ifilter);
+            if (batteryStatus != null) {
+                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                int pct = (level >= 0 && scale > 0) ? (level * 100 / scale) : -1;
+                int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+                int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+
+                String statusStr = (status == BatteryManager.BATTERY_STATUS_CHARGING) ? "Charging" :
+                                   (status == BatteryManager.BATTERY_STATUS_DISCHARGING) ? "Discharging" :
+                                   (status == BatteryManager.BATTERY_STATUS_FULL) ? "Full" : "Not Charging";
+
+                String plugStr = (chargePlug == BatteryManager.BATTERY_PLUGGED_USB) ? "USB" :
+                                 (chargePlug == BatteryManager.BATTERY_PLUGGED_AC) ? "AC Adapter" :
+                                 (chargePlug == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless" : "Battery";
+
+                res.put("success", true);
+                res.put("percentage", pct);
+                res.put("voltage_mv", voltage);
+                res.put("temperature_celsius", temp / 10.0);
+                res.put("status", statusStr);
+                res.put("plugged", plugStr);
+                res.put("health", health == BatteryManager.BATTERY_HEALTH_GOOD ? "Good" : "Degraded");
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+                    if (bm != null) {
+                        long currentNow = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+                        res.put("current_now_microamps", currentNow);
+                    }
+                }
+            } else {
+                res.put("success", false);
+                res.put("error", "Unable to read battery state.");
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String getNetworkTelemetry() {
+        JSONObject res = new JSONObject();
+        try {
+            res.put("success", true);
+            res.put("mobile_rx_bytes", TrafficStats.getMobileRxBytes());
+            res.put("mobile_tx_bytes", TrafficStats.getMobileTxBytes());
+            res.put("total_rx_bytes", TrafficStats.getTotalRxBytes());
+            res.put("total_tx_bytes", TrafficStats.getTotalTxBytes());
+
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                if (ni != null && ni.isConnected()) {
+                    res.put("connected", true);
+                    res.put("network_type", ni.getTypeName());
+                    res.put("subtype", ni.getSubtypeName());
+                } else {
+                    res.put("connected", false);
+                    res.put("network_type", "None");
+                }
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String getAudioTelemetry() {
+        JSONObject res = new JSONObject();
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                res.put("success", true);
+                res.put("media_volume", am.getStreamVolume(AudioManager.STREAM_MUSIC));
+                res.put("media_volume_max", am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+                res.put("ring_volume", am.getStreamVolume(AudioManager.STREAM_RING));
+                res.put("ring_volume_max", am.getStreamMaxVolume(AudioManager.STREAM_RING));
+                res.put("notification_volume", am.getStreamVolume(AudioManager.STREAM_NOTIFICATION));
+                res.put("notification_volume_max", am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION));
+                int rm = am.getRingerMode();
+                res.put("ringer_mode", rm == AudioManager.RINGER_MODE_SILENT ? "Silent" :
+                                        rm == AudioManager.RINGER_MODE_VIBRATE ? "Vibrate" : "Normal");
+            } else {
+                res.put("success", false);
+                res.put("error", "AudioManager unavailable.");
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String setAudioVolume(String streamType, int volumePercent) {
+        JSONObject res = new JSONObject();
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) {
+                res.put("success", false);
+                res.put("error", "AudioManager unavailable.");
+                return res.toString();
+            }
+            int stream = AudioManager.STREAM_MUSIC;
+            if ("ring".equalsIgnoreCase(streamType)) stream = AudioManager.STREAM_RING;
+            else if ("notification".equalsIgnoreCase(streamType)) stream = AudioManager.STREAM_NOTIFICATION;
+            else if ("voice".equalsIgnoreCase(streamType) || "call".equalsIgnoreCase(streamType)) stream = AudioManager.STREAM_VOICE_CALL;
+
+            int max = am.getStreamMaxVolume(stream);
+            int target = Math.max(0, Math.min(max, (int) Math.round((volumePercent / 100.0) * max)));
+            am.setStreamVolume(stream, target, AudioManager.FLAG_SHOW_UI);
+
+            res.put("success", true);
+            res.put("stream", streamType);
+            res.put("new_volume", target);
+            res.put("max_volume", max);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String setRingerMode(String mode) {
+        JSONObject res = new JSONObject();
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) {
+                res.put("success", false);
+                res.put("error", "AudioManager unavailable.");
+                return res.toString();
+            }
+            if ("silent".equalsIgnoreCase(mode)) {
+                am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            } else if ("vibrate".equalsIgnoreCase(mode)) {
+                am.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+            } else {
+                am.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+            }
+            res.put("success", true);
+            res.put("ringer_mode", mode);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String dispatchIntent(String action, String dataUri, String packageName, String extraKey, String extraValue) {
+        JSONObject res = new JSONObject();
+        try {
+            Intent intent = new Intent();
+            if (action != null && !action.trim().isEmpty()) {
+                intent.setAction(action.trim());
+            } else {
+                intent.setAction(Intent.ACTION_VIEW);
+            }
+            if (dataUri != null && !dataUri.trim().isEmpty()) {
+                intent.setData(Uri.parse(dataUri.trim()));
+            }
+            if (packageName != null && !packageName.trim().isEmpty()) {
+                intent.setPackage(packageName.trim());
+            }
+            if (extraKey != null && !extraKey.trim().isEmpty() && extraValue != null) {
+                intent.putExtra(extraKey.trim(), extraValue);
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            res.put("success", true);
+            res.put("message", "Intent dispatched successfully.");
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", "Failed to dispatch intent: " + e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    private void requestRuntimePermissionOnDemand(final String permission) {
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        ((Activity) context).requestPermissions(new String[]{permission}, 1001);
+                    }
+                }
+            });
+        }
+    }
+
+    @JavascriptInterface
+    public String interactScreen(String actionType, String targetText, String targetId, String textToType, int x, int y) {
+        JSONObject res = new JSONObject();
+        try {
+            GCodeAccessibilityService service = GCodeAccessibilityService.getInstance();
+            if (service == null) {
+                openAccessibilitySettings();
+                res.put("success", false);
+                res.put("need_permission", true);
+                res.put("error", "Accessibility Service is not enabled. Hibban AI has automatically opened Accessibility settings on screen. Please toggle 'Hibban AI' on and try again.");
+                return res.toString();
+            }
+
+            String action = actionType != null ? actionType.trim().toLowerCase() : "dump";
+            if ("dump".equals(action) || "read_screen".equals(action)) {
+                return service.dumpScreenHierarchy().toString();
+            } else if ("click_text".equals(action)) {
+                boolean ok = service.clickByText(targetText);
+                res.put("success", ok);
+                res.put("message", ok ? "Clicked node with text: " + targetText : "Text node not found on screen: " + targetText);
+            } else if ("click_id".equals(action)) {
+                boolean ok = service.clickById(targetId);
+                res.put("success", ok);
+                res.put("message", ok ? "Clicked node with id: " + targetId : "View id not found on screen: " + targetId);
+            } else if ("type".equals(action) || "type_text".equals(action)) {
+                boolean ok = service.typeText(textToType);
+                res.put("success", ok);
+                res.put("message", ok ? "Typed text into focused field." : "No focused input field found.");
+            } else if ("click_coords".equals(action)) {
+                boolean ok = service.clickCoordinates(x, y);
+                res.put("success", ok);
+                res.put("message", ok ? "Dispatched click at (" + x + ", " + y + ")" : "Failed to dispatch coordinate gesture.");
+            } else if ("back".equals(action)) {
+                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_BACK);
+                res.put("success", ok);
+            } else if ("home".equals(action)) {
+                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_HOME);
+                res.put("success", ok);
+            } else if ("recents".equals(action)) {
+                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_RECENTS);
+                res.put("success", ok);
+            } else if ("notifications".equals(action)) {
+                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS);
+                res.put("success", ok);
+            } else {
+                res.put("success", false);
+                res.put("error", "Unknown screen action: " + actionType);
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String getRecentNotifications(int limit) {
+        JSONObject res = new JSONObject();
+        try {
+            GCodeNotificationListener listener = GCodeNotificationListener.getInstance();
+            if (listener == null) {
+                openNotificationListenerSettings();
+                res.put("success", false);
+                res.put("need_permission", true);
+                res.put("error", "Notification Access is not enabled. Hibban AI has automatically opened Notification Access settings on screen. Please toggle 'Hibban AI' on and try again.");
+                return res.toString();
+            }
+            res.put("success", true);
+            res.put("notifications", listener.getActiveNotificationsJson(limit));
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String getCallLogs(int limit) {
+        JSONObject res = new JSONObject();
+        try {
+            if (context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+                requestRuntimePermissionOnDemand(Manifest.permission.READ_CALL_LOG);
+                res.put("success", false);
+                res.put("error", "READ_CALL_LOG permission not granted. Hibban AI has automatically requested permission on screen now. Please tap Allow and retry.");
+                return res.toString();
+            }
+            int max = (limit > 0) ? limit : 15;
+            Cursor cursor = context.getContentResolver().query(
+                    CallLog.Calls.CONTENT_URI,
+                    new String[]{CallLog.Calls.NUMBER, CallLog.Calls.CACHED_NAME, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION},
+                    null, null, CallLog.Calls.DATE + " DESC"
+            );
+            JSONArray arr = new JSONArray();
+            if (cursor != null) {
+                int count = 0;
+                while (cursor.moveToNext() && count < max) {
+                    JSONObject c = new JSONObject();
+                    c.put("number", cursor.getString(0));
+                    c.put("name", cursor.getString(1));
+                    int type = cursor.getInt(2);
+                    c.put("type", type == CallLog.Calls.INCOMING_TYPE ? "Incoming" :
+                                  type == CallLog.Calls.OUTGOING_TYPE ? "Outgoing" :
+                                  type == CallLog.Calls.MISSED_TYPE ? "Missed" : "Other");
+                    c.put("date", cursor.getLong(3));
+                    c.put("duration_sec", cursor.getLong(4));
+                    arr.put(c);
+                    count++;
+                }
+                cursor.close();
+            }
+            res.put("success", true);
+            res.put("calls", arr);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String getContacts(String query, int limit) {
+        JSONObject res = new JSONObject();
+        try {
+            if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                requestRuntimePermissionOnDemand(Manifest.permission.READ_CONTACTS);
+                res.put("success", false);
+                res.put("error", "READ_CONTACTS permission not granted. Hibban AI has automatically requested permission on screen now. Please tap Allow and retry.");
+                return res.toString();
+            }
+            int max = (limit > 0) ? limit : 25;
+            Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+            String[] projection = new String[]{
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    ContactsContract.CommonDataKinds.Phone.TYPE
+            };
+            String selection = null;
+            String[] selectionArgs = null;
+            if (query != null && !query.trim().isEmpty()) {
+                selection = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ? OR " +
+                            ContactsContract.CommonDataKinds.Phone.NUMBER + " LIKE ?";
+                String q = "%" + query.trim() + "%";
+                selectionArgs = new String[]{q, q};
+            }
+            Cursor cursor = context.getContentResolver().query(
+                    uri,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+            );
+            JSONArray arr = new JSONArray();
+            if (cursor != null) {
+                int count = 0;
+                while (cursor.moveToNext() && count < max) {
+                    JSONObject c = new JSONObject();
+                    c.put("name", cursor.getString(0));
+                    c.put("number", cursor.getString(1));
+                    int type = cursor.getInt(2);
+                    String label = (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) ? "Mobile" :
+                                   (type == ContactsContract.CommonDataKinds.Phone.TYPE_HOME) ? "Home" :
+                                   (type == ContactsContract.CommonDataKinds.Phone.TYPE_WORK) ? "Work" : "Other";
+                    c.put("type", label);
+                    arr.put(c);
+                    count++;
+                }
+                cursor.close();
+            }
+            res.put("success", true);
+            res.put("contacts", arr);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String makePhoneCall(String phoneNumber, boolean directCall) {
+        JSONObject res = new JSONObject();
+        try {
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                res.put("success", false);
+                res.put("error", "Phone number is empty");
+                return res.toString();
+            }
+            String cleanNum = phoneNumber.trim().replaceAll("[^0-9+*#]", "");
+            Intent intent;
+            if (directCall) {
+                if (context.checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                    intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Uri.encode(cleanNum)));
+                } else {
+                    requestRuntimePermissionOnDemand(Manifest.permission.CALL_PHONE);
+                    intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(cleanNum)));
+                }
+            } else {
+                intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(cleanNum)));
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            res.put("success", true);
+            res.put("status", directCall ? "Direct call placed to " + cleanNum : "Dialer opened with " + cleanNum);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String sendSms(String phoneNumber, String message) {
+        JSONObject res = new JSONObject();
+        try {
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                res.put("success", false);
+                res.put("error", "Phone number is empty");
+                return res.toString();
+            }
+            String cleanNum = phoneNumber.trim().replaceAll("[^0-9+*#]", "");
+            if (context.checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+                SmsManager sms = SmsManager.getDefault();
+                sms.sendTextMessage(cleanNum, null, message != null ? message : "", null, null);
+                res.put("success", true);
+                res.put("status", "SMS sent successfully to " + cleanNum);
+            } else {
+                requestRuntimePermissionOnDemand(Manifest.permission.SEND_SMS);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("sms:" + cleanNum));
+                intent.putExtra("sms_body", message != null ? message : "");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                res.put("success", true);
+                res.put("status", "SMS permission prompt requested on screen. Opened SMS draft with " + cleanNum);
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public void requestAllPermissions() {
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) context).checkAndRequestAllPermissions();
+                }
+            });
+        }
+    }
+
+    @JavascriptInterface
+    public String checkPermissionsStatus() {
+        JSONObject res = new JSONObject();
+        try {
+            res.put("contacts", context.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED);
+            res.put("callLog", context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED);
+            res.put("phone", context.checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED);
+            res.put("sms", context.checkSelfPermission(Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED);
+            res.put("storage", context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+            res.put("audio", context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED);
+            res.put("camera", context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED);
+
+            res.put("accessibility", GCodeAccessibilityService.getInstance() != null);
+            res.put("notificationListener", GCodeNotificationListener.getInstance() != null);
+
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            boolean isIgnoringBattery = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (pm != null && pm.isIgnoringBatteryOptimizations(context.getPackageName()));
+            res.put("batteryOptimization", isIgnoringBattery);
+
+            boolean allFiles = true;
+            if (Build.VERSION.SDK_INT >= 30) {
+                try {
+                    java.lang.reflect.Method isManagerMethod = Environment.class.getMethod("isExternalStorageManager");
+                    allFiles = (Boolean) isManagerMethod.invoke(null);
+                } catch (Throwable ignored) {
+                    allFiles = false;
+                }
+            }
+            res.put("allFiles", allFiles);
+        } catch (Throwable e) {
+            try { res.put("error", e.getMessage()); } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public void openAllFilesSettings() {
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                Intent intent = new Intent("android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION");
+                intent.setData(Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
+    public void openBatteryOptimizationSettings() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
+    public void openAccessibilitySettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
+    public void openNotificationListenerSettings() {
+        try {
+            Intent intent = null;
+            if (Build.VERSION.SDK_INT >= 30) {
+                try {
+                    intent = new Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS");
+                    intent.putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME",
+                            new ComponentName(context, GCodeNotificationListener.class).flattenToString());
+                } catch (Throwable ignored) {}
+            }
+            if (intent == null) {
+                intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception ignored) {}
+        }
+    }
 }
+
+

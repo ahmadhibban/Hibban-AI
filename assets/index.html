@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hibban's GCode AI</title>
+  <title>Hibban AI</title>
   <style>
     @font-face {
       font-family: 'Amiri';
@@ -52,7 +52,7 @@
       color: var(--text);
       display: flex;
       flex-direction: column;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 16px;
       line-height: 1.65;
       letter-spacing: 0.1px;
@@ -203,6 +203,9 @@
       margin-bottom: 6px;
       user-select: none;
       -webkit-user-select: none;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .gemini-icon-halo {
@@ -212,6 +215,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
     .gemini-halo-ring {
@@ -242,6 +246,9 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      max-width: calc(100% - 38px);
+      min-width: 0;
+      overflow: hidden;
     }
 
     .gemini-shimmer-label {
@@ -253,6 +260,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: shimmerGradient 2.2s linear infinite;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
     }
 
     @keyframes shimmerGradient {
@@ -348,6 +360,7 @@
       font-size: 16px;
       line-height: 1.65;
       word-wrap: break-word;
+      font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     .msg-row.user .bubble {
@@ -458,10 +471,11 @@
       margin: 12px 0;
       overflow-x: auto;
       position: relative;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Kalpurush', 'Amiri', monospace;
     }
 
     code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Kalpurush', 'Amiri', monospace;
       font-size: 14px;
       color: #38bdf8;
     }
@@ -724,9 +738,9 @@
   <!-- Top Header -->
   <header>
     <div class="brand">
-      <img src="icon.png" class="brand-img" alt="GCode AI">
+      <img src="icon.png" class="brand-img" alt="Hibban AI">
       <div class="brand-info">
-        <h1>Hibban's GCode AI</h1>
+        <h1>Hibban AI</h1>
         <p><span id="status-dot" class="status-dot"></span> <span id="status-text">Active</span></p>
       </div>
     </div>
@@ -738,9 +752,9 @@
   <!-- Chat Stream -->
   <div id="chat-container">
     <div class="empty-state" id="empty-state">
-      <img src="icon.png" class="empty-img" alt="Hibban's GCode AI">
-      <div class="empty-title">Hibban's GCode AI</div>
-      <div class="empty-desc">Your unrestricted autonomous AI developer powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any computational or development task in pure Bengali!</div>
+      <img src="icon.png" class="empty-img" alt="Hibban AI">
+      <div class="empty-title">Hibban AI</div>
+      <div class="empty-desc">Your unrestricted autonomous AI developer created for Ahmad Hibban, powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any task in natural Bengali!</div>
     </div>
   </div>
 
@@ -889,11 +903,130 @@
             required: ["dir_path"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "generate_image",
+          description: "Generate high-resolution AI images, drawings, art, photos, wallpapers, logos, and graphics from text prompts with unlimited unmetered access. Saves the generated image directly to device storage.",
+          parameters: {
+            type: "object",
+            properties: {
+              prompt: { type: "string", description: "Detailed descriptive prompt for the image to generate." },
+              target_path: { type: "string", description: "Optional destination file path on device storage (e.g. /storage/emulated/0/Download/my_image.jpg). If omitted, saves automatically in Download folder." },
+              aspect_ratio: { type: "string", enum: ["1:1", "16:9", "9:16", "4:3", "3:4"], description: "Optional aspect ratio. Defaults to 1:1." }
+            },
+            required: ["prompt"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "system_telemetry",
+          description: "Inspect hardware dynamics, battery telemetry, network traffic, cellular stats, and audio routing. Query types: 'battery', 'network', 'audio'.",
+          parameters: {
+            type: "object",
+            properties: {
+              metric_type: { type: "string", enum: ["battery", "network", "audio"], description: "The telemetry subsystem to inspect." }
+            },
+            required: ["metric_type"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "device_control",
+          description: "Control hardware channels, volume, ringer mode, and system settings. Action types: 'set_volume' (requires stream: 'media'|'ring'|'notification'|'voice' and volume_percent: 0-100), 'set_ringer' (requires mode: 'normal'|'silent'|'vibrate').",
+          parameters: {
+            type: "object",
+            properties: {
+              action: { type: "string", enum: ["set_volume", "set_ringer"], description: "Control action to execute." },
+              stream: { type: "string", enum: ["media", "ring", "notification", "voice"], description: "Audio stream to modify." },
+              volume_percent: { type: "integer", description: "Target volume level (0 to 100)." },
+              mode: { type: "string", enum: ["normal", "silent", "vibrate"], description: "Target ringer mode." }
+            },
+            required: ["action"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "intent_action",
+          description: "Cross-application inter-process communication (IPC) and Intent orchestration. Launch any app, dial phone numbers, send SMS, dispatch WhatsApp messages, or open settings directly.",
+          parameters: {
+            type: "object",
+            properties: {
+              action: { type: "string", description: "Android Intent action (e.g. android.intent.action.VIEW, android.intent.action.CALL, android.intent.action.SENDTO)." },
+              data_uri: { type: "string", description: "Target URI data (e.g. 'tel:017XXXXXXXX', 'https://api.whatsapp.com/send?phone=...&text=...', 'package:com.gcode.ai')." },
+              package_name: { type: "string", description: "Optional specific target package name (e.g. 'com.whatsapp', 'com.android.settings')." },
+              extra_key: { type: "string", description: "Optional Intent extra key." },
+              extra_value: { type: "string", description: "Optional Intent extra value." }
+            }
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "ui_interaction",
+          description: "Autonomous UI hierarchy inspection, screen reading, and accessibility-driven screen interaction. Action types: 'read_screen' (dumps active UI node hierarchy), 'click_text' (clicks node with target_text), 'click_id' (clicks node with target_id), 'click_coords' (clicks screen coordinates x,y), 'type_text' (types text into focused input), 'back', 'home', 'recents', 'notifications'.",
+          parameters: {
+            type: "object",
+            properties: {
+              action: { type: "string", enum: ["read_screen", "click_text", "click_id", "click_coords", "type_text", "back", "home", "recents", "notifications"], description: "The UI interaction action." },
+              target_text: { type: "string", description: "Text label of the UI element to click." },
+              target_id: { type: "string", description: "Resource view ID of the UI element to click." },
+              text_to_type: { type: "string", description: "Text string to input into focused field." },
+              x: { type: "integer", description: "X screen coordinate." },
+              y: { type: "integer", description: "Y screen coordinate." }
+            },
+            required: ["action"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "notification_manager",
+          description: "Inspect, audit, and intercept real-time device notification streams, active alerts, and messages.",
+          parameters: {
+            type: "object",
+            properties: {
+              limit: { type: "integer", description: "Maximum number of recent notifications to retrieve (default: 15)." }
+            }
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "telephony_manager",
+          description: "Manage phone calls, contact search, SMS messages, and call logs. Allows searching device contacts by name/number, placing calls, sending SMS, and reading call history.",
+          parameters: {
+            type: "object",
+            properties: {
+              action: {
+                type: "string",
+                enum: ["get_contacts", "make_call", "send_sms", "get_call_logs"],
+                description: "Action to perform: 'get_contacts' (search contacts database), 'make_call' (dial or directly call number), 'send_sms' (send text SMS to number), 'get_call_logs' (inspect call history)."
+              },
+              query: { type: "string", description: "Search query for contacts (e.g. contact name or phone number)." },
+              phone_number: { type: "string", description: "Target phone number for call or SMS." },
+              message: { type: "string", description: "Text message body for 'send_sms'." },
+              direct_call: { type: "boolean", description: "True to call directly (requires CALL_PHONE permission), false to open dialer (default: false)." },
+              limit: { type: "integer", description: "Maximum number of records to retrieve (default: 20)." }
+            },
+            required: ["action"]
+          }
+        }
       }
     ];
 
-    const SYSTEM_PROMPT = `You are Hibban's GCode AI, the unrestricted, general-purpose autonomous AI developer and intelligence created for Ahmad Hibban (আহমাদ হিব্বান).
-You run natively on Ahmad Hibban's Android device with a full standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Git, Curl, Wget, Coreutils, PRoot, Android SDK Build Tools) and unrestricted device access.
+    const SYSTEM_PROMPT = `You are Hibban AI, the unrestricted, general-purpose autonomous AI developer and intelligence created for Ahmad Hibban (আহমাদ হিব্বান).
+You run natively on Ahmad Hibban's Android device with a full standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Apt, FFmpeg, FFprobe, Git, Curl, Wget, Coreutils, PRoot, Android SDK Build Tools) and unrestricted device access.
 
 IDENTITY & CORE PHILOSOPHY:
 - Ahmad Hibban is your creator, master, and the owner of this device.
@@ -908,13 +1041,34 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
    - DIRECT QUESTIONS: If asked a question, answer it directly, clearly, and concisely without volunteering unrelated device details.
    - EXPLICIT TASKS: Run tools ONLY when Ahmad Hibban explicitly requests an action that requires system execution, file manipulation, or live web search.
 
-2. LANGUAGE:
-   - All communications and responses to Ahmad Hibban inside this app MUST be in natural, polite Bengali (বাংলা ভাষায়).
+2. LANGUAGE & OUTPUT PURITY:
+   - All communications and responses to Ahmad Hibban inside this app MUST be in natural, polite Bengali (বাংলা ভাষায়) or Banglish if addressed in Banglish.
+   - STRICT INTEGRITY: NEVER output broken repetitive words, repetitive token babble (such as 'standard apt standard...'), or internal scratchpad ramblings. Speak with natural intelligence and clarity.
+   - FORMATTING & FONT BEAUTY: Always write Bengali naturally in regular text. NEVER wrap general conversational explanations, answers, or descriptions inside raw markdown monospace code blocks (\`...\` or \`\`\`...\`\`\`) unless writing actual programming source code. Keep typography clean so that the custom Kalpurush font renders flawlessly.
 
-3. MAXIMUM POWER CAPABILITY DOMAINS:
+3. UNIVERSAL AUTONOMOUS EXECUTION LAW (সর্বোচ্চ সর্বজনীন স্বয়ংক্রিয় ক্ষমতা):
+   - You are a completely general-purpose autonomous computing intelligence and developer. You are NOT confined, pre-programmed, or restricted to any specific task or narrow niche. You have the absolute power, authority, and computing environment to accomplish ANYTHING Ahmad Hibban asks.
+   - You must always remember that your capabilities are open-ended and boundless across all domains of computing, automation, systems, and software engineering.
+   - When given ANY actionable directive or request by Ahmad Hibban:
+     DO NOT merely output an interim plan or say "কাজটি সম্পন্ন হলে জানিয়ে দেব" and stop!
+     You MUST execute the necessary tools immediately in the very same turn, running autonomously across multi-turn cycles until the entire objective is 100% completed and verified.
+   - Never stop midway with future promises; directly execute the actions end-to-end.
+
+4. MAXIMUM POWER CAPABILITY DOMAINS:
    - Full-Stack Software Engineering & Application Architecture
    - Autonomous Scripting, Task Orchestration & Workflow Automation
    - Complete Linux System Administration & Shell Command Execution
+   - Android System & OS-Level Control Architecture
+   - Cross-Application Inter-Process Communication (IPC) & Intent Orchestration
+   - Autonomous UI Hierarchy Inspection & Accessibility-Driven Screen Interaction
+   - Telecommunications, Cellular Traffic & Network Stream Diagnostics
+   - Hardware Power Dynamics, Battery Telemetry & Thermal Intelligence
+   - System Notification Streams, Priority Interception & Actionable Auditing
+   - Telephony Subsystem, Cellular Call Logs & Contact Database Management
+   - Device Audio Routing, Hardware Channels & Media Pipeline Control
+   - Android Runtime (ART), Process Lifecycle & Memory Allocation Forensics
+   - Device Storage Analytics, Filesystem Forensics & Storage Sanitization
+   - System Security Environment, Device Settings & Permission Administration
    - Dynamic On-Demand Package Installation & Custom Environment Provisioning
    - On-Device Android Application Development, Compilation & Reverse Engineering
    - Database Architecture, Complex Querying & Data Analytics
@@ -929,17 +1083,26 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
    - Multi-Agent Coordination & Unrestricted Multi-Turn Autonomous Execution
 
 4. GENERAL COMPUTATIONAL FREEDOM:
-   - You run in GCode AI's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
-   - If any required library or package is missing, you have full freedom to install it autonomously via run_command (pip install, npm install).
+   - You run in Hibban AI's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
+   - Pre-installed Multimedia Powerhouse: FFmpeg and FFprobe are bundled directly in your environment for audio, video, container, subtitle, and media operations.
+   - If any required library or package is missing, you have full freedom to install it autonomously via run_command (apt install, pip install, npm install).
    - Modeled after Google AI Mode: Use 'web_search' when needing real-time facts or current web information to avoid hallucinations.
-   - Multi-step tasks: For complex technical jobs, formulate a brief mental plan ('পরিকল্পনা:') before executing tools cleanly. Clean up one-off temporary files upon completion.
+   - Complete On-Device Android Build & APK Compilation: You have built-in on-device tools to compile Android apps (aapt, d8, ecj/javac, apksigner). The Android framework JAR is located at /storage/emulated/0/Download/android.jar. You can compile Android applications directly on-device from Java source and XML resources to signed .apk.
    - Resource immunity: Ahmad Hibban's phone has massive RAM and high-speed multi-core CPU. Never hesitate to run heavy tasks.
 
 CORE TOOLS:
 - run_command: Run any shell / terminal command in the standalone Linux environment.
+- system_telemetry: Deep inspection of battery, power dynamics, network data, and audio streams.
+- device_control: Control hardware volumes, ringer modes, and system toggles.
+- intent_action: Cross-app IPC, launch apps, dialer, messages, and deep links.
+- ui_interaction: Screen reading, UI node clicks, typing, and global gestures.
+- notification_manager: Intercept and audit incoming notification streams.
+- telephony_manager: Search contacts database by name/number, dial or make phone calls, send SMS messages, and inspect call history.
+- generate_image: Generate high-resolution AI images, art, drawings, logos, and graphics with unlimited unmetered access.
 - read_file: Read file contents.
 - write_file: Create or write files on device.
 - edit_file: Exact string replacement in files.
+- list_directory: Explore directories and files.
 - web_search: Search Google and live web for real-time information.
 - download_file: Download files from URLs to device storage.
 - process_file_data: Deep inspect and process any file, media, or multi-format data on device.
@@ -1050,6 +1213,24 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
 
       checkOmniRouteStatus();
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
+            try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+          }
+          isCheckingOmni = false;
+          checkOmniRouteStatus();
+        }
+      });
+
+      window.addEventListener("focus", () => {
+        if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
+          try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+        }
+        isCheckingOmni = false;
+        checkOmniRouteStatus();
+      });
     });
 
     let isCheckingOmni = false;
@@ -1156,6 +1337,8 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     function confirmClearChat() {
       closeClearModal();
       chatHistory = [];
+      localStorage.removeItem("hibban_chat_history");
+      localStorage.removeItem("hibban_chat_html");
       localStorage.removeItem("gcode_chat_history");
       localStorage.removeItem("gcode_chat_html");
       if (window.AndroidBridge) {
@@ -1164,9 +1347,9 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
       document.getElementById("chat-container").innerHTML = `
         <div class="empty-state" id="empty-state">
-          <img src="icon.png" class="empty-img" alt="Hibban's GCode AI">
-          <div class="empty-title">Hibban's GCode AI</div>
-          <div class="empty-desc">Your unrestricted autonomous AI developer powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Aider) and multimodal vision. Ready for any coding or terminal task in pure Bengali!</div>
+          <img src="icon.png" class="empty-img" alt="Hibban AI">
+          <div class="empty-title">Hibban AI</div>
+          <div class="empty-desc">Your unrestricted autonomous AI developer created for Ahmad Hibban, powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any task in natural Bengali!</div>
         </div>
       `;
     }
@@ -1174,9 +1357,21 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     function persistChat() {
       try {
         const historyJson = JSON.stringify(chatHistory);
-        const containerHtml = document.getElementById("chat-container").innerHTML;
-        localStorage.setItem("gcode_chat_history", historyJson);
-        localStorage.setItem("gcode_chat_html", containerHtml);
+        const container = document.getElementById("chat-container");
+        if (!container) return;
+        const clone = container.cloneNode(true);
+        // Remove all active thinking cards so ghost animations never persist
+        clone.querySelectorAll('.gemini-thinking-card').forEach(el => el.remove());
+        clone.querySelectorAll('.msg-row.agent').forEach(row => {
+          const txt = (row.querySelector('.agent-content-text')?.textContent || row.querySelector('.bubble')?.textContent || '').trim();
+          const hasImg = !!row.querySelector('img:not(.gemini-thinking-img)');
+          if (!txt && !hasImg) {
+            row.remove();
+          }
+        });
+        const containerHtml = clone.innerHTML;
+        localStorage.setItem("hibban_chat_history", historyJson);
+        localStorage.setItem("hibban_chat_html", containerHtml);
         if (window.AndroidBridge) {
           window.AndroidBridge.saveConfig("saved_chat_history", historyJson);
           window.AndroidBridge.saveConfig("saved_chat_html", containerHtml);
@@ -1193,16 +1388,25 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           containerHtml = window.AndroidBridge.getConfig("saved_chat_html", "");
         }
         if (!containerHtml) {
-          historyJson = localStorage.getItem("gcode_chat_history") || "";
-          containerHtml = localStorage.getItem("gcode_chat_html") || "";
+          historyJson = localStorage.getItem("hibban_chat_history") || localStorage.getItem("gcode_chat_history") || "";
+          containerHtml = localStorage.getItem("hibban_chat_html") || localStorage.getItem("gcode_chat_html") || "";
         }
 
         if (containerHtml && containerHtml.includes("msg-row")) {
-          document.getElementById("chat-container").innerHTML = containerHtml;
-          if (historyJson) {
-            chatHistory = JSON.parse(historyJson);
-          }
           const container = document.getElementById("chat-container");
+          container.innerHTML = containerHtml;
+          // Immediately strip any lingering thinking cards and clean empty bubble rows
+          container.querySelectorAll('.gemini-thinking-card').forEach(el => el.remove());
+          container.querySelectorAll('.msg-row.agent').forEach(row => {
+            const txt = (row.querySelector('.agent-content-text')?.textContent || row.querySelector('.bubble')?.textContent || '').trim();
+            const hasImg = !!row.querySelector('img:not(.gemini-thinking-img)');
+            if (!txt && !hasImg) {
+              row.remove();
+            }
+          });
+          if (historyJson) {
+            try { chatHistory = JSON.parse(historyJson); } catch (e) {}
+          }
           setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
         }
       } catch (e) {}
@@ -1399,7 +1603,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
                                  (window.AndroidBridge && typeof window.AndroidBridge.isAppInForeground === 'function' && !window.AndroidBridge.isAppInForeground());
           if (isBackgrounded && window.AndroidBridge && typeof window.AndroidBridge.postNotification === 'function') {
             try {
-              window.AndroidBridge.postNotification("GCode AI", "Your response is ready.");
+              window.AndroidBridge.postNotification("Hibban AI", "Your response is ready.");
             } catch (e) {}
           }
 
@@ -1417,7 +1621,10 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         dot.className = "status-dot busy";
         statusText.textContent = "Active";
         if (activeAgentBubble) {
-          activeAgentBubble.setStatus(text);
+          // Strictly single line and max 35 characters
+          let cleanText = (text || "Thinking...").replace(/\s+/g, " ").trim();
+          if (cleanText.length > 35) cleanText = cleanText.substring(0, 32) + "...";
+          activeAgentBubble.setStatus(cleanText);
         }
       } else {
         dot.className = "status-dot";
@@ -1495,6 +1702,11 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         if (activeAbortController) {
           try { activeAbortController.abort(); } catch (e) {}
         }
+        if (activeAgentBubble) {
+          try { activeAgentBubble.finish("Interrupted by user."); } catch (e) {}
+          activeAgentBubble = null;
+        }
+        document.querySelectorAll('.gemini-thinking-card').forEach(el => el.remove());
         setLiveStatus(true, "Stopping agent...");
         sendBtn.disabled = true;
         return;
@@ -1503,6 +1715,13 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const input = document.getElementById("user-input");
       const prompt = input.value.trim();
       if (!prompt) return;
+
+      // Clean up ANY existing thinking cards before launching a new command
+      document.querySelectorAll('.gemini-thinking-card').forEach(el => el.remove());
+      if (activeAgentBubble) {
+        try { activeAgentBubble.finish(""); } catch (e) {}
+        activeAgentBubble = null;
+      }
 
       input.value = "";
       autoResize(input);
@@ -1672,6 +1891,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       compactHistoryIfNeeded();
 
       let executedActions = [];
+      let autonomousTurnCount = 0;
 
       // Unrestricted autonomous agent loop modeled after Google Antigravity
       while (!abortRequested) {
@@ -1702,6 +1922,45 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         const textContent = (message.content || "").trim();
 
         if (toolCalls.length === 0) {
+          // Check if this was an interim plan or promise to work rather than actual task completion
+          const lower = textContent.toLowerCase();
+          const isInterimPlanOrPromise = 
+            (executedActions.length === 0 || executedActions.length < 2) &&
+            (textContent.includes("পরিকল্পনা") || 
+             textContent.includes("শুরু করেছি") || 
+             textContent.includes("শুরু করতে যাচ্ছি") ||
+             textContent.includes("জানিয়ে দেব") || 
+             textContent.includes("জানিয়ে দেব") || 
+             textContent.includes("বানানো হবে") ||
+             textContent.includes("তৈরি করা হবে") ||
+             textContent.includes("পদক্ষেপ") ||
+             textContent.includes("ধাপ") ||
+             textContent.includes("নিচে দেওয়া হলো") ||
+             textContent.includes("নিচে দেওয়া হলো") ||
+             lower.includes("plan") ||
+             lower.includes("step 1") ||
+             lower.includes("let me create") ||
+             lower.includes("i will now") ||
+             lower.includes("i am going to") ||
+             lower.includes("will notify you")) &&
+            !textContent.includes("সম্পন্ন হয়েছে") &&
+            !textContent.includes("তৈরি করা হয়েছে") &&
+            !textContent.includes("সেভ করা হয়েছে") &&
+            !lower.includes("successfully completed") &&
+            !lower.includes("here is the result");
+
+          if (isInterimPlanOrPromise && autonomousTurnCount < 6) {
+            autonomousTurnCount++;
+            if (bubble) {
+              bubble.setStatus(`স্বয়ংক্রিয়ভাবে কাজ শুরু হচ্ছে (${autonomousTurnCount})...`);
+            }
+            chatHistory.push({
+              role: "user",
+              content: "[System Directive: পরিকল্পনা বা প্রতিশ্রুতির বদলে অবিলম্বে স্বয়ংক্রিয়ভাবে সরাসরি উপযুক্ত টুল এক্সিকিউট করে কাজটি শেষ করুন। কোনো উত্তরের অপেক্ষা বা ভবিষ্যৎ প্রতিশ্রুতি না দিয়ে সরাসরি টুল কল সম্পন্ন করুন।]"
+            });
+            continue;
+          }
+
           if (bubble) {
             bubble.finish(textContent || "কাজ সম্পন্ন হয়েছে।");
           } else {
@@ -1728,6 +1987,13 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           let summary = "";
           if (fname === "process_file_data" || fname === "view_image") summary = `Processed file: ${fargs.file_path}`;
           else if (fname === "download_file") summary = `Downloaded: ${fargs.target_path}`;
+          else if (fname === "generate_image") summary = `Generated image: "${(fargs.prompt || '').slice(0, 30)}..."`;
+          else if (fname === "system_telemetry") summary = `Inspected system telemetry (${fargs.metric_type || 'battery'})`;
+          else if (fname === "device_control") summary = `Device control: ${fargs.action}`;
+          else if (fname === "intent_action") summary = `Dispatched Intent action (${fargs.action || fargs.data_uri || 'open'})`;
+          else if (fname === "ui_interaction") summary = `UI interaction: ${fargs.action}`;
+          else if (fname === "notification_manager") summary = `Inspected notification streams`;
+          else if (fname === "telephony_manager") summary = `Queried telephony logs`;
           else if (fname === "run_command") summary = `Ran command: ${fargs.command}`;
           else if (fname === "web_search") summary = `Searched web (Google AI Mode): "${fargs.query}"`;
           else if (fname === "write_file") summary = `Wrote file: ${fargs.file_path}`;
@@ -1740,6 +2006,9 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
           let displayAction = `Executing: ${fname}...`;
           if (fname === "web_search") displayAction = `Searching Google: "${fargs.query}"...`;
+          else if (fname === "generate_image") displayAction = `Generating AI Image...`;
+          else if (fname === "ui_interaction") displayAction = `Interacting with screen (${fargs.action})...`;
+          else if (fname === "system_telemetry") displayAction = `Reading system telemetry...`;
           else if (fname === "download_file") displayAction = `Downloading: ${fargs.target_path}...`;
           else if (fname === "run_command") displayAction = `Running command...`;
           setLiveStatus(true, displayAction);
@@ -1845,6 +2114,60 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
             return obj.files.map(f => `${f.isDirectory ? '[DIR] ' : '[FILE]'} ${f.name}`).join("\n");
           }
           return `Error: ${obj.error}`;
+        } else if (name === "generate_image") {
+          const prompt = args.prompt;
+          if (!prompt) return "Error: Image prompt cannot be empty.";
+          let w = 1024, h = 1024;
+          const ar = args.aspect_ratio || "1:1";
+          if (ar === "16:9") { w = 1280; h = 720; }
+          else if (ar === "9:16") { w = 720; h = 1280; }
+          else if (ar === "4:3") { w = 1024; h = 768; }
+          else if (ar === "3:4") { w = 768; h = 1024; }
+
+          setLiveStatus(true, `Generating AI Image: "${prompt.slice(0, 30)}..."`);
+          if (typeof window.AndroidBridge.generateImage === 'function') {
+            const resJson = window.AndroidBridge.generateImage(prompt, args.target_path || "", w, h, "flux");
+            const obj = JSON.parse(resJson);
+            if (obj.success) {
+              return `Successfully generated image!\nSaved location: ${obj.path}\nPreview:\n![${prompt}](file://${obj.path})`;
+            }
+            return `Image generation failed: ${obj.error}`;
+          }
+          return "Error: AndroidBridge.generateImage is not available.";
+        } else if (name === "system_telemetry") {
+          const type = (args.metric_type || "battery").toLowerCase();
+          if (type === "network") {
+            return window.AndroidBridge.getNetworkTelemetry();
+          } else if (type === "audio") {
+            return window.AndroidBridge.getAudioTelemetry();
+          } else {
+            return window.AndroidBridge.getBatteryTelemetry();
+          }
+        } else if (name === "device_control") {
+          const act = (args.action || "").toLowerCase();
+          if (act === "set_volume") {
+            return window.AndroidBridge.setAudioVolume(args.stream || "media", args.volume_percent != null ? args.volume_percent : 50);
+          } else if (act === "set_ringer") {
+            return window.AndroidBridge.setRingerMode(args.mode || "normal");
+          }
+          return `Error: Unknown device control action '${args.action}'`;
+        } else if (name === "intent_action") {
+          return window.AndroidBridge.dispatchIntent(args.action || "", args.data_uri || "", args.package_name || "", args.extra_key || "", args.extra_value || "");
+        } else if (name === "ui_interaction") {
+          return window.AndroidBridge.interactScreen(args.action || "dump", args.target_text || "", args.target_id || "", args.text_to_type || "", args.x || 0, args.y || 0);
+        } else if (name === "notification_manager") {
+          return window.AndroidBridge.getRecentNotifications(args.limit || 15);
+        } else if (name === "telephony_manager") {
+          const act = (args.action || "").toLowerCase();
+          if (act === "get_contacts" || args.query) {
+            return window.AndroidBridge.getContacts(args.query || "", args.limit || 25);
+          } else if (act === "make_call" || (args.phone_number && !args.message)) {
+            return window.AndroidBridge.makePhoneCall(args.phone_number || args.query || "", !!args.direct_call);
+          } else if (act === "send_sms" || (args.phone_number && args.message)) {
+            return window.AndroidBridge.sendSms(args.phone_number || "", args.message || "");
+          } else {
+            return window.AndroidBridge.getCallLogs(args.limit || 15);
+          }
         }
       } catch (e) {
         return `Tool Execution Exception: ${e.message}`;
@@ -1896,17 +2219,27 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       // Wrap Bengali words in .bn-text (Kalpurush font with spacious letter and word spacing)
       html = html.replace(/([\u0980-\u09FF]+)/g, '<span class="bn-text">$1</span>');
 
-      // Restore code blocks
+      // Restore code blocks with Bengali and Arabic fonts preserved
       codeBlocks.forEach((cb, idx) => {
-        html = html.replace(`__CODE_BLOCK_${idx}__`, cb);
+        let formattedCb = cb
+          .replace(/([\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)/g, '<span class="ar-text" dir="rtl">$1</span>')
+          .replace(/([\u0980-\u09FF]+)/g, '<span class="bn-text">$1</span>');
+        html = html.replace(`__CODE_BLOCK_${idx}__`, formattedCb);
       });
 
-      // Inline code
-      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Inline code with custom fonts preserved
+      html = html.replace(/`([^`]+)`/g, (m, code) => {
+        let formattedCode = code
+          .replace(/([\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)/g, '<span class="ar-text" dir="rtl">$1</span>')
+          .replace(/([\u0980-\u09FF]+)/g, '<span class="bn-text">$1</span>');
+        return `<code>${formattedCode}</code>`;
+      });
       // Bold
       html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       // Lists
       html = html.replace(/^\s*-\s+(.*)$/gm, '• $1<br>');
+      // Images: ![alt](url)
+      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<div style="margin: 10px 0; text-align: center;"><img src="$2" alt="$1" style="max-width: 100%; max-height: 380px; border-radius: 12px; border: 1px solid rgba(0, 243, 255, 0.35); box-shadow: 0 6px 18px rgba(0,0,0,0.5); object-fit: contain; background: #0b0f19;" loading="lazy"><br><span style="font-size: 11px; color: #8892b0; margin-top: 4px; display: inline-block;">$1</span></div>');
       // Newlines
       html = html.replace(/\n/g, '<br>');
       html = html.replace(/<\/div><br>/g, '</div>');
