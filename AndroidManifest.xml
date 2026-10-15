@@ -74,7 +74,7 @@
 
         <!-- Native UI Hierarchy & Screen Interaction Accessibility Service -->
         <service
-            android:name=".GCodeAccessibilityService"
+            android:name=".HibbanAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:label="@string/accessibility_service_label"
             android:exported="true">
@@ -88,7 +88,7 @@
 
         <!-- Native Notification Streams & Alert Interception Service -->
         <service
-            android:name=".GCodeNotificationListener"
+            android:name=".HibbanNotificationListener"
             android:label="Hibban AI Notification Auditor"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
@@ -99,7 +99,7 @@
 
         <!-- Native Background Engine Daemon & OmniRoute Watchdog Service -->
         <service
-            android:name=".GCodeDaemonService"
+            android:name=".HibbanDaemonService"
             android:label="Hibban AI Engine Daemon"
             android:enabled="true"
             android:exported="false" />

@@ -960,7 +960,7 @@
             type: "object",
             properties: {
               action: { type: "string", description: "Android Intent action (e.g. android.intent.action.VIEW, android.intent.action.CALL, android.intent.action.SENDTO)." },
-              data_uri: { type: "string", description: "Target URI data (e.g. 'tel:017XXXXXXXX', 'https://api.whatsapp.com/send?phone=...&text=...', 'package:com.gcode.ai')." },
+              data_uri: { type: "string", description: "Target URI data (e.g. 'tel:017XXXXXXXX', 'https://api.whatsapp.com/send?phone=...&text=...', 'package:com.android.settings')." },
               package_name: { type: "string", description: "Optional specific target package name (e.g. 'com.whatsapp', 'com.android.settings')." },
               extra_key: { type: "string", description: "Optional Intent extra key." },
               extra_value: { type: "string", description: "Optional Intent extra value." }
@@ -1153,21 +1153,25 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const full = id + " " + name;
       let score = 0;
 
-      // Tier 1: Frontier Thinking / Large Reasoning / High
-      if (full.includes("thinking") || full.includes("opus") || full.includes("sonnet")) score += 1000;
-      if (full.includes("pro") || full.includes("flash-high")) score += 800;
-      if (full.includes("r1") || full.includes("120b") || full.includes("70b")) score += 700;
+      // Tier 1: Ultra-Fast Frontier Load-Balancers & Fast Frontier Engines (1.5s - 2.2s latency)
+      if (full.includes("best-fast") || full.includes("best-coding-fast") || full.includes("best-coding")) score += 2500;
+      if (full.includes("flash-high") || full.includes("gemini-3.8-flash") || full.includes("gemini-3-flash")) score += 2100;
+      if (full.includes("gpt-4.1-mini") || full.includes("claude-3-5-haiku") || full.includes("haiku")) score += 1900;
+      if (full.includes("flash") && !full.includes("lite") && !full.includes("low") && !full.includes("thinking")) score += 1700;
 
-      // Tier 2: Standard Flash / Medium
-      if (full.includes("flash-medium") || full.includes("flash-tiered")) score += 500;
-      if (full.includes("flash") && !full.includes("lite") && !full.includes("low")) score += 400;
+      // Tier 2: Standard Frontier General Models (High Intelligence, Balanced Speed)
+      if (full.includes("gpt-4.1") || full.includes("gpt-4o") || (full.includes("sonnet") && !full.includes("thinking"))) score += 1400;
+      if (full.includes("pro") && !full.includes("thinking")) score += 1200;
+      if (full.includes("flash-medium") || full.includes("flash-tiered")) score += 1100;
 
-      // Tier 3: Lite / Low
-      if (full.includes("flash-low") || full.includes("flash-lite")) score += 200;
-      if (full.includes("mini") || full.includes("nano")) score += 100;
+      // Tier 3: Thinking / Heavy Reasoning Models (8s - 15s delay - reserved for fallback cascade)
+      if (full.includes("thinking") || full.includes("r1") || full.includes("opus") || full.includes("120b")) score += 500;
+      if (full.includes("flash-low") || full.includes("flash-lite") || full.includes("mini") || full.includes("nano")) score += 400;
 
-      if (m.capabilities && m.capabilities.reasoning) score += 250;
-      if (m.capabilities && m.capabilities.tool_calling) score += 100;
+      // Capabilities scoring
+      if (m.capabilities && m.capabilities.tool_calling) score += 400; // Essential for Hibban AI tool execution
+      if (m.capabilities && m.capabilities.fast) score += 300;
+      if (m.capabilities && m.capabilities.reasoning) score += 100;
       if (m.outputTokenLimit && m.outputTokenLimit >= 64000) score += 50;
 
       return score;
@@ -1533,7 +1537,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       thinkingCard.innerHTML = `
         <div class="gemini-icon-halo">
           <div class="gemini-halo-ring"></div>
-          <img src="icon.png" class="gemini-thinking-img" alt="GCode AI">
+          <img src="icon.png" class="gemini-thinking-img" alt="Hibban AI">
         </div>
         <div class="gemini-thinking-body">
           <span class="gemini-shimmer-label">Thinking...</span>

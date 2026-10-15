@@ -75,14 +75,14 @@ Hibban AI কোনো নির্দিষ্ট বা সীমাবদ্�
 
 ---
 
-## 5. নতুন সংযোজিত স্বয়ংসম্পূর্ণ সাবসিস্টেম ও স্থাপত্য (Newly Integrated Standalone Subsystems)
+## 5. Newly Integrated Standalone Subsystems
 
 কোনো ৩য় পক্ষ বা বাহ্যিক অ্যাপ্লিকেশন (Tasker, Termux, Shizuku ইত্যাদি) ছাড়াই Hibban AI-এর নিজস্ব কোডবেসে সরাসরি নিম্নলিখিত শক্তিশালী সাবসিস্টেমগুলো যুক্ত করা হয়েছে:
 
-- **Native Screen Interaction & Accessibility Engine (`GCodeAccessibilityService`):**
+- **Native Screen Interaction & Accessibility Engine (`HibbanAccessibilityService`):**
   - অ্যান্ড্রয়েডের বিল্ট-ইন অ্যাক্সেসিবিলিটি ফ্রেমওয়ার্কের মাধ্যমে স্ক্রিনের সকল ভিউ ও নোড পর্যবেক্ষণ।
   - নির্দিষ্ট বাটন বা টেক্সটে স্বয়ংক্রিয় ক্লিক, ইনপুট ফিল্ডে ভার্চুয়াল টেক্সট টাইপিং এবং গ্লোবাল জেসচার (Back, Home, Recents, Notifications)।
-- **Native Notification Interception Subsystem (`GCodeNotificationListener`):**
+- **Native Notification Interception Subsystem (`HibbanNotificationListener`):**
   - ডিভাইসে আসা সকল ইনকামিং নোটিফিকেশন স্ট্রিম, ওটিপি (OTP), ব্যাংক এসএমএস এবং জরুরি অ্যালার্ট রিয়েল-টাইমে পর্যবেক্ষণ ও প্রসেস করার ক্ষমতা।
 - **Hardware Telemetry & Battery Power Analytics:**
   - সরাসরি `BatteryManager` এপিআই-এর মাধ্যমে রিয়েল-টাইম ডিসচার্জ কারেন্ট (mA), ভোল্টেজ, তাপমাত্রা এবং রানিং ব্যাটারি লাইফ প্রেডিকশন।

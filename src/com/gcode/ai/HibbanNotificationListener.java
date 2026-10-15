@@ -12,11 +12,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class GCodeNotificationListener extends NotificationListenerService {
-    private static volatile GCodeNotificationListener instance = null;
+public class HibbanNotificationListener extends NotificationListenerService {
+    private static volatile HibbanNotificationListener instance = null;
     private static final List<JSONObject> notificationHistory = Collections.synchronizedList(new ArrayList<>());
 
-    public static GCodeNotificationListener getInstance() {
+    public static HibbanNotificationListener getInstance() {
         return instance;
     }
 

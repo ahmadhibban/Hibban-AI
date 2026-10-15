@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
         }
 
         checkAndRequestAllPermissions();
-        GCodeDaemonService.start(this);
+        HibbanDaemonService.start(this);
         initWebView();
 
         File usrBash = new File(getFilesDir(), "usr/bin/bash");
@@ -580,7 +580,7 @@ public class MainActivity extends Activity {
             bridge.setAppInForeground(true);
             bridge.ensureOmniRouteAsync();
         }
-        GCodeDaemonService.start(this);
+        HibbanDaemonService.start(this);
     }
 
     @Override
@@ -589,7 +589,7 @@ public class MainActivity extends Activity {
         if (bridge != null) {
             bridge.setAppInForeground(false);
         }
-        GCodeDaemonService.start(this);
+        HibbanDaemonService.start(this);
     }
 
     @Override

@@ -13,10 +13,10 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class GCodeAccessibilityService extends AccessibilityService {
-    private static volatile GCodeAccessibilityService instance = null;
+public class HibbanAccessibilityService extends AccessibilityService {
+    private static volatile HibbanAccessibilityService instance = null;
 
-    public static GCodeAccessibilityService getInstance() {
+    public static HibbanAccessibilityService getInstance() {
         return instance;
     }
 

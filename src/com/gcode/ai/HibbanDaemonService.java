@@ -14,21 +14,21 @@ import android.os.PowerManager;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-public class GCodeDaemonService extends Service {
-    private static final String CHANNEL_ID = "gcode_engine_channel";
+public class HibbanDaemonService extends Service {
+    private static final String CHANNEL_ID = "hibban_engine_channel";
     private static final int NOTIF_ID = 20128;
     private PowerManager.WakeLock wakeLock;
     private Thread watchdogThread;
     private volatile boolean isRunning = false;
-    private static volatile GCodeDaemonService instance;
+    private static volatile HibbanDaemonService instance;
 
-    public static GCodeDaemonService getInstance() {
+    public static HibbanDaemonService getInstance() {
         return instance;
     }
 
     public static void start(Context context) {
         try {
-            Intent intent = new Intent(context, GCodeDaemonService.class);
+            Intent intent = new Intent(context, HibbanDaemonService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent);
             } else {

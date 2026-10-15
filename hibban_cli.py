@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/python3
 """
-gcode - Autonomous AI Coding Assistant for Termux
+hibban - Autonomous AI Coding Assistant for Termux
 Powered by Google Gemini (Free Tier via Google AI Studio)
 Supports Automatic Model Fallback & Multi-Key Rotation
 """
@@ -15,7 +15,9 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-CONFIG_DIR = os.path.expanduser("~/.gcode")
+CONFIG_DIR = os.path.expanduser("~/.hibban")
+if not os.path.exists(CONFIG_DIR) and os.path.exists(os.path.expanduser("~/.gcode")):
+    CONFIG_DIR = os.path.expanduser("~/.gcode")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DEFAULT_MODEL = "gemini-3.7-flash"
 FALLBACK_MODELS = [
@@ -80,7 +82,7 @@ def get_config():
 
     if not keys:
         print(f"\n{C_CYAN}{C_BOLD}╔════════════════════════════════════════════════════════════════╗{C_RESET}")
-        print(f"{C_CYAN}{C_BOLD}║           🚀 Welcome to gcode (Termux Autonomous Agent)        ║{C_RESET}")
+        print(f"{C_CYAN}{C_BOLD}║          🚀 Welcome to Hibban AI (Termux Autonomous Agent)     ║{C_RESET}")
         print(f"{C_CYAN}{C_BOLD}╚════════════════════════════════════════════════════════════════╝{C_RESET}\n")
         print(f"{C_YELLOW}Ekbar shudhu apnar Free Google Gemini API Key dite hobe:{C_RESET}")
         print(f"1. Browser-e ekhane jan: {C_BOLD}https://aistudio.google.com/app/apikey{C_RESET}")
@@ -94,7 +96,7 @@ def get_config():
             sys.exit(1)
 
         if not user_key or user_key.lower() in ("exit", "quit", "q"):
-            print(f"\n{C_RED}API Key chara gcode cholbe na! Pore abar 'gcode' likhe try korun.{C_RESET}\n")
+            print(f"\n{C_RED}API Key chara Hibban AI cholbe na! Pore abar 'hibban' likhe try korun.{C_RESET}\n")
             sys.exit(1)
 
         keys.append(user_key)
@@ -198,7 +200,7 @@ TOOLS = [
     }
 ]
 
-SYSTEM_PROMPT = """You are gcode, an expert autonomous AI coding assistant running natively in Termux (Android Linux).
+SYSTEM_PROMPT = """You are Hibban AI, an expert autonomous AI coding assistant running natively in Termux (Android Linux).
 You have full access to tools to inspect, modify, create files, and run commands.
 Always inspect files before modifying them.
 Execute tasks autonomously. When you are done, explain your changes clearly in Banglish.
@@ -365,7 +367,7 @@ def run_agent_loop(prompt, keys, model=DEFAULT_MODEL, history=None):
                 print(f"{C_RED}[Code {resp.status_code}]: {resp.text}{C_RESET}\n")
             else:
                 print(f"{C_RED}{last_error_msg}{C_RESET}")
-                print(f"{C_YELLOW}💡 Tip: Protidin 1500 req free pawa jay. Ekadhik API key add korte ~/.gcode/config.json-e 'api_keys' list use korte paren.{C_RESET}\n")
+                print(f"{C_YELLOW}💡 Tip: Protidin 1500 req free pawa jay. Ekadhik API key add korte ~/.hibban/config.json-e 'api_keys' list use korte paren.{C_RESET}\n")
             break
 
         data = resp.json()
@@ -386,7 +388,7 @@ def run_agent_loop(prompt, keys, model=DEFAULT_MODEL, history=None):
         if text_parts:
             text_str = "".join(text_parts).strip()
             if text_str:
-                print(f"\n{C_CYAN}{C_BOLD}gcode:{C_RESET}\n{text_str}\n")
+                print(f"\n{C_CYAN}{C_BOLD}hibban:{C_RESET}\n{text_str}\n")
 
         if not tool_calls:
             # Task finished
@@ -422,12 +424,12 @@ def main():
         return
 
     # Interactive REPL mode
-    print(f"\n{C_CYAN}{C_BOLD}gcode - Termux Autonomous AI Coder [{model}]{C_RESET} (Type 'exit' to quit)\n")
+    print(f"\n{C_CYAN}{C_BOLD}Hibban AI - Termux Autonomous AI Coder [{model}]{C_RESET} (Type 'exit' to quit)\n")
     history = []
     while True:
         try:
             cwd_name = os.path.basename(os.getcwd()) or "/"
-            print(f"\n{C_MAGENTA}{C_BOLD}╭─ gcode [{cwd_name}]{C_RESET}")
+            print(f"\n{C_MAGENTA}{C_BOLD}╭─ hibban [{cwd_name}]{C_RESET}")
             prompt = input("\001\033[35m\033[1m\002╰─> \001\033[0m\002").strip()
             if not prompt:
                 continue

@@ -76,7 +76,7 @@ public class WebAppInterface {
 
     public WebAppInterface(Context context) {
         this.context = context;
-        this.prefs = context.getSharedPreferences("gcode_prefs", Context.MODE_PRIVATE);
+        this.prefs = context.getSharedPreferences("hibban_prefs", Context.MODE_PRIVATE);
     }
 
     private File resolveFile(String filePath) {
@@ -1377,7 +1377,7 @@ public class WebAppInterface {
     public String interactScreen(String actionType, String targetText, String targetId, String textToType, int x, int y) {
         JSONObject res = new JSONObject();
         try {
-            GCodeAccessibilityService service = GCodeAccessibilityService.getInstance();
+            HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
             if (service == null) {
                 openAccessibilitySettings();
                 res.put("success", false);
@@ -1434,7 +1434,7 @@ public class WebAppInterface {
     public String getRecentNotifications(int limit) {
         JSONObject res = new JSONObject();
         try {
-            GCodeNotificationListener listener = GCodeNotificationListener.getInstance();
+            HibbanNotificationListener listener = HibbanNotificationListener.getInstance();
             if (listener == null) {
                 openNotificationListenerSettings();
                 res.put("success", false);
@@ -1650,8 +1650,8 @@ public class WebAppInterface {
             res.put("audio", context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED);
             res.put("camera", context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED);
 
-            res.put("accessibility", GCodeAccessibilityService.getInstance() != null);
-            res.put("notificationListener", GCodeNotificationListener.getInstance() != null);
+            res.put("accessibility", HibbanAccessibilityService.getInstance() != null);
+            res.put("notificationListener", HibbanNotificationListener.getInstance() != null);
 
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             boolean isIgnoringBattery = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (pm != null && pm.isIgnoringBatteryOptimizations(context.getPackageName()));
@@ -1714,7 +1714,7 @@ public class WebAppInterface {
                 try {
                     intent = new Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS");
                     intent.putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME",
-                            new ComponentName(context, GCodeNotificationListener.class).flattenToString());
+                            new ComponentName(context, HibbanNotificationListener.class).flattenToString());
                 } catch (Throwable ignored) {}
             }
             if (intent == null) {
