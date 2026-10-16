@@ -79,10 +79,6 @@ public class WebAppInterface {
     private volatile boolean isAppInForeground = true;
     private android.webkit.WebView webView;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private SpeechRecognizer systemSpeechRecognizer = null;
-    private Intent speechIntent = null;
-    private boolean isUsingSystemSpeech = false;
-    private String currentSpeechLang = "bn-BD";
     private InAppSpeechRecognizer inAppSpeechRecognizer;
     private MediaPlayer voicePlayer;
     private TextToSpeech textToSpeech;
@@ -1999,37 +1995,10 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public boolean isSpeechRecognitionAvailable() {
-        return SpeechRecognizer.isRecognitionAvailable(context);
+        return true;
     }
 
-    private ComponentName findGoogleRecognitionService() {
-        try {
-            PackageManager pm = context.getPackageManager();
-            Intent serviceIntent = new Intent("android.speech.RecognitionService");
-            List<ResolveInfo> services = pm.queryIntentServices(serviceIntent, 0);
-            if (services != null && !services.isEmpty()) {
-                // Priority 1: Google Voice Typing (Google App / QuickSearchBox)
-                for (ResolveInfo ri : services) {
-                    if (ri.serviceInfo != null && "com.google.android.googlequicksearchbox".equals(ri.serviceInfo.packageName)) {
-                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
-                    }
-                }
-                // Priority 2: Gboard / Google Input Method Latin Voice Typing
-                for (ResolveInfo ri : services) {
-                    if (ri.serviceInfo != null && (ri.serviceInfo.packageName.contains("inputmethod.latin") || ri.serviceInfo.packageName.contains("gboard"))) {
-                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
-                    }
-                }
-                // Priority 3: Google Speech Services (com.google.android.tts)
-                for (ResolveInfo ri : services) {
-                    if (ri.serviceInfo != null && ri.serviceInfo.packageName.contains("google")) {
-                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
-                    }
-                }
-            }
-        } catch (Throwable ignored) {}
-        return null;
-    }
+
 
     private static volatile boolean isRequestingAudio = false;
 
@@ -2078,120 +2047,9 @@ public class WebAppInterface {
                     }
 
                     final String speechLang = (lang != null && !lang.trim().isEmpty()) ? lang.trim() : "bn-BD";
-                    currentSpeechLang = speechLang;
                     isListeningVoice = true;
 
-                    // Priority 1: System SpeechRecognizer with live partial results streaming
-                    if (SpeechRecognizer.isRecognitionAvailable(context)) {
-                        try {
-                            if (systemSpeechRecognizer == null) {
-                                ComponentName googleService = findGoogleRecognitionService();
-                                if (googleService != null) {
-                                    systemSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, googleService);
-                                } else {
-                                    systemSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
-                                }
-                                systemSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
-                                    @Override
-                                    public void onReadyForSpeech(Bundle params) {
-                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('ready');");
-                                    }
-
-                                    @Override
-                                    public void onBeginningOfSpeech() {
-                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('listening');");
-                                    }
-
-                                    @Override
-                                    public void onRmsChanged(float rmsdB) {
-                                        float norm = (rmsdB + 2.0f) / 12.0f;
-                                        norm = Math.max(0.0f, Math.min(1.0f, norm));
-                                        dispatchJs("window.onVoiceRmsChanged && window.onVoiceRmsChanged(" + norm + ");");
-                                    }
-
-                                    @Override
-                                    public void onBufferReceived(byte[] buffer) {}
-
-                                    @Override
-                                    public void onEndOfSpeech() {
-                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('processing');");
-                                    }
-
-                                    @Override
-                                    public void onError(int error) {
-                                        if (isUsingSystemSpeech) {
-                                            isUsingSystemSpeech = false;
-                                            if (inAppSpeechRecognizer != null && isListeningVoice) {
-                                                inAppSpeechRecognizer.startListening(currentSpeechLang);
-                                                return;
-                                            }
-                                        }
-                                        dispatchJs("window.onVoiceError && window.onVoiceError(" + error + ");");
-                                    }
-
-                                    @Override
-                                    public void onResults(Bundle results) {
-                                        isUsingSystemSpeech = false;
-                                        if (results != null) {
-                                            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                                            if (matches != null && !matches.isEmpty()) {
-                                                String text = matches.get(0);
-                                                if (text != null && !text.trim().isEmpty()) {
-                                                    JSONObject res = new JSONObject();
-                                                    try {
-                                                        res.put("text", text.trim());
-                                                        res.put("confidence", 1.0f);
-                                                    } catch (Exception ignored) {}
-                                                    dispatchJs("window.onVoiceFinalResult && window.onVoiceFinalResult(" + res.toString() + ");");
-                                                    return;
-                                                }
-                                            }
-                                        }
-                                        dispatchJs("window.onVoiceError && window.onVoiceError(7);");
-                                    }
-
-                                    @Override
-                                    public void onPartialResults(Bundle partialResults) {
-                                        if (partialResults != null) {
-                                            ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                                            if (matches != null && !matches.isEmpty()) {
-                                                String partialText = matches.get(0);
-                                                if (partialText != null && !partialText.trim().isEmpty()) {
-                                                    JSONObject obj = new JSONObject();
-                                                    try {
-                                                        obj.put("partial", partialText.trim());
-                                                    } catch (Exception ignored) {}
-                                                    dispatchJs("window.onVoicePartialResult && window.onVoicePartialResult(" + obj.toString() + ");");
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onEvent(int eventType, Bundle params) {}
-                                });
-                            }
-
-                            speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, speechLang);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, speechLang);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, speechLang);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                            speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-                            speechIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
-
-                            isUsingSystemSpeech = true;
-                            systemSpeechRecognizer.startListening(speechIntent);
-                            return;
-                        } catch (Throwable sysErr) {
-                            isUsingSystemSpeech = false;
-                        }
-                    }
-
-                    // Priority 2: In-App Autonomous AudioRecord STT Fallback
                     if (inAppSpeechRecognizer != null) {
-                        isUsingSystemSpeech = false;
                         inAppSpeechRecognizer.startListening(speechLang);
                     } else {
                         dispatchJs("window.onVoiceError && window.onVoiceError(7);");
@@ -2209,10 +2067,6 @@ public class WebAppInterface {
             @Override
             public void run() {
                 try {
-                    if (systemSpeechRecognizer != null && isUsingSystemSpeech) {
-                        try { systemSpeechRecognizer.stopListening(); } catch (Throwable ignored) {}
-                        isUsingSystemSpeech = false;
-                    }
                     if (inAppSpeechRecognizer != null) {
                         inAppSpeechRecognizer.stopListening();
                     }
@@ -2228,9 +2082,6 @@ public class WebAppInterface {
             @Override
             public void run() {
                 try {
-                    if (systemSpeechRecognizer != null && isUsingSystemSpeech) {
-                        try { systemSpeechRecognizer.stopListening(); } catch (Throwable ignored) {}
-                    }
                     if (inAppSpeechRecognizer != null) {
                         inAppSpeechRecognizer.finishSpeechNow();
                     }
