@@ -12,10 +12,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.camera2.CameraManager;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.PlaybackParams;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.media.ToneGenerator;
@@ -31,6 +35,15 @@ import android.os.Vibrator;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.media.MediaPlayer;
 import android.telephony.SmsManager;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -64,6 +77,33 @@ public class WebAppInterface {
     private final Context context;
     private final SharedPreferences prefs;
     private volatile boolean isAppInForeground = true;
+    private android.webkit.WebView webView;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private SpeechRecognizer systemSpeechRecognizer = null;
+    private Intent speechIntent = null;
+    private boolean isUsingSystemSpeech = false;
+    private String currentSpeechLang = "bn-BD";
+    private InAppSpeechRecognizer inAppSpeechRecognizer;
+    private MediaPlayer voicePlayer;
+    private TextToSpeech textToSpeech;
+    private volatile boolean isListeningVoice = false;
+
+    public void setWebView(android.webkit.WebView webView) {
+        this.webView = webView;
+    }
+
+    private void dispatchJs(final String js) {
+        if (webView != null) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        webView.evaluateJavascript(js, null);
+                    } catch (Throwable ignored) {}
+                }
+            });
+        }
+    }
 
     public void setAppInForeground(boolean inForeground) {
         this.isAppInForeground = inForeground;
@@ -77,6 +117,52 @@ public class WebAppInterface {
     public WebAppInterface(Context context) {
         this.context = context;
         this.prefs = context.getSharedPreferences("hibban_prefs", Context.MODE_PRIVATE);
+        this.inAppSpeechRecognizer = new InAppSpeechRecognizer(context);
+        this.inAppSpeechRecognizer.setListener(new InAppSpeechRecognizer.Listener() {
+            @Override
+            public void onReadyForSpeech() {
+                dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('ready');");
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {
+                dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('listening');");
+            }
+
+            @Override
+            public void onRmsChanged(float normRms) {
+                dispatchJs("window.onVoiceRmsChanged && window.onVoiceRmsChanged(" + normRms + ");");
+            }
+
+            @Override
+            public void onPartialResult(String partialText) {
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put("partial", partialText);
+                } catch (Exception ignored) {}
+                dispatchJs("window.onVoicePartialResult && window.onVoicePartialResult(" + obj.toString() + ");");
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+                dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('processing');");
+            }
+
+            @Override
+            public void onResult(String text, float confidence) {
+                JSONObject res = new JSONObject();
+                try {
+                    res.put("text", text);
+                    res.put("confidence", confidence);
+                } catch (Exception ignored) {}
+                dispatchJs("window.onVoiceFinalResult && window.onVoiceFinalResult(" + res.toString() + ");");
+            }
+
+            @Override
+            public void onError(int errorCode, String message) {
+                dispatchJs("window.onVoiceError && window.onVoiceError(" + errorCode + ");");
+            }
+        });
     }
 
     private File resolveFile(String filePath) {
@@ -804,7 +890,7 @@ public class WebAppInterface {
     @JavascriptInterface
     public boolean isOmniRouteRunning() {
         try (java.net.Socket socket = new java.net.Socket()) {
-            socket.connect(new java.net.InetSocketAddress("127.0.0.1", 20128), 350);
+            socket.connect(new java.net.InetSocketAddress("127.0.0.1", 20128), 1200);
             return true;
         } catch (Exception e) {
             return false;
@@ -833,7 +919,13 @@ public class WebAppInterface {
                     if (isOmniRouteRunning()) return;
                     if (omniProcess != null) {
                         try {
-                            if (omniProcess.isAlive()) return;
+                            if (omniProcess.isAlive()) {
+                                for (int i = 0; i < 8; i++) {
+                                    if (isOmniRouteRunning()) return;
+                                    try { Thread.sleep(300); } catch (Exception ignored) {}
+                                }
+                                if (isOmniRouteRunning()) return;
+                            }
                         } catch (Throwable ignored) {}
                     }
 
@@ -1305,11 +1397,35 @@ public class WebAppInterface {
         JSONObject res = new JSONObject();
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (am == null) {
                 res.put("success", false);
                 res.put("error", "AudioManager unavailable.");
                 return res.toString();
             }
+
+            boolean isSilentTarget = "silent".equalsIgnoreCase(mode);
+            boolean hasPolicyAccess = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (nm != null && nm.isNotificationPolicyAccessGranted());
+
+            if (isSilentTarget && !hasPolicyAccess) {
+                // If setting silent mode without DND policy access, Android throws SecurityException.
+                // Auto-open permission screen and fallback to Vibrate safely
+                openNotificationPolicySettings();
+                try {
+                    am.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+                    res.put("success", true);
+                    res.put("ringer_mode", "vibrate");
+                    res.put("notice", "Silent mode requires Notification Policy Access. Opened settings screen automatically and temporarily switched to Vibrate.");
+                    return res.toString();
+                } catch (Throwable fallbackErr) {
+                    res.put("success", false);
+                    res.put("need_permission", true);
+                    res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
+                    res.put("error", "Notification Policy Access is required for Silent Mode. Settings screen has been opened automatically.");
+                    return res.toString();
+                }
+            }
+
             if ("silent".equalsIgnoreCase(mode)) {
                 am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
             } else if ("vibrate".equalsIgnoreCase(mode)) {
@@ -1319,6 +1435,98 @@ public class WebAppInterface {
             }
             res.put("success", true);
             res.put("ringer_mode", mode);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String setDoNotDisturb(boolean enabled, String dndMode) {
+        JSONObject res = new JSONObject();
+        try {
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+            boolean hasPolicyAccess = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (nm != null && nm.isNotificationPolicyAccessGranted());
+
+            if (!hasPolicyAccess) {
+                // Auto-open the DND Permission settings screen directly
+                openNotificationPolicySettings();
+
+                // Also attempt accessibility fallback if enabled
+                HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
+                if (service != null) {
+                    service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS);
+                    try { Thread.sleep(400); } catch (Exception ignored) {}
+                    boolean clicked = service.clickByText("Do Not Disturb") || service.clickByText("DND") || service.clickByText("ডোন্ট ডিস্টার্ব");
+                    if (clicked) {
+                        res.put("success", true);
+                        res.put("dnd_active", enabled);
+                        res.put("via", "accessibility");
+                        res.put("message", "Toggled Do Not Disturb via Accessibility Service.");
+                        return res.toString();
+                    }
+                }
+
+                res.put("success", false);
+                res.put("need_permission", true);
+                res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
+                res.put("error", "Do Not Disturb (Notification Policy) access is not granted. Hibban AI has automatically opened the 'Do Not Disturb Access' settings screen. Please toggle Hibban AI to Allowed.");
+                return res.toString();
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && nm != null) {
+                if (enabled) {
+                    int filter = NotificationManager.INTERRUPTION_FILTER_PRIORITY;
+                    if ("total_silence".equalsIgnoreCase(dndMode)) filter = NotificationManager.INTERRUPTION_FILTER_NONE;
+                    else if ("alarms_only".equalsIgnoreCase(dndMode)) filter = NotificationManager.INTERRUPTION_FILTER_ALARMS;
+                    nm.setInterruptionFilter(filter);
+                } else {
+                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
+                }
+            }
+            if (am != null) {
+                if (enabled) {
+                    try { am.setRingerMode(AudioManager.RINGER_MODE_SILENT); } catch (Throwable ignored) {}
+                } else {
+                    try { am.setRingerMode(AudioManager.RINGER_MODE_NORMAL); } catch (Throwable ignored) {}
+                }
+            }
+            res.put("success", true);
+            res.put("dnd_active", enabled);
+            res.put("mode", dndMode != null ? dndMode : (enabled ? "priority" : "off"));
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String setFlashlight(boolean enabled) {
+        JSONObject res = new JSONObject();
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                CameraManager camManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+                if (camManager != null) {
+                    String[] ids = camManager.getCameraIdList();
+                    if (ids != null && ids.length > 0) {
+                        camManager.setTorchMode(ids[0], enabled);
+                        res.put("success", true);
+                        res.put("flashlight", enabled);
+                        res.put("message", enabled ? "Flashlight turned on." : "Flashlight turned off.");
+                        return res.toString();
+                    }
+                }
+            }
+            res.put("success", false);
+            res.put("error", "Flashlight/Torch not supported on this device.");
         } catch (Throwable e) {
             try {
                 res.put("success", false);
@@ -1627,6 +1835,45 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
+    public String getSmsInbox(int limit) {
+        JSONObject res = new JSONObject();
+        JSONArray list = new JSONArray();
+        int max = limit > 0 ? Math.min(limit, 50) : 15;
+        try {
+            if (context.checkSelfPermission(Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
+                Uri inboxUri = Uri.parse("content://sms/inbox");
+                try (Cursor cursor = context.getContentResolver().query(inboxUri, new String[]{"_id", "address", "body", "date"}, null, null, "date DESC LIMIT " + max)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int addrIdx = cursor.getColumnIndex("address");
+                        int bodyIdx = cursor.getColumnIndex("body");
+                        int dateIdx = cursor.getColumnIndex("date");
+                        do {
+                            JSONObject item = new JSONObject();
+                            item.put("sender", addrIdx != -1 ? cursor.getString(addrIdx) : "Unknown");
+                            item.put("body", bodyIdx != -1 ? cursor.getString(bodyIdx) : "");
+                            item.put("timestamp", dateIdx != -1 ? cursor.getLong(dateIdx) : 0L);
+                            list.put(item);
+                        } while (cursor.moveToNext());
+                    }
+                }
+                res.put("success", true);
+                res.put("count", list.length());
+                res.put("messages", list);
+            } else {
+                requestRuntimePermissionOnDemand(Manifest.permission.READ_SMS);
+                res.put("success", false);
+                res.put("error", "READ_SMS permission not granted. Permission dialog requested.");
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
     public void requestAllPermissions() {
         if (context instanceof MainActivity) {
             ((MainActivity) context).runOnUiThread(new Runnable() {
@@ -1652,6 +1899,10 @@ public class WebAppInterface {
 
             res.put("accessibility", HibbanAccessibilityService.getInstance() != null);
             res.put("notificationListener", HibbanNotificationListener.getInstance() != null);
+
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            boolean hasPolicy = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (nm != null && nm.isNotificationPolicyAccessGranted());
+            res.put("notificationPolicy", hasPolicy);
 
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             boolean isIgnoringBattery = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (pm != null && pm.isIgnoringBatteryOptimizations(context.getPackageName()));
@@ -1707,6 +1958,17 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
+    public void openNotificationPolicySettings() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
     public void openNotificationListenerSettings() {
         try {
             Intent intent = null;
@@ -1728,6 +1990,561 @@ public class WebAppInterface {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             } catch (Exception ignored) {}
+        }
+    }
+
+    // ==========================================
+    // JARVIS & SIRI VOICE ENGINE (SPEECH & TTS)
+    // ==========================================
+
+    @JavascriptInterface
+    public boolean isSpeechRecognitionAvailable() {
+        return SpeechRecognizer.isRecognitionAvailable(context);
+    }
+
+    private ComponentName findGoogleRecognitionService() {
+        try {
+            PackageManager pm = context.getPackageManager();
+            Intent serviceIntent = new Intent("android.speech.RecognitionService");
+            List<ResolveInfo> services = pm.queryIntentServices(serviceIntent, 0);
+            if (services != null && !services.isEmpty()) {
+                // Priority 1: Google Voice Typing (Google App / QuickSearchBox)
+                for (ResolveInfo ri : services) {
+                    if (ri.serviceInfo != null && "com.google.android.googlequicksearchbox".equals(ri.serviceInfo.packageName)) {
+                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
+                    }
+                }
+                // Priority 2: Gboard / Google Input Method Latin Voice Typing
+                for (ResolveInfo ri : services) {
+                    if (ri.serviceInfo != null && (ri.serviceInfo.packageName.contains("inputmethod.latin") || ri.serviceInfo.packageName.contains("gboard"))) {
+                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
+                    }
+                }
+                // Priority 3: Google Speech Services (com.google.android.tts)
+                for (ResolveInfo ri : services) {
+                    if (ri.serviceInfo != null && ri.serviceInfo.packageName.contains("google")) {
+                        return new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    private static volatile boolean isRequestingAudio = false;
+
+    public static void resetRequestingAudio() {
+        isRequestingAudio = false;
+    }
+
+    @JavascriptInterface
+    public boolean hasAudioPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    @JavascriptInterface
+    public void requestAudioPermission() {
+        if (hasAudioPermission() || isRequestingAudio) return;
+        isRequestingAudio = true;
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (context instanceof Activity && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        ((Activity) context).requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 1005);
+                    } else {
+                        isRequestingAudio = false;
+                    }
+                } catch (Throwable ignored) {
+                    isRequestingAudio = false;
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void startSpeechRecognition(final String lang) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!hasAudioPermission()) {
+                        requestAudioPermission();
+                        dispatchJs("window.onVoiceError && window.onVoiceError(9);");
+                        return;
+                    }
+
+                    final String speechLang = (lang != null && !lang.trim().isEmpty()) ? lang.trim() : "bn-BD";
+                    currentSpeechLang = speechLang;
+                    isListeningVoice = true;
+
+                    // Priority 1: System SpeechRecognizer with live partial results streaming
+                    if (SpeechRecognizer.isRecognitionAvailable(context)) {
+                        try {
+                            if (systemSpeechRecognizer == null) {
+                                ComponentName googleService = findGoogleRecognitionService();
+                                if (googleService != null) {
+                                    systemSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, googleService);
+                                } else {
+                                    systemSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+                                }
+                                systemSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
+                                    @Override
+                                    public void onReadyForSpeech(Bundle params) {
+                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('ready');");
+                                    }
+
+                                    @Override
+                                    public void onBeginningOfSpeech() {
+                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('listening');");
+                                    }
+
+                                    @Override
+                                    public void onRmsChanged(float rmsdB) {
+                                        float norm = (rmsdB + 2.0f) / 12.0f;
+                                        norm = Math.max(0.0f, Math.min(1.0f, norm));
+                                        dispatchJs("window.onVoiceRmsChanged && window.onVoiceRmsChanged(" + norm + ");");
+                                    }
+
+                                    @Override
+                                    public void onBufferReceived(byte[] buffer) {}
+
+                                    @Override
+                                    public void onEndOfSpeech() {
+                                        dispatchJs("window.onVoiceStateChange && window.onVoiceStateChange('processing');");
+                                    }
+
+                                    @Override
+                                    public void onError(int error) {
+                                        if (isUsingSystemSpeech) {
+                                            isUsingSystemSpeech = false;
+                                            if (inAppSpeechRecognizer != null && isListeningVoice) {
+                                                inAppSpeechRecognizer.startListening(currentSpeechLang);
+                                                return;
+                                            }
+                                        }
+                                        dispatchJs("window.onVoiceError && window.onVoiceError(" + error + ");");
+                                    }
+
+                                    @Override
+                                    public void onResults(Bundle results) {
+                                        isUsingSystemSpeech = false;
+                                        if (results != null) {
+                                            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                                            if (matches != null && !matches.isEmpty()) {
+                                                String text = matches.get(0);
+                                                if (text != null && !text.trim().isEmpty()) {
+                                                    JSONObject res = new JSONObject();
+                                                    try {
+                                                        res.put("text", text.trim());
+                                                        res.put("confidence", 1.0f);
+                                                    } catch (Exception ignored) {}
+                                                    dispatchJs("window.onVoiceFinalResult && window.onVoiceFinalResult(" + res.toString() + ");");
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                        dispatchJs("window.onVoiceError && window.onVoiceError(7);");
+                                    }
+
+                                    @Override
+                                    public void onPartialResults(Bundle partialResults) {
+                                        if (partialResults != null) {
+                                            ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                                            if (matches != null && !matches.isEmpty()) {
+                                                String partialText = matches.get(0);
+                                                if (partialText != null && !partialText.trim().isEmpty()) {
+                                                    JSONObject obj = new JSONObject();
+                                                    try {
+                                                        obj.put("partial", partialText.trim());
+                                                    } catch (Exception ignored) {}
+                                                    dispatchJs("window.onVoicePartialResult && window.onVoicePartialResult(" + obj.toString() + ");");
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onEvent(int eventType, Bundle params) {}
+                                });
+                            }
+
+                            speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, speechLang);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, speechLang);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, speechLang);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                            speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+                            speechIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
+
+                            isUsingSystemSpeech = true;
+                            systemSpeechRecognizer.startListening(speechIntent);
+                            return;
+                        } catch (Throwable sysErr) {
+                            isUsingSystemSpeech = false;
+                        }
+                    }
+
+                    // Priority 2: In-App Autonomous AudioRecord STT Fallback
+                    if (inAppSpeechRecognizer != null) {
+                        isUsingSystemSpeech = false;
+                        inAppSpeechRecognizer.startListening(speechLang);
+                    } else {
+                        dispatchJs("window.onVoiceError && window.onVoiceError(7);");
+                    }
+                } catch (Throwable e) {
+                    dispatchJs("window.onVoiceError && window.onVoiceError(-1);");
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void stopSpeechRecognition() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (systemSpeechRecognizer != null && isUsingSystemSpeech) {
+                        try { systemSpeechRecognizer.stopListening(); } catch (Throwable ignored) {}
+                        isUsingSystemSpeech = false;
+                    }
+                    if (inAppSpeechRecognizer != null) {
+                        inAppSpeechRecognizer.stopListening();
+                    }
+                    isListeningVoice = false;
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void finishSpeechNow() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (systemSpeechRecognizer != null && isUsingSystemSpeech) {
+                        try { systemSpeechRecognizer.stopListening(); } catch (Throwable ignored) {}
+                    }
+                    if (inAppSpeechRecognizer != null) {
+                        inAppSpeechRecognizer.finishSpeechNow();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void speakBengali(final String text, final String callbackId) {
+        if (text == null || text.trim().isEmpty()) {
+            dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+            return;
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean synthSuccess = false;
+                boolean isFallback = false;
+                File cacheDir = context.getCacheDir();
+                if (!cacheDir.exists()) cacheDir.mkdirs();
+                File outMp3 = new File(cacheDir, "hibban_bn_voice.mp3");
+                if (outMp3.exists()) outMp3.delete();
+
+                File filesDir = context.getFilesDir();
+                File usrDir = new File(filesDir, "usr");
+                File binDir = new File(usrDir, "bin");
+                File bashBin = new File(binDir, "bash");
+                File appPython = new File(binDir, "python3");
+                File ttsScript = new File(binDir, "tts_synthesizer.py");
+                File homeDir = new File(filesDir, "home");
+                File tmpDir = new File(usrDir, "tmp");
+
+                File libPython = new File(usrDir, "lib/libpython3.14.so");
+                File publicLogFile = new File("/storage/emulated/0/Download/omniroute_debug.log");
+
+                if (ttsScript.exists() && (appPython.exists() || bashBin.exists())) {
+                    try {
+                        String cleanPrompt = text.replaceAll("[*#_`~>\\[\\](){}]", " ").replaceAll("\\s+", " ").trim();
+                        List<String> cmd = new ArrayList<>();
+                        if (bashBin.exists()) {
+                            cmd.add(bashBin.getAbsolutePath());
+                            cmd.add("--noprofile");
+                            cmd.add("--norc");
+                            cmd.add("-c");
+                            cmd.add("exec '" + appPython.getAbsolutePath() + "' '" + ttsScript.getAbsolutePath() + "' \"$1\" \"$2\" \"$3\" \"$4\" \"$5\"");
+                            cmd.add("bash");
+                            cmd.add(cleanPrompt);
+                            cmd.add(outMp3.getAbsolutePath());
+                            cmd.add("bn-BD-PradeepNeural");
+                            cmd.add("+3%");
+                            cmd.add("-4Hz");
+                        } else {
+                            cmd.add(appPython.getAbsolutePath());
+                            cmd.add(ttsScript.getAbsolutePath());
+                            cmd.add(cleanPrompt);
+                            cmd.add(outMp3.getAbsolutePath());
+                            cmd.add("bn-BD-PradeepNeural");
+                            cmd.add("+3%");
+                            cmd.add("-4Hz");
+                        }
+
+                        ProcessBuilder pb = new ProcessBuilder(cmd);
+                        pb.directory(homeDir.exists() ? homeDir : filesDir);
+                        Map<String, String> env = pb.environment();
+                        env.put("PATH", binDir.getAbsolutePath() + ":/system/bin:/system/xbin");
+                        env.put("LD_LIBRARY_PATH", new File(usrDir, "lib").getAbsolutePath() + ":/system/lib64:/vendor/lib64");
+                        if (libPython.exists()) {
+                            env.put("LD_PRELOAD", libPython.getAbsolutePath());
+                        }
+                        env.put("PREFIX", usrDir.getAbsolutePath());
+                        env.put("HOME", homeDir.getAbsolutePath());
+                        env.put("TMPDIR", tmpDir.getAbsolutePath());
+                        env.put("PYTHONHOME", usrDir.getAbsolutePath());
+                        env.put("PYTHONPATH", new File(usrDir, "lib/python3.14/site-packages").getAbsolutePath());
+                        File certPem = new File(usrDir, "lib/python3.14/site-packages/certifi/cacert.pem");
+                        if (certPem.exists()) {
+                            env.put("SSL_CERT_FILE", certPem.getAbsolutePath());
+                        }
+                        pb.redirectErrorStream(true);
+                        Process proc = pb.start();
+
+                        StringBuilder procLog = new StringBuilder();
+                        try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                            String l;
+                            while ((l = r.readLine()) != null) {
+                                procLog.append(l).append("\n");
+                            }
+                        }
+
+                        boolean finished = proc.waitFor(9, TimeUnit.SECONDS);
+                        if (finished && proc.exitValue() == 0 && outMp3.exists() && outMp3.length() > 800) {
+                            synthSuccess = true;
+                            isFallback = false;
+                        } else {
+                            try (java.io.FileWriter dfw = new java.io.FileWriter(publicLogFile, true)) {
+                                dfw.write("[TTS-Edge] Failed. exit=" + (finished ? proc.exitValue() : "timeout") + " outMp3=" + outMp3.exists() + " log=" + procLog.toString() + "\n");
+                                dfw.flush();
+                            } catch (Throwable ignored) {}
+                        }
+                    } catch (Throwable ttsEx) {
+                        try (java.io.FileWriter dfw = new java.io.FileWriter(publicLogFile, true)) {
+                            dfw.write("[TTS-Edge] Exception: " + ttsEx.getMessage() + "\n");
+                            dfw.flush();
+                        } catch (Throwable ignored) {}
+                    }
+                }
+
+                if (!synthSuccess) {
+                    // Ultra-fast Google Translate Bengali Voice HTTP Fallback (0.15s latency)
+                    synthSuccess = synthesizeWithGoogleHttpTts(text, outMp3);
+                    isFallback = true;
+                }
+
+                if (synthSuccess && outMp3.exists() && outMp3.length() > 400) {
+                    playAudioFile(outMp3.getAbsolutePath(), callbackId, isFallback);
+                } else {
+                    speakWithNativeTts(text, callbackId);
+                }
+            }
+        }).start();
+    }
+
+    private boolean synthesizeWithGoogleHttpTts(String text, File outMp3) {
+        if (text == null || text.trim().isEmpty()) return false;
+        try {
+            String clean = text.replaceAll("[*#_`~>\\[\\](){}]", " ").replaceAll("\\s+", " ").trim();
+            if (clean.length() > 220) {
+                clean = clean.substring(0, 220);
+            }
+            String encoded = java.net.URLEncoder.encode(clean, "UTF-8");
+            java.net.URL url = new java.net.URL("https://translate.google.com/translate_tts?ie=UTF-8&tl=bn&client=tw-ob&q=" + encoded);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(6000);
+            if (conn.getResponseCode() == 200) {
+                try (InputStream in = conn.getInputStream();
+                     FileOutputStream fos = new FileOutputStream(outMp3)) {
+                    byte[] buf = new byte[4096];
+                    int r;
+                    while ((r = in.read(buf)) != -1) {
+                        fos.write(buf, 0, r);
+                    }
+                    fos.flush();
+                }
+                conn.disconnect();
+                return outMp3.exists() && outMp3.length() > 500;
+            }
+            conn.disconnect();
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        return false;
+    }
+
+    private void playAudioFile(final String path, final String callbackId, final boolean isFallback) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Ensure media stream volume is audible
+                    try {
+                        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                        if (am != null) {
+                            int curVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                            if (curVol == 0) {
+                                int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                                am.setStreamVolume(AudioManager.STREAM_MUSIC, Math.max(1, (int)(maxVol * 0.7)), 0);
+                            }
+                        }
+                    } catch (Throwable ignored) {}
+
+                    if (voicePlayer != null) {
+                        try { voicePlayer.stop(); voicePlayer.release(); } catch (Throwable ignored) {}
+                    }
+                    voicePlayer = new MediaPlayer();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        AudioAttributes attrs = new AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                .build();
+                        voicePlayer.setAudioAttributes(attrs);
+                    } else {
+                        voicePlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    }
+                    voicePlayer.setDataSource(path);
+                    voicePlayer.setVolume(1.0f, 1.0f);
+
+                    voicePlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                            try { mp.release(); } catch (Throwable ignored) {}
+                            voicePlayer = null;
+                        }
+                    });
+                    voicePlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                        @Override
+                        public boolean onError(MediaPlayer mp, int what, int extra) {
+                            dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                            try { mp.release(); } catch (Throwable ignored) {}
+                            voicePlayer = null;
+                            return true;
+                        }
+                    });
+
+                    // Prepare player first
+                    voicePlayer.prepare();
+
+                    // Voice Calibration (Calibrated male voice + natural pacing):
+                    // MUST be set AFTER prepare() to avoid IllegalStateException!
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        try {
+                            PlaybackParams params = new PlaybackParams();
+                            params.setPitch(1.0f);
+                            params.setSpeed(1.0f); // Calibrated to 1.0f as requested (natural pacing)
+                            voicePlayer.setPlaybackParams(params);
+                        } catch (Throwable ignored) {}
+                    }
+
+                    voicePlayer.start();
+                    dispatchJs("window.onVoicePlaybackStarted && window.onVoicePlaybackStarted('" + callbackId + "');");
+                } catch (Throwable e) {
+                    dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void stopBengaliVoice() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (voicePlayer != null) {
+                        try { voicePlayer.stop(); voicePlayer.release(); } catch (Throwable ignored) {}
+                        voicePlayer = null;
+                    }
+                    if (textToSpeech != null) {
+                        textToSpeech.stop();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
+
+    private void speakWithNativeTts(final String text, final String callbackId) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (textToSpeech == null) {
+                    textToSpeech = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
+                        @Override
+                        public void onInit(int status) {
+                            if (status == TextToSpeech.SUCCESS) {
+                                initAndSpeak(text, callbackId);
+                            } else {
+                                dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                            }
+                        }
+                    });
+                } else {
+                    initAndSpeak(text, callbackId);
+                }
+            }
+        });
+    }
+
+    private void initAndSpeak(String text, final String callbackId) {
+        try {
+            java.util.Locale bnLocale = new java.util.Locale("bn", "BD");
+            textToSpeech.setLanguage(bnLocale);
+            textToSpeech.setSpeechRate(1.12f); // Slightly faster speech
+            textToSpeech.setPitch(0.80f); // Masculine male pitch
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                try {
+                    java.util.Set<android.speech.tts.Voice> voices = textToSpeech.getVoices();
+                    if (voices != null) {
+                        for (android.speech.tts.Voice v : voices) {
+                            if (v.getLocale() != null && "bn".equalsIgnoreCase(v.getLocale().getLanguage())) {
+                                String vName = v.getName().toLowerCase();
+                                if (vName.contains("male") || vName.contains("man") || vName.contains("-b-") || vName.contains("-d-")) {
+                                    textToSpeech.setVoice(v);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+
+                textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override public void onStart(String utteranceId) {
+                        dispatchJs("window.onVoicePlaybackStarted && window.onVoicePlaybackStarted('" + callbackId + "');");
+                    }
+                    @Override public void onDone(String utteranceId) {
+                        dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                    }
+                    @Override public void onError(String utteranceId) {
+                        dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
+                    }
+                });
+                textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, callbackId);
+            } else {
+                java.util.HashMap<String, String> map = new java.util.HashMap<>();
+                map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, callbackId);
+                textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, map);
+            }
+        } catch (Throwable e) {
+            dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
         }
     }
 }

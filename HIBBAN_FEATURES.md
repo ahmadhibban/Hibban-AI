@@ -1,106 +1,171 @@
-# Hibban AI — Features & Capabilities Specification
+# Hibban AI — Complete Microscopic Features & Architecture Specification
 
-> **Project Name:** Hibban AI  
-> **Author & Creator:** Ahmad Hibban (আহমাদ হিব্বান)  
-> **Package:** `com.gcode.ai` (Android Standalone Edition)  
-
----
-
-## 1. মূল দর্শন ও Architecture (Core Philosophy & Architecture)
-
-Hibban AI কোনো নির্দিষ্ট বা সীমাবদ্ধ কাজের জন্য তৈরি করা হয়নি। এটি Android Device-এর ভেতরে সম্পূর্ণ Standalone, General-Purpose Autonomous AI Developer এবং Computing System হিসেবে সর্বোচ্চ ক্ষমতাসম্পন্ন (Maximum Power)। এর লক্ষ্য ব্যবহারকারীর যেকোনো জটিল ও সৃষ্টিশীল নির্দেশনায় স্বয়ংক্রিয়ভাবে পূর্ণাঙ্গ সমাধান প্রদান করা।
-
-- **Unrestricted Autonomous Intelligence:** ব্যবহারকারীর নির্দেশ অনুযায়ী যেকোনো ধরনের Coding, Automation, Software Development বা জটিল Technical সমস্যা সমাধান করার অসীম ক্ষমতা।
-- **Local AI Gateway Architecture:** App-এর নিজস্ব Background Local Port `127.0.0.1:20128`-এ OmniRoute Server সক্রিয় থাকে।
-- **Keyless Unlimited Access:** ব্যবহারকারীর নিজস্ব কোনো Personal API Key ছাড়াই Pre-configured Session-এর মাধ্যমে Frontier AI Models-এ সর্বোচ্চ কোটা (Unlimited Quota) নিশ্চিত করা।
-- **Dynamic Hierarchy & Auto Cascade:** কোনো Model Hardcoded নয়; Real-Time Dynamic Model Loading, Intelligence Hierarchy এবং Quota Exhaustion (HTTP 429) পরিস্থিতিতে স্বয়ংক্রিয় Cascade।
-- **Complete Standalone Linux OS Environment:** কোনো External Dependency বা Termux ছাড়াই App-এর নিজস্ব Isolated Sandbox-এ পূর্ণাঙ্গ Linux Runtime অন্তর্ভুক্ত, যার মাধ্যমে সম্পূর্ণ Computing Environment-এর উপর AI-এর পূর্ণ নিয়ন্ত্রণ রয়েছে।
-- **Autonomous Multi-Turn Execution:** যেকোনো জটিল নির্দেশনায় AI নিজে থেকে প্রয়োজন অনুযায়ী যতবার ইচ্ছা Tool Run করে, Code লিখে, Test করে এবং স্বয়ংক্রিয়ভাবে কাজ সম্পন্ন করে।
+> **Application Name:** Hibban AI  
+> **Master Creator & System Architect:** Ahmad Hibban (আহমাদ হিব্বান)  
+> **Package Identifier:** `com.gcode.ai` (Android Standalone Engine Edition)  
+> **Current Version:** `3.2.0` (Build Code `6`)  
+> **Target SDK:** 28 (Android 9.0 Pie) | **Min SDK:** 21 (Android 5.0 Lollipop)  
+> **Local AI Gateway Endpoint:** `http://127.0.0.1:20128/v1`
 
 ---
 
-## 2. Pre-installed Packages ও Runtime Environment
+## ১. মূল দর্শন ও স্বায়ত্তশাসিত সিস্টেম আর্কিটেকচার (Core Philosophy & System Architecture)
 
-- **Shell:** GNU Bash 5.3 ও Dash।
-- **Runtimes:** Python 3.14.6 (সাথে Pip Package Manager), Node.js v26.4.0 (সাথে npm Package Manager)।
-- **Gateway:** OmniRoute v3.8.51 (Built-in Proxy Router)।
-- **System Utilities:** GNU Coreutils (`ls`, `cat`, `grep`, `sed`, `awk`, `find`, `tar`, `gzip`, `curl`, `wget`, `cut`, `sort`, `uniq` ইত্যাদি)।
-- **Networking & Security:** Git, Curl, Wget, Official CA TLS Certificates।
-- **Compilation Tools:** Android SDK Build Tools (`aapt`, `d8`, `apksigner`)।
-- **Virtualization Core:** ARM64 User-space PRoot Engine।
-- **On-Demand Package Management:** যেকোনো প্রয়োজনে `pip install <package>` অথবা `npm install -g <package>` Command দিয়ে যেকোনো নতুন Library ও Module Install করার পূর্ণ স্বাধীনতা।
+Hibban AI কোনো সাধারণ চ্যাটবট বা এপিআই ক্লায়েন্ট নয়। এটি অ্যান্ড্রয়েড অপারেটিং সিস্টেমের ভেতর সম্পূর্ণরূপে ইনস্টল করা একটি **স্বায়ত্তশাসিত জেনারেল-পারপাস এআই সফটওয়্যার ডেভেলপার, সিস্টেম অ্যাডমিনিস্ট্রেটর ও ওএস অটোমেশন ইঞ্জিন**। এটি তৈরি করেছেন এককভাবে **আহমাদ হিব্বান (Ahmad Hibban)**।
 
----
-
-## 3. UI/UX ও Design System
-
-- **Dark Glassmorphism Interface:** Modern Neon Cyan ও Deep Space Dark Theme।
-- **Real-Time Gateway Status Dot:** Solid Green Dot (`Active`), Pulsing Yellow Dot (`Connecting...`), Red Dot (`Offline`)।
-- **Bilingual Typography & Native RTL:** Kalpurush Font (বাংলা) এবং Amiri Calligraphy Font সহ স্বয়ংক্রিয় Right-to-Left (RTL) Text Alignment (আরবি)।
-- **Syntax-Highlighted Code Blocks:** Code Blocks-এর জন্য Real-Time Syntax Styling ও Clean Monospace Typography।
-- **Instant Task Pause & Stop Control:** Background Task Execution চলাকালীন তাৎক্ষণিক Pause ও Stop করার সুবিধাজনক কন্ট্রোল বাটন।
-- **Auto History Compaction:** দীর্ঘ আলাপে Context Window সুরক্ষিত ও Memory হালকা রাখতে Intelligent Auto Summary।
-- **CPU WakeLock Support:** Device Screen বন্ধ থাকলেও Background Autonomous Execution সচল রাখার ক্ষমতা।
+### মূল স্থাপত্যিক স্তম্ভসমূহ (Architectural Pillars):
+1. **১০০% স্ট্যান্ডঅ্যালোন ও সম্পূর্ণ অফলাইন লিনাক্স স্যান্ডবক্স:** Termux, UserLAnd, বা বাহ্যিক কোনো অ্যাপ ছাড়াই অ্যাপের নিজস্ব ডিরেক্টরি (`/data/data/com.termux/files/usr/`) সম্পূর্ণ লিনাক্স ওএস রানটাইম ধারণ করে।
+2. **লোকাল এআই গেটওয়ে প্রক্সি (OmniRoute Gateway on Port 20128):** অ্যাপটির ব্যাকগ্রাউন্ডে নিজস্ব Node.js-চালিত OmniRoute v3.8.51 সার্ভার রান করে, যা `127.0.0.1:20128`-এ OpenAI-কমপ্লায়েন্ট এপিআই সার্ভিস প্রদান করে।
+3. **কী-হীন আনলিমিটেড ফ্রন্টিয়ার মডেল এক্সেস (Keyless Unlimited Quota):** ব্যবহারকারীর নিজস্ব কোনো ব্যক্তিগত এপিআই কী দিতে হয় না। প্রাক-কনফিগার করা বিশেষ গেটওয়ে টোকেনের মাধ্যমে সর্বোচ্চ ক্ষমতার ফ্রন্টিয়ার এআই মডেলগুলোতে আনলিমিটেড কোটায় কাজ করা যায়।
+4. **ডাইনামিক হায়ারার্কি ও অটো-ফেলওভার ক্যাসকেড (Auto Cascade):** কোনো মডেল হার্ডকোডেড নয়। সিস্টেম রানটাইমে লাইভ মডেল লিস্ট ফেচ করে। কোনো মডেলে কোটা শেষ বা রেট লিমিট (HTTP 429) আসলে তাৎক্ষণিকভাবে পরবর্তী শক্তিশালী মডেলে অটোমেটিক সুইচ করে।
+5. **ভয়েস ও টেক্সট মোডের ১০০% পূর্ণ সমতা (Voice & Text Absolute Parity):** ভয়েস মোডে এবং সরাসরি টাইপ করা টেক্সট চ্যাটে এআই-এর ক্ষমতা ও বুদ্ধিমত্তা সম্পূর্ণ অভিন্ন। ভয়েস মোডেও মাল্টি-টার্ন অটোনোমাস টুল কলিং লুপ সক্রিয় থাকে।
+6. **পারসিস্টেন্ট ব্যাকগ্রাউন্ড ডেমন ও ওয়েক-লক (CPU WakeLock & Background Daemon):** ফোনের স্ক্রিন বন্ধ থাকলেও ব্যাকগ্রাউন্ডে দীর্ঘ সময় ধরে কোডিং বা অটোমেশন টাস্ক চালিয়ে যাওয়ার জন্য `HibbanDaemonService` এবং ডেডিকেটেড `WakeLock` সমন্বিত।
 
 ---
 
-## 4. সর্বোচ্চ ক্ষমতার কর্মক্ষেত্রসমূহ (Comprehensive Capabilities & Domains — শুধুমাত্র শিরোনাম)
+## ২. ফার্স্ট-রান বুটস্ট্র্যাপ ও আনপ্যাকিং লাইফসাইকেল (First-Launch Extraction & Bootstrap)
 
-- **Full-Stack Software Engineering & Application Architecture**
-- **Autonomous Scripting, Task Orchestration & Workflow Automation**
-- **Complete Linux System Administration & Shell Command Execution**
-- **Android System & OS-Level Control Architecture**
-- **Cross-Application Inter-Process Communication (IPC) & Intent Orchestration**
-- **Autonomous UI Hierarchy Inspection & Accessibility-Driven Screen Interaction**
-- **Telecommunications, Cellular Traffic & Network Stream Diagnostics**
-- **Hardware Power Dynamics, Battery Telemetry & Thermal Intelligence**
-- **System Notification Streams, Priority Interception & Actionable Auditing**
-- **Telephony Subsystem, Cellular Call Logs & Contact Database Management**
-- **Device Audio Routing, Hardware Channels & Media Pipeline Control**
-- **Android Runtime (ART), Process Lifecycle & Memory Allocation Forensics**
-- **Device Storage Analytics, Filesystem Forensics & Storage Sanitization**
-- **System Security Environment, Device Settings & Permission Administration**
-- **Dynamic On-Demand Package Installation & Custom Environment Provisioning**
-- **On-Device Android Application Development, Compilation & Reverse Engineering**
-- **Database Architecture, Complex Querying & Data Analytics**
-- **Universal File, Media, Code & Multi-Format Data Processing**
-- **Real-Time Live Web Search, Grounding & Information Intelligence**
-- **Autonomous Error Detection, Traceback Diagnostics & Self-Healing Code**
-- **Complete Device Filesystem Navigation, Storage Access & File Manipulation**
-- **Automated Network Streaming, Web Scraping & Direct Data Downloading**
-- **Algorithmic Problem Solving, Mathematical Modeling & Computational Logic**
-- **Security Auditing, Code Review, Static Analysis & Performance Optimization**
-- **Git Version Control, Repository Management & Collaborative Workflows**
-- **Multi-Agent Coordination & Unrestricted Multi-Turn Autonomous Execution**
+অ্যাপটি প্রথমবার ওপেন করার পর `setup.html` স্ক্রিনে একটি আকর্ষণীয় এবং মসৃণ ভিজ্যুয়াল প্রগ্রেস প্রদর্শিত হয়। এর পেছনের ব্যাকএন্ড লজিক:
+
+1. **মাল্টি-পার্ট স্প্লিট টার আর্কাইভ আনপ্যাকার (`MainActivity.java`):**
+   - GitHub এবং Android সম্পদ লিমিট বাইপাস করার জন্য বিশাল লিনাক্স ওএস আর্কাইভগুলোকে খণ্ড খণ্ড ফাইলে বিভক্ত করে রাখা হয়েছে:
+     - `system_bootstrap.tar.gz.part_aa` থেকে `part_ad` (~210MB সংকুচিত, এক্সট্র্যাক্ট করার পর ~740MB)
+     - `omni_bootstrap.tar.gz.part_aa` থেকে `part_ah` (~480MB সংকুচিত)
+     - `home_bootstrap.tar.gz.part_aa`
+     - `node_libs_bootstrap.tar.gz` (~15MB)
+     - `edge_tts_bundle.tar.gz.part_aa` (~1.8MB)
+   - জাভার `SequenceInputStream` ব্যবহার করে মেমোরিতে কোনো বাড়তি রম খরচ না করে সরাসরি পাইপলাইনিং পদ্ধতিতে টার ও জিপ স্ট্রিম আনপ্যাক করা হয়।
+2. **সিস্টেম লাইব্রেরি ও পারমিশন ইনিশিয়ালাইজেশন:**
+   - `usr/bin/bash`, `usr/bin/node`, `usr/bin/python3`, `usr/bin/tar` সহ সকল বাইনারিতে সরাসরি জাভা রিফ্লেকশন (`setExecutable(true, false)`) দিয়ে এক্সিকিউটেবল পারমিশন দেওয়া হয়।
+   - Android Dynamic Linker-এর আর্কিটেকচার অনুযায়ী `libicudata.so.78.3` এবং `libcares.so` যাচাই ও লিঙ্ক করা হয়।
+3. **ডিএনএস রেজলভার প্রোভিশনিং (`resolv.conf`):**
+   - লিনাক্স ইউটিলিটিগুলো যাতে অ্যান্ড্রয়েডের ভেতরে সরাসরি ইন্টারনেট রেজলভ করতে পারে, সেজন্য `usr/etc/resolv.conf` ফাইলে স্বয়ংক্রিয়ভাবে Google DNS (`8.8.8.8`, `8.8.4.4`) এবং Cloudflare DNS (`1.1.1.1`, `1.0.0.1`) কনফিগার করা হয়।
+4. **গেটওয়ে ইনিশিয়ালাইজেশন মার্কার (`.installed_v18`):**
+   - ফাইল সিস্টেমে `.installed_v18` ফ্ল্যাগ তৈরি করা হয়, যাতে পরবর্তী প্রতিবার অ্যাপ ওপেন করার সময় কোনো সময় নষ্ট না করে ১ সেকেন্ডের মধ্যে সরাসরি চ্যাট ইন্টারফেসে চলে যেতে পারে।
 
 ---
 
-## 5. Newly Integrated Standalone Subsystems
+## ৩. ভয়েস ইঞ্জিন ও দ্বৈত স্পিচ আর্কিটেকচার (Hybrid Voice Engine & Speech Synthesis)
 
-কোনো ৩য় পক্ষ বা বাহ্যিক অ্যাপ্লিকেশন (Tasker, Termux, Shizuku ইত্যাদি) ছাড়াই Hibban AI-এর নিজস্ব কোডবেসে সরাসরি নিম্নলিখিত শক্তিশালী সাবসিস্টেমগুলো যুক্ত করা হয়েছে:
+অ্যাপটির ভয়েস মোড অত্যন্ত উচ্চমানের এবং ন্যাচারাল। এতে রয়েছে হাইব্রিড স্পিচ রিকগনিশন ও নিউরাল টিটিএস।
 
-- **Native Screen Interaction & Accessibility Engine (`HibbanAccessibilityService`):**
-  - অ্যান্ড্রয়েডের বিল্ট-ইন অ্যাক্সেসিবিলিটি ফ্রেমওয়ার্কের মাধ্যমে স্ক্রিনের সকল ভিউ ও নোড পর্যবেক্ষণ।
-  - নির্দিষ্ট বাটন বা টেক্সটে স্বয়ংক্রিয় ক্লিক, ইনপুট ফিল্ডে ভার্চুয়াল টেক্সট টাইপিং এবং গ্লোবাল জেসচার (Back, Home, Recents, Notifications)।
-- **Native Notification Interception Subsystem (`HibbanNotificationListener`):**
-  - ডিভাইসে আসা সকল ইনকামিং নোটিফিকেশন স্ট্রিম, ওটিপি (OTP), ব্যাংক এসএমএস এবং জরুরি অ্যালার্ট রিয়েল-টাইমে পর্যবেক্ষণ ও প্রসেস করার ক্ষমতা।
-- **Hardware Telemetry & Battery Power Analytics:**
-  - সরাসরি `BatteryManager` এপিআই-এর মাধ্যমে রিয়েল-টাইম ডিসচার্জ কারেন্ট (mA), ভোল্টেজ, তাপমাত্রা এবং রানিং ব্যাটারি লাইফ প্রেডিকশন।
-- **Cellular Traffic & Network Diagnostics:**
-  - `TrafficStats` এপিআই দিয়ে সিম কার্ডের মোবাইল ডেটা এবং ওয়াই-ফাই ডেটা খরচের সঠিক রিয়েল-টাইম হিসাব।
-- **Hardware Audio Routing & System Toggles:**
-  - `AudioManager` দিয়ে মিডিয়া, রিংটোন ও নোটিফিকেশন ভলিউম নিয়ন্ত্রণ এবং রিংগার মোড (Normal/Silent/Vibrate) পরিচালনা।
-- **Cross-Application IPC & Intent Dispatcher:**
-  - হোয়াটসঅ্যাপ, টেলিগ্রাম, কল ডায়ালার, এসএমএস এবং অ্যান্ড্রয়েড সিস্টেম সেটিংসের গভীর পেজগুলোতে সরাসরি যোগাযোগ ও ডেটা সেন্ড।
-- **Unlimited Generative AI Image Engine:**
-  - কোনো বাহ্যিক এপিআই কি ছাড়াই আনলিমিটেড হাই-রেজোলিউশন ইমেজ জেনারেশন (Flux ইঞ্জিন) এবং সরাসরি ডিভাইসে সেভ ও প্রিভিউ।
-- **Pre-installed Multimedia Powerhouse (FFmpeg & FFprobe):**
-  - অডিও ও ভিডিও এডিটিং, কনভার্সন, ট্রিম, মার্জ, এবং সাবটাইটেল হ্যান্ডলিংয়ের জন্য সম্পূর্ণ বিল্ট-ইন এফএফএমপেগ স্যুট।
-- **Telephony & Call Analytics Subsystem:**
-  - সরাসরি সিস্টেম কল হিস্ট্রি ও ডায়াল হিস্ট্রি বিশ্লেষণ, মিসড কল অডিট এবং যোগাযোগ সংক্রান্ত অটোমেশন।
-- **Contact Database Management & Direct Communication Engine:**
-  - ডিভাইস কন্ট্যাক্ট ডাটাবেস থেকে যেকোনো নাম বা নম্বর দিয়ে সরাসরি কন্ট্যাক্ট সার্চ (`ContactsContract`), ফোন কল ডায়ালিং এবং সরাসরি এসএমএস পাঠানোর ক্ষমতা।
-- **Autonomous Startup & On-Demand Dynamic Permission Provisioning:**
-  - অ্যাপ প্রথমবার ওপেন করার সাথে সাথেই এ আই-এর পূর্ণ ক্ষমতার জন্য প্রয়োজনীয় সকল রানটাইম পারমিশন (কন্ট্যাক্ট, কল লগ, ফোন কল, এসএমএস, ক্যামেরা, অডিও, স্টোরেজ, লোকেশন, নোটিফিকেশন) স্বয়ংক্রিয়ভাবে চেয়ে নেওয়া।
-  - কোনো পারমিশন যদি বাকি থাকে, তবে যখনই এ আই কোনো নির্দিষ্ট কাজ (কল, এসএমএস, কন্ট্যাক্ট সার্চ, স্ক্রিন অটোমেশন বা নোটিফিকেশন রিড) করতে যাবে, ঠিক তখনই অন-ডিমান্ড স্বয়ংক্রিয়ভাবে সেই পারমিশন চেয়ে নেওয়ার বুদ্ধিমান ব্যবস্থা।
+### ক. লাইভ স্ট্রিমিং স্পিচ রিকগনিশন (Instant Live Typing STT):
+1. **প্রাইমারি ইঞ্জিন: Android Native SpeechRecognizer:**
+   - `RecognizerIntent.EXTRA_PARTIAL_RESULTS = true` সক্রিয়।
+   - ব্যবহারকারী কথা বলা শুরু করা মাত্র প্রতি ২০০ মিলিগ্রাম সেকেন্ডে আংশিক ফলাফল (Partial Results) সরাসরি জাভাস্ক্রিপ্ট কলব্যাক `window.onVoicePartialResult` এর মাধ্যমে ভয়েস বাবলে টাইপ হতে থাকে। ব্যবহারকারীকে কোনো অপেক্ষা করতে হয় না।
+2. **সেকেন্ডারি ইঞ্জিন: ইন-অ্যাপ অটোনোমাস অডিওরেকর্ড এসটিটি (`InAppSpeechRecognizer.java`):**
+   - কোনো কাস্টম রম বা de-Googled ফোনে সিস্টেম রিকগনিশন সার্ভিস অনুপস্থিত থাকলে তাৎক্ষণিকভাবে ইন-অ্যাপ নিউরাল এসটিটি সক্রিয় হয়।
+   - এতে রয়েছে ৮০০ মিলিসেকেন্ডের আল্ট্রা-ফাস্ট সাইলেন্স ডিটেকশন অ্যালগরিদম, যা কথা শেষ হওয়া মাত্র দ্রুত টার্ন শেষ করে এআই প্রসেসিং শুরু করে।
+3. **স্পিচ এনার্জি ও আরএমএস রিয়্যাক্টিভ মনিটরিং (`onRmsChanged`):**
+   - ব্যবহারকারীর গলার ভলিউম এবং ঘরের ব্যাকগ্রাউন্ড নয়েজের পার্থক্যের রিয়েল-টাইম স্বাভাবিকীকরণ (Normalized 0.0 - 1.0), যা ভয়েস স্ক্রিনের থ্রি-ডি অরবিটাল রিংগুলোকে শব্দের সাথে স্পন্দিত করে।
 
+### খ. নিউরাল বাংলা ভয়েস সিন্থেসিস (Neural Bengali TTS):
+1. **প্রাইমারি ভয়েস: Microsoft Edge Neural TTS (`tts_synthesizer.py`):**
+   - পাইথন ৩ এবং অ্যাসিনক্রোনাস ওয়েবসকেটের মাধ্যমে মাইক্রোসফটের উচ্চমানের পুরুষালি বাংলা নিউরাল ভয়েস (`bn-BD-PradeepNeural`) ব্যবহার করা হয়।
+   - পিচ `-3Hz` এবং রেট `+10%` করে রোবোটিক ভাব দূর করে মানুষের মতো আত্মবিশ্বাসী কণ্ঠ তৈরি করা হয়েছে।
+2. **সেকেন্ডারি ভয়েস: Android Native TextToSpeech Engine:**
+   - ডিভাইস যখন অফলাইনে থাকে বা দ্রুত প্রতিক্রিয়া প্রয়োজন হয়, তখন সিস্টেম বিল্ট-ইন বাংলা পুরুষালি ভয়েস (`setLanguage(bn-BD)`, পিচ `0.80`, স্পিড `1.12`) ব্যাকআপ হিসেবে কথা বলে।
+
+---
+
+## ৪. থ্রি-ডি অ্যাটমিক অরবিটাল ভয়েস ডিজাইন (3D Atomic Orbital Loading & Voice UI)
+
+ভয়েস স্ক্রিনে সাধারণ গোল চাকার পরিবর্তে `setup.html`-এর থ্রি-ডি অরবিটাল অ্যাটমিক অ্যানিমেশন প্রতিস্থাপন করা হয়েছে:
+
+1. **সেন্ট্রাল কোর ও আইকন ডিস্ক:**
+   - কেন্দ্রে রয়েছে ডার্ক ব্লু ব্যাকড্রপ ডিস্ক (`.voice-icon-backdrop-disc`) এবং কাচের মতো কার্ভড কোণে অ্যাপের মূল আইকন (`icon.png`)।
+   - পেছনের গ্লো কোর (`.voice-orb-glow`) সাইয়ান ও পার্পল নিয়ন হ্যালো তৈরি করে।
+2. **ত্রিমাত্রিক অরবিটাল নিয়ন রিং (3D Orbital Rings):**
+   - **রিং ১ (সায়ান নিয়ন সুইপ রিং):** `rotateVoiceOrbit1` দিয়ে ৬৮ ডিগ্রি এক্স-অক্ষ ও ১৮ ডিগ্রি ওয়াই-অক্ষে ক্লকওয়াইজ ৩৬০ ডিগ্রি অনবরত ঘুরতে থাকে।
+   - **রিং ২ (পার্পল নিয়ন সুইপ রিং):** `rotateVoiceOrbit2` দিয়ে ৩২ ডিগ্রি এক্স-অক্ষ ও ৬০ ডিগ্রি ওয়াই-অক্ষে কাউন্টার-ক্লকওয়াইজ ঘোরে।
+   - **রিং ৩ (ভায়োলেট ড্যাশড অরবিট রিং):** `rotateVoiceOrbit3` দিয়ে ৫৫ ডিগ্রি এক্স-অক্ষ ও -৪০ ডিগ্রি ওয়াই-অক্ষে কক্ষপথ তৈরি করে।
+3. **লাইভ ইন্টারঅ্যাক্টিভ প্রতিক্রিয়া:**
+   - **লিসেনিং অবস্থায় (Listening):** ব্যবহারকারীর কথার ভলিউম অনুযায়ী গ্লো এবং রিংগুলো মসৃণভাবে বড়-ছোট হয় (`onVoiceRmsChanged`)।
+   - **থিঙ্কিং অবস্থায় (Thinking):** এআই যখন কাজ করে বা ভাবে, রিং তিনটির ঘূর্ণন গতি চার গুণ বৃদ্ধি পায় (১.৬ সেকেন্ডে পূর্ণ ঘূর্ণন) এবং তীব্র সাইয়ান-পার্পল আলো নির্গত করে।
+   - **স্পিকিং অবস্থায় (Speaking):** এআই যখন কথা বলে, রিংগুলো শান্ত ছন্দময় নিয়ন ওয়েভ তৈরি করে।
+   - **ট্যাপ-টু-ফিনিশ বা স্টপ:** অরবিটাল স্টেজে যেকোনো সময় আঙুল দিয়ে ট্যাপ করলে তাৎক্ষণিকভাবে কথা শেষ হয় অথবা এআই-এর কথা বলা বন্ধ হয়ে নতুন নির্দেশের জন্য কান পাতে।
+
+---
+
+## ৫. স্বায়ত্তশাসিত এআই টুল স্যুট (Complete Autonomous Tool Capabilities)
+
+এআই-এর কাছে ডিভাইসের সর্বোচ্চ নিয়ন্ত্রণ নিশ্চিত করার জন্য নিম্নলিখিত টুলগুলো সরাসরি কার্যকর:
+
+| টুলের নাম | কার্যকর ক্ষমতা ও বিবরণ |
+|---|---|
+| `run_command` | স্যান্ডবক্সড লিনাক্স বাশে যেকোনো শেল কমান্ড, স্ক্রিপ্ট, পাইথন প্রোগ্রাম, নোড স্ক্রিপ্ট বা সিস্টেম ইউটিলিটি এক্সিকিউট করে সম্পূর্ণ `stdout`, `stderr` এবং `exitCode` গ্রহণ করে। |
+| `read_file` | যেকোনো টেক্সট, সোর্স কোড, কনফিগ বা লগ ফাইল নির্দিষ্ট লাইন রেঞ্জ (`start_line` থেকে `end_line`) অনুযায়ী মেমোরি-দক্ষভাবে রিড করে। |
+| `write_file` | ডিভাইসের যেকোনো বৈধ পাথে নতুন ফাইল তৈরি বা বিদ্যমান ফাইলে ওভাররাইট করে। ইউটিএফ-৮ সাপোর্ট সহ পারমিশন সুরক্ষিত রাখে। |
+| `edit_file` | ফাইলে থাকা নির্দিষ্ট কোনো টেক্সট বা কোড ব্লককে নিখুঁতভাবে নতুন কোড বা টেক্সট দিয়ে প্রতিস্থাপন করে। |
+| `list_directory` | নির্দিষ্ট ডিরেক্টরির ফাইল ও ফোল্ডার তালিকা, তাদের ধরন (`[DIR]` বা `[FILE]`) ও সাইজ এক্সপ্লোর করে। |
+| `download_file` | যেকোনো পাবলিক ইন্টারনেট ইউআরএল থেকে ব্যাকগ্রাউন্ডে সরাসরি ডিভাইসের নির্দিষ্ট ফোল্ডারে ফাইল ডাউনলোড করে। |
+| `web_search` | গুগল এআই মোডের মতো কোনো এপিআই কী ছাড়াই রিয়েল-টাইম লাইভ ওয়েব তথ্য, সংবাদ, আর্টিকেল ও লিঙ্ক স্ক্র্যাপ করে নিয়ে আসে। |
+| `generate_image` | আনলিমিটেড কোটায় হাই-রেজোলিউশন ইমেজ (Flux নিউরাল মডেল) জেনারেট করে সরাসরি ডাউনলোড ফোল্ডারে সেভ ও প্রিভিউ করে। |
+| `process_file_data` & `view_image` | ডিভাইসে থাকা যেকোনো ছবি বা মিডিয়া ফাইলকে বেস৬৪ এনকোড করে মাল্টিমোডাল ভিশন এআই দিয়ে পুঙ্খানুপুঙ্খ বিশ্লেষণ করে। |
+| `device_control` | ফোনের হার্ডওয়্যার ফ্ল্যাশলাইট টর্চ অন/অফ, ওয়াই-ফাই হটস্পট সেটিংস, ওয়াই-ফাই ও ব্লুটুথ স্ক্রিন ওপেন, ভলিউম অ্যাডজাস্ট, রিংগার মোড (Normal/Silent/Vibrate), ডু নট ডিস্টার্ব (DND) নিয়ন্ত্রণ। |
+| `system_telemetry` | ফোনের ব্যাটারি চার্জের শতকরা হার, ভোল্টেজ, ব্যাটারি স্বাস্থ্য, তাপমাত্রা, নেটওয়ার্ক ডেটা ব্যবহার (ওয়াই-ফাই/মোবাইল ডেটা) এবং অডিও লেভেলের লাইভ ডেটা অডিট। |
+| `intent_action` | অ্যান্ড্রয়েড আইপিসি ইনটেন্ট ডিসপ্যাচার। সরাসরি যেকোনো অ্যাপ চালু, সিস্টেম সেটিংস পেজ খোলা, ক্যামেরা চালু বা ডিপ লিঙ্ক ফায়ার করা। |
+| `ui_interaction` | `HibbanAccessibilityService`-এর মাধ্যমে অন-স্ক্রিন নোডগুলো রিড করা, যেকোনো টেক্সট বা বাটনে ক্লিক করা, ভার্চুয়াল টাইপিং, ব্যাক, হোম এবং নোটিফিকেশন প্যানেল টানা। |
+| `notification_manager` | `HibbanNotificationListener`-এর মাধ্যমে ডিভাইসে আসা সকল ইনকামিং নোটিফিকেশন, ওটিপি (OTP), ব্যাংক মেসেজ এবং অ্যাপ অ্যালার্ট রিড ও সামারাইজ করা। |
+| `telephony_manager` | ডিভাইসের কন্ট্যাক্ট তালিকা সার্চ করা (`get_contacts`), সরাসরি ফোন কল দেওয়া বা ডায়াল করা (`make_call`), টেক্সট এসএমএস পাঠানো (`send_sms`), ইনবক্স থেকে ইনকামিং এসএমএস রিড করা (`read_sms`), এবং কল হিস্ট্রি বিশ্লেষণ (`get_call_logs`)। |
+
+---
+
+## ৬. প্রি-ইন্সটলড সফটওয়্যার ও ডেভেলপমেন্ট প্যাকেজসমূহ (Pre-installed Packages)
+
+Hibban AI-এর ভেতরে একটি পূর্ণাঙ্গ কম্পিউটার সিস্টেমের প্রায় সকল মৌলিক সফটওয়্যার ও রানটাইম আগে থেকেই ইনস্টল করা আছে:
+
+- **শেল ও কোর ইউটিলিটি:** GNU Bash 5.3, Dash, Coreutils (`ls`, `cat`, `grep`, `sed`, `awk`, `find`, `tar`, `gzip`, `cut`, `sort`, `uniq`, `head`, `tail`, `wc`, `tee`, `xargs`, `which`)।
+- **প্রোগ্রামিং ল্যাঙ্গুয়েজ রানটাইম:** Python 3.14.6 (সাথে Pip), Node.js v26.4.0 (সাথে npm)।
+- **মাল্টিমিডিয়া ইঞ্জিন:** FFmpeg ও FFprobe (অডিও/ভিডিও কনভার্সন, মার্জ, ট্রিম, ট্রান্সকোডিং)।
+- **অ্যান্ড্রয়েড অ্যাপ বিল্ড টুলস:** `aapt` (Android Asset Packaging Tool), `d8` (DEX Compiler), `apksigner` (APK Signing & Verification), `android.jar` প্ল্যাটফর্ম লাইব্রেরি।
+- **ভার্চুয়ালাইজেশন ও সিকিউরিটি:** PRoot ARM64 ইঞ্জিন, Git, Curl, Wget, CA-Certificates।
+- **অন-ডিমান্ড এক্সপ্যানশন:** ইন্টারনেটের মাধ্যমে যেকোনো পাইথন লাইব্রেরি (`pip install <library>`) বা নোড মডিউল (`npm install <module>`) মুহূর্তের মধ্যে ইনস্টল করার অবাধ স্বাধীনতা।
+
+---
+
+## ৭. বাগ অডিট ও পারফরম্যান্স অপ্টিমাইজেশন লগ (Deep Bug Fixes & Optimization)
+
+এই সংস্করণে নিম্নলিখিত সূক্ষ্ম সমস্যাগুলো স্থায়ীভাবে সমাধান করা হয়েছে:
+
+1. **ভয়েসে লাইভ টাইপিং ল্যাগ দূরীকরণ:** পূর্ববর্তী সংস্করণে ব্যবহারকারীর কথা শেষ হওয়ার পর এআই যখন ভাবা শুরু করত তখন লেখা আসত। সিস্টেম `SpeechRecognizer`-এর `EXTRA_PARTIAL_RESULTS` স্ট্রিমিং এবং ৮০০ মিলিসেকেন্ড সাইলেন্স অপ্টিমাইজেশনের মাধ্যমে এখন ব্যবহারকারী কথা বলার সাথে সাথেই ডিসপ্লেতে প্রতিটি শব্দ লাইভ ফুটে ওঠে।
+2. **ওয়েবভিউ কনসোল ডিস্ক আই/ও অপ্টিমাইজেশন:** পূর্বে `WebChromeClient.onConsoleMessage`-এ প্রতিটি জাভাস্ক্রিপ্ট লগের জন্য ডিস্ক ফাইলে রাইট করা হচ্ছিল, যা অ্যাপে মাইক্রো-স্টাটার সৃষ্টি করত। এটি ইন-মেমোরি অ্যান্ড্রয়েড লগক্যাটে স্থানান্তরিত করায় অ্যাপের সার্বিক স্পিড ও স্ক্রোলিং লক্ষণীয়ভাবে বৃদ্ধি পেয়েছে।
+3. **ভয়েস মোডে ডাক-এআই ও ওপেনএআই হ্যালুসিনেশন নির্মূল:** ভয়েস প্রম্পটে ডাকডাকগো প্রক্সি ব্যবহারের কারণে সৃষ্ট আইডেন্টিটি সমস্যা সম্পূর্ণ মুছে ফেলা হয়েছে।
+4. **অপ্রয়োজনীয় ও ডেড কোড বর্জন:** `HibbanDaemonService.java` থেকে অব্যবহৃত স্পিচ ক্লাসের ইমপোর্ট ও ডেড ওয়েক-ওয়ার্ড মেথড অপসারিত হয়েছে।
+5. **টেলিফোনি সাবসিস্টেমের পূর্ণতা:** এসএমএস ইনবক্স রিড করার জন্য `getSmsInbox` মেথড এবং টুল স্কিমা যুক্ত করা হয়েছে।
+
+---
+
+## ৮. ভবিষ্যৎ রোডম্যাপ ও নেক্সট-জেন ফিচার প্রস্তাবনা (Future Roadmap & Next-Gen Capabilities)
+
+অ্যাপটিকে ভবিষ্যতের সুপার-অ্যাসিস্ট্যান্ট ও অ্যান্ড্রয়েড পাওয়ারহাউসে রূপান্তর করতে নিম্নলিখিত ফিচারগুলো অন্তর্ভুক্ত করা যেতে পারে:
+
+1. **লোকাল অন-ডিভাইস LLM এক্সিকিউশন (Qualcomm NPU / MediaTek APU Acceleration):**
+   - সম্পূর্ণ অফলাইনে ইন্টারনেট সংযোগ ছাড়াই কাজ করার জন্য ২০২৪-২০২৫ সালের অন-ডিভাইস ক্ষুদ্র মডেল (যেমন `Llama-3.2-1B-Instruct` বা `Gemma-2-2B` Q4_K_M কোয়ান্টাইজেশনে) সরাসরি ডিভাইসের NPU/GPU-তে এক্সিকিউট করা।
+2. **ভয়েস হট-ওয়ার্ড ও হ্যান্ডস-ফ্রি অ্যাক্টিভেশন (Porcupine / Snowboy Wake Word):**
+   - "Hey Hibban" বা "হিব্বান শুনছো" বললেই স্ক্রিন অফ থাকা অবস্থায়ও স্বয়ংক্রিয়ভাবে ওয়েক-আপ হয়ে কমান্ড শোনা।
+3. **অটোনোমাস স্ক্রিন-ভিশন এজেন্ট (OmniVision Screen Agent):**
+   - অ্যাক্সেসিবিলিটির পাশাপাশি রিয়েল-টাইম স্ক্রিনশটকে ভিশন মডেলে পাঠিয়ে অ্যান্ড্রয়েডের যেকোনো জটিল গ্রাফিক্যাল ইন্টারফেসে (যেমন ফেসবুক, ফুডপান্ডা, বিকাশ) স্বয়ংক্রিয়ভাবে ব্যবহারকারীর হয়ে লেনদেন বা কাজ সম্পন্ন করা।
+4. **ফুল-ডুপ্লেক্স রিয়েল-টাইম অডিও স্ট্রিম (WebRTC / Gemini Live Protocol):**
+   - ব্যবহারকারী ও এআই একই সাথে কথা বলতে ও থামাতে (Barge-in / Interrupt) পারবে, কোনো বাটন প্রেসের প্রয়োজন হবে না।
+5. **লোকাল আরএজি ও ভেক্টর মেমোরি (ChromaDB / SQLite Vector Embeddings):**
+   - ব্যবহারকারীর ফোনের সকল ডকুমেন্ট, পিডিএফ, চ্যাট হিস্ট্রি ও কোড প্রজেক্টকে লোকাল ভেক্টর ডাটাবেসে এম্বেড করে সেকেন্ডের মধ্যে প্রাসঙ্গিক তথ্য খুঁজে বের করা।
+
+---
+
+## ৯. গুগল প্লে-স্টোর পলিসি বিশ্লেষণ (Why This App Cannot Be Published on Play Store As-Is)
+
+বর্তমানে এই অ্যাপ্লিকেশনটি গুগল প্লে-স্টোরে সরাসরি পাবলিশ করা সম্ভব নয়। এর প্রযুক্তিগত ও পলিসিগত কারণসমূহ:
+
+1. **টার্গেট এসডিকে পলিসি লঙ্ঘন (Target SDK Version 28 vs 34+):**
+   - গুগল প্লে-স্টোরের বর্তমান বাধ্যতামূলক নিয়ম অনুযায়ী সকল নতুন অ্যাপকে ন্যূনতম `targetSdkVersion 34` (Android 14) লক্ষ্য করে তৈরি হতে হবে। কিন্তু এই অ্যাপটিতে আনরেস্ট্রিক্টেড ফাইল এক্সেস ও লিনাক্স বাইনারি রান করার জন্য `targetSdkVersion 28` রাখা হয়েছে।
+2. **উচ্চ-ঝুঁকিপূর্ণ পারমিশন ও ডিফল্ট হ্যান্ডলার নীতি (SMS & Call Permissions Policy):**
+   - গুগল প্লে পলিসি অনুযায়ী কোনো অ্যাপ যদি `SEND_SMS`, `READ_SMS`, `CALL_PHONE`, `READ_CALL_LOG` ব্যবহার করতে চায়, তবে সেই অ্যাপটিকে ফোনের **ডিফল্ট এসএমএস অ্যাপ** অথবা **ডিফল্ট ডায়ালার অ্যাপ** হতে হবে। সাধারণ সহায়ক অ্যাপ হিসেবে গুগল এই পারমিশনগুলোর অনুমোদন দেয় না।
+3. **অ্যাক্সেসিবিলিটি সার্ভিস পলিসি (Accessibility Service Device Automation Policy):**
+   - প্লে-স্টোরের কঠোর নির্দেশিকা অনুযায়ী `AccessibilityService` শুধুমাত্র শারীরিকভাবে প্রতিবন্ধী ব্যক্তিদের সহায়তার উদ্দেশ্যে ব্যবহার করা যাবে। সিস্টেম কন্ট্রোল, স্ক্রিন রিডিং বা টাচ অটোমেশনের উদ্দেশ্যে ব্যবহার করলে অ্যাপ তাৎক্ষণিকভাবে রিজেক্ট বা অ্যাকাউন্ট ব্যান হয়।
+4. **আনপ্যাকড লোকাল লিনাক্স এক্সিকিউটেবলস নীতি (Malicious Behavior Policy - Arbitrary Code Execution):**
+   - অ্যাপের ভেতরে `usr/bin/node`, `usr/bin/bash`, `usr/bin/python3` ডাইনামিকালি এক্সট্র্যাক্ট করে ব্যাকগ্রাউন্ডে স্বাধীন ওএস প্রসেস হিসেবে চালানো প্লে-স্টোরের "Device and Network Abuse" এবং "Malicious Behavior" পলিসির সরাসরি বিরোধী।
+5. **ক্লিয়ার-টেক্সট ট্রাফিক (`usesCleartextTraffic="true"`):**
+   - প্লে-স্টোর ডিফল্টভাবে প্লেইনটেক্সট এইচটিটিপি ট্রাফিক নিষিদ্ধ করে। কিন্তু লোকালহোস্টে `127.0.0.1:20128`-এ OmniRoute চালুর জন্য ক্লিয়ার-টেক্সট সক্রিয় রাখা হয়েছে।
+
+> **উপসংহার:** Hibban AI মূলত একটি **পাওয়ার-ইউজার স্ট্যান্ডঅ্যালোন সিস্টেম টুল**। এটি গিটহাব বা নিজস্ব সাইটের মাধ্যমে আনরেস্ট্রিক্টেড পাওয়ার সহ অ্যান্ড্রয়েডে সরাসরি ইনস্টল ও ব্যবহার করার জন্যই সর্বোত্তম।

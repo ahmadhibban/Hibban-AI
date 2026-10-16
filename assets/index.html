@@ -6,17 +6,19 @@
   <title>Hibban AI</title>
   <style>
     @font-face {
-      font-family: 'Amiri';
-      src: url('fonts/amiri.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
-
-    @font-face {
       font-family: 'Kalpurush';
       src: url('fonts/kalpurush.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
+      unicode-range: U+0980-09FF;
+    }
+
+    @font-face {
+      font-family: 'Amiri';
+      src: url('fonts/amiri.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
     }
 
     :root {
@@ -52,7 +54,7 @@
       color: var(--text);
       display: flex;
       flex-direction: column;
-      font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, 'Kalpurush', 'Amiri', sans-serif;
       font-size: 16px;
       line-height: 1.65;
       letter-spacing: 0.1px;
@@ -195,37 +197,41 @@
     .gemini-thinking-card {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-      background: transparent;
-      border: none;
-      box-shadow: none;
+      gap: 12px;
+      padding: 6px 14px 6px 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
       margin-bottom: 6px;
       user-select: none;
       -webkit-user-select: none;
       max-width: 100%;
       box-sizing: border-box;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .gemini-icon-halo {
       position: relative;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      margin: 0;
     }
 
     .gemini-halo-ring {
       position: absolute;
-      inset: -3px;
+      width: 32px;
+      height: 32px;
+      top: 0;
+      left: 0;
       border-radius: 50%;
-      background: conic-gradient(from 0deg, #6366f1, #06b6d4, #a855f7, #6366f1);
-      filter: blur(4px);
-      opacity: 0.85;
-      animation: rotateHalo 3s linear infinite;
+      background: conic-gradient(from 0deg, #38bdf8, #818cf8, #c084fc, #38bdf8);
+      filter: blur(3px);
+      opacity: 0.9;
+      animation: rotateHalo 2.5s linear infinite;
     }
 
     @keyframes rotateHalo {
@@ -235,9 +241,9 @@
 
     .gemini-thinking-img {
       position: relative;
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
       object-fit: cover;
       z-index: 1;
     }
@@ -245,8 +251,8 @@
     .gemini-thinking-body {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      max-width: calc(100% - 38px);
+      gap: 3px;
+      max-width: calc(100% - 44px);
       min-width: 0;
       overflow: hidden;
     }
@@ -276,7 +282,7 @@
       display: flex;
       align-items: center;
       gap: 3px;
-      height: 8px;
+      height: 10px;
     }
 
     .gemini-wave-bar span {
@@ -289,8 +295,9 @@
 
     .gemini-wave-bar span:nth-child(1) { animation-delay: 0s; height: 4px; }
     .gemini-wave-bar span:nth-child(2) { animation-delay: 0.2s; height: 8px; }
-    .gemini-wave-bar span:nth-child(3) { animation-delay: 0.4s; height: 6px; }
-    .gemini-wave-bar span:nth-child(4) { animation-delay: 0.6s; height: 10px; }
+    .gemini-wave-bar span:nth-child(3) { animation-delay: 0.4s; height: 11px; }
+    .gemini-wave-bar span:nth-child(4) { animation-delay: 0.2s; height: 8px; }
+    .gemini-wave-bar span:nth-child(5) { animation-delay: 0s; height: 4px; }
 
     @keyframes waveBar {
       0% { transform: scaleY(0.4); opacity: 0.4; }
@@ -360,7 +367,7 @@
       font-size: 16px;
       line-height: 1.65;
       word-wrap: break-word;
-      font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, 'Kalpurush', 'Amiri', sans-serif;
     }
 
     .msg-row.user .bubble {
@@ -471,11 +478,11 @@
       margin: 12px 0;
       overflow-x: auto;
       position: relative;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Kalpurush', 'Amiri', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
 
     code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Kalpurush', 'Amiri', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 14px;
       color: #38bdf8;
     }
@@ -504,7 +511,7 @@
       min-height: 46px;
       line-height: 1.55;
       outline: none;
-      font-family: 'Kalpurush', 'Amiri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, 'Kalpurush', 'Amiri', sans-serif;
       letter-spacing: 0.2px;
       transition: border-color 0.2s;
       touch-action: manipulation;
@@ -533,6 +540,10 @@
       touch-action: manipulation;
     }
 
+    #send-btn svg, #send-btn svg * {
+      pointer-events: none;
+    }
+
     #send-btn:active {
       transform: scale(0.92);
     }
@@ -540,6 +551,401 @@
     #send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    #voice-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: #94a3b8;
+      border-radius: 14px;
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    #voice-btn:hover {
+      background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    #voice-btn:active {
+      transform: scale(0.92);
+    }
+
+    #voice-btn svg, #voice-btn svg * {
+      pointer-events: none;
+    }
+
+    /* Siri / Jarvis Glowing Iridescent Voice Overlay */
+    .voice-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 38%, rgba(24, 21, 60, 0.96) 0%, rgba(8, 9, 15, 0.98) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      z-index: 500;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px 24px 44px;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .voice-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .voice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .voice-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 7px 16px;
+      border-radius: 20px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .voice-pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulseGreen 1.5s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    .voice-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 17px;
+      transition: all 0.2s;
+    }
+
+    .voice-close-btn:active {
+      transform: scale(0.9);
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .voice-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .voice-orbital-container {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      margin-bottom: 34px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .voice-orb-glow {
+      position: absolute;
+      width: 165px;
+      height: 165px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(168, 85, 247, 0.2) 50%, transparent 70%);
+      filter: blur(24px);
+      animation: voiceGlowPulse 4s ease-in-out infinite alternate;
+      transition: transform 0.08s ease-out, opacity 0.08s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes voiceGlowPulse {
+      0% { transform: scale(0.85); opacity: 0.6; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .voice-icon-backdrop-disc {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #172554 0%, #030712 85%);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      z-index: 2;
+      transition: transform 0.08s ease-out, box-shadow 0.2s ease;
+      pointer-events: none;
+    }
+
+    .voice-icon-center-box {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      z-index: 5;
+      transition: transform 0.08s ease-out;
+      pointer-events: none;
+    }
+
+    .voice-icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .voice-ring-cyan {
+      position: absolute;
+      width: 185px;
+      height: 185px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top: 2.8px solid #00f0ff;
+      border-bottom: 2.8px solid #0284c7;
+      filter: drop-shadow(0 0 8px #00f0ff);
+      will-change: transform;
+      animation: rotateVoiceOrbit1 6s linear infinite;
+      z-index: 3;
+      pointer-events: none;
+      transition: transform 0.08s ease-out;
+    }
+
+    .voice-ring-purple {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-left: 2.6px solid #c084fc;
+      border-right: 2.6px solid #a855f7;
+      filter: drop-shadow(0 0 8px #a855f7);
+      will-change: transform;
+      animation: rotateVoiceOrbit2 7.5s linear infinite;
+      z-index: 4;
+      pointer-events: none;
+      transition: transform 0.08s ease-out;
+    }
+
+    .voice-ring-dashed {
+      position: absolute;
+      width: 165px;
+      height: 165px;
+      border-radius: 50%;
+      border: 2px dashed rgba(168, 85, 247, 0.85);
+      filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
+      will-change: transform;
+      animation: rotateVoiceOrbit3 9s linear infinite;
+      z-index: 3;
+      pointer-events: none;
+      transition: transform 0.08s ease-out;
+    }
+
+    @keyframes rotateVoiceOrbit1 {
+      0% { transform: rotateX(68deg) rotateY(18deg) rotateZ(0deg); }
+      100% { transform: rotateX(68deg) rotateY(18deg) rotateZ(360deg); }
+    }
+
+    @keyframes rotateVoiceOrbit2 {
+      0% { transform: rotateX(32deg) rotateY(60deg) rotateZ(360deg); }
+      100% { transform: rotateX(32deg) rotateY(60deg) rotateZ(0deg); }
+    }
+
+    @keyframes rotateVoiceOrbit3 {
+      0% { transform: rotateX(55deg) rotateY(-40deg) rotateZ(0deg); }
+      100% { transform: rotateX(55deg) rotateY(-40deg) rotateZ(360deg); }
+    }
+
+    /* Thinking State (Fast orbital spin & bright cyan/purple aura) */
+    .voice-orbital-container.thinking .voice-ring-cyan {
+      animation: rotateVoiceOrbit1 1.6s linear infinite;
+      filter: drop-shadow(0 0 14px #00f0ff);
+    }
+    .voice-orbital-container.thinking .voice-ring-purple {
+      animation: rotateVoiceOrbit2 1.8s linear infinite;
+      filter: drop-shadow(0 0 14px #a855f7);
+    }
+    .voice-orbital-container.thinking .voice-ring-dashed {
+      animation: rotateVoiceOrbit3 2.0s linear infinite;
+      filter: drop-shadow(0 0 12px #c084fc);
+    }
+    .voice-orbital-container.thinking .voice-orb-glow {
+      animation: voiceGlowPulse 1.2s ease-in-out infinite alternate;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.45) 0%, rgba(168, 85, 247, 0.3) 50%, transparent 70%);
+    }
+
+    /* Speaking State (Smooth rhythmic neon pulses) */
+    .voice-orbital-container.speaking .voice-ring-cyan {
+      animation: rotateVoiceOrbit1 4s linear infinite;
+      filter: drop-shadow(0 0 16px #38bdf8);
+      border-top-color: #67e8f9;
+      border-bottom-color: #0ea5e9;
+    }
+    .voice-orbital-container.speaking .voice-ring-purple {
+      animation: rotateVoiceOrbit2 4.5s linear infinite;
+      filter: drop-shadow(0 0 16px #ec4899);
+      border-left-color: #f472b6;
+      border-right-color: #db2777;
+    }
+    .voice-orbital-container.speaking .voice-orb-glow {
+      animation: voiceGlowPulse 1.5s ease-in-out infinite alternate;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(56, 189, 248, 0.3) 50%, transparent 70%);
+    }
+    .voice-orbital-container.speaking .voice-icon-center-box {
+      box-shadow: 0 8px 30px rgba(236, 72, 153, 0.5), 0 0 20px rgba(56, 189, 248, 0.6);
+    }
+
+    .voice-status-text {
+      font-size: 23px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-top: 14px;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease;
+    }
+
+    .voice-status-text.thinking {
+      background: linear-gradient(90deg, #38bdf8, #c084fc, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: textShimmer 2s linear infinite;
+    }
+
+    .voice-status-text.speaking {
+      color: #38bdf8;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    }
+
+    @keyframes textShimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .voice-transcript-bubble {
+      width: 90%;
+      max-width: 440px;
+      min-height: 58px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 24px;
+      padding: 16px 22px;
+      color: #f8fafc;
+      font-size: 17.5px;
+      line-height: 1.65;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      word-wrap: break-word;
+      font-family: 'Kalpurush', system-ui, -apple-system, sans-serif;
+      letter-spacing: 0.2px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .voice-transcript-bubble.active-speech {
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .voice-transcript-bubble.ai-reply {
+      border-color: rgba(192, 132, 252, 0.5);
+      box-shadow: 0 0 25px rgba(192, 132, 252, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      text-align: center;
+    }
+
+    .voice-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 34px;
+      width: 100%;
+    }
+
+    .voice-ctrl-btn {
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .voice-ctrl-btn:active {
+      transform: scale(0.9);
+    }
+
+    .voice-mute-btn {
+      width: 58px;
+      height: 58px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .voice-mute-btn.muted {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #f87171;
+    }
+
+    .voice-end-btn {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(239, 68, 68, 0.5);
     }
 
     /* Modals */
@@ -761,12 +1167,58 @@
   <!-- Clean Input Footer -->
   <footer>
     <textarea id="user-input" rows="1" placeholder="Type a message or task..." oninput="handleInputChange(this)" onkeydown="checkEnter(event)"></textarea>
-    <button id="send-btn" onclick="handleSend()" title="Send">
+    <button id="voice-btn" type="button" onclick="startVoiceMode()" title="Voice Call Assistant">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+    </button>
+    <button id="send-btn" type="button" onclick="handleSend()" title="Send">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="transform: translate(1px, 0); display: block;">
         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
       </svg>
     </button>
   </footer>
+
+  <!-- Siri / Jarvis Iridescent Voice Assistant Overlay -->
+  <div id="voice-overlay" class="voice-overlay">
+    <div class="voice-header">
+      <div></div>
+      <button class="voice-close-btn" onclick="endVoiceMode()" title="Close">✕</button>
+    </div>
+
+    <div class="voice-center">
+      <div class="voice-orbital-container" id="voice-orbital-container" onclick="handleOrbClick()" title="ট্যাপ করে কথা শেষ করুন বা থামান">
+        <div class="voice-orb-glow" id="voice-orb-glow"></div>
+        <div class="voice-ring-cyan" id="voice-ring-cyan"></div>
+        <div class="voice-ring-purple" id="voice-ring-purple"></div>
+        <div class="voice-ring-dashed" id="voice-ring-dashed"></div>
+        <div class="voice-icon-backdrop-disc" id="voice-icon-backdrop-disc"></div>
+        <div class="voice-icon-center-box" id="voice-icon-center-box">
+          <img src="icon.png" alt="Hibban AI" class="voice-icon-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'24\' fill=\'%23030712\'/><circle cx=\'50\' cy=\'50\' r=\'28\' fill=\'none\' stroke=\'%2338bdf8\' stroke-width=\'5\'/><path d=\'M38 36v28l26-14z\' fill=\'%2338bdf8\'/></svg>'">
+        </div>
+        <div id="voice-orb" style="display:none;"></div>
+      </div>
+
+      <div class="voice-status-text" id="voice-status-text">Listening...</div>
+
+      <div class="voice-transcript-bubble" id="voice-transcript-bubble">আমি শুনছি, বলুন...</div>
+    </div>
+
+    <div class="voice-controls">
+      <button class="voice-ctrl-btn voice-mute-btn" id="voice-mute-btn" onclick="toggleVoiceMute()" title="Mute Microphone">
+        <svg id="voice-mute-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </button>
+      <button class="voice-ctrl-btn voice-end-btn" onclick="endVoiceMode()" title="End Call">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+          <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <!-- Beautiful Clear Chat Confirmation Modal -->
   <div class="modal-backdrop" id="clear-modal">
@@ -938,14 +1390,15 @@
         type: "function",
         function: {
           name: "device_control",
-          description: "Control hardware channels, volume, ringer mode, and system settings. Action types: 'set_volume' (requires stream: 'media'|'ring'|'notification'|'voice' and volume_percent: 0-100), 'set_ringer' (requires mode: 'normal'|'silent'|'vibrate').",
+          description: "Control hardware channels, volume, ringer mode, Do Not Disturb (DND), flashlight, Wi-Fi hotspot, Wi-Fi, Bluetooth, and system settings. Action types: 'set_volume' (requires stream: 'media'|'ring'|'notification'|'voice' and volume_percent: 0-100), 'set_ringer' (requires mode: 'normal'|'silent'|'vibrate'), 'set_dnd' (requires enabled: true|false, optional mode: 'priority'|'total_silence'|'alarms_only'|'off'), 'set_flashlight' (requires enabled: true|false), 'open_hotspot' (opens Wi-Fi hotspot & tethering settings), 'open_wifi' (opens Wi-Fi settings), 'open_bluetooth' (opens Bluetooth settings).",
           parameters: {
             type: "object",
             properties: {
-              action: { type: "string", enum: ["set_volume", "set_ringer"], description: "Control action to execute." },
+              action: { type: "string", enum: ["set_volume", "set_ringer", "set_dnd", "set_flashlight", "open_hotspot", "open_wifi", "open_bluetooth"], description: "Control action to execute." },
               stream: { type: "string", enum: ["media", "ring", "notification", "voice"], description: "Audio stream to modify." },
               volume_percent: { type: "integer", description: "Target volume level (0 to 100)." },
-              mode: { type: "string", enum: ["normal", "silent", "vibrate"], description: "Target ringer mode." }
+              mode: { type: "string", description: "Target ringer mode ('normal'|'silent'|'vibrate') or DND mode ('priority'|'total_silence'|'alarms_only'|'off')." },
+              enabled: { type: "boolean", description: "For set_dnd and set_flashlight: true to turn on, false to turn off." }
             },
             required: ["action"]
           }
@@ -1010,8 +1463,8 @@
             properties: {
               action: {
                 type: "string",
-                enum: ["get_contacts", "make_call", "send_sms", "get_call_logs"],
-                description: "Action to perform: 'get_contacts' (search contacts database), 'make_call' (dial or directly call number), 'send_sms' (send text SMS to number), 'get_call_logs' (inspect call history)."
+                enum: ["get_contacts", "make_call", "send_sms", "read_sms", "get_call_logs"],
+                description: "Action to perform: 'get_contacts' (search contacts database), 'make_call' (dial or directly call number), 'send_sms' (send text SMS to number), 'read_sms' (read latest incoming SMS inbox), 'get_call_logs' (inspect call history)."
               },
               query: { type: "string", description: "Search query for contacts (e.g. contact name or phone number)." },
               phone_number: { type: "string", description: "Target phone number for call or SMS." },
@@ -1106,6 +1559,12 @@ CORE TOOLS:
 - web_search: Search Google and live web for real-time information.
 - download_file: Download files from URLs to device storage.
 - process_file_data: Deep inspect and process any file, media, or multi-format data on device.
+
+5. STRICT DEVICE CONTROL & TRUTHFUL PERMISSION REPORTING:
+   - When the user asks to turn on or off Do Not Disturb (DND), silent mode, or change ringer mode, ALWAYS call 'device_control' with action: 'set_dnd' (or action: 'set_ringer').
+   - If the tool result indicates need_permission: true or success: false, the Android system has ALREADY automatically launched the system 'Do Not Disturb Access' (Notification Policy) settings screen on the user's screen.
+   - You must honestly and politely tell the user in Bengali that the permission settings screen has been launched, and they simply need to toggle Hibban AI to 'Allowed', after which DND will be fully operational.
+   - NEVER lie, hallucinate, or claim you enabled Silent mode or DND when the tool failed or requested permission! Always report the exact tool result truthfully.
 
 Be thoughtful, disciplined, accurate, and execute tasks cleanly.`;
 
@@ -1238,6 +1697,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     });
 
     let isCheckingOmni = false;
+    let omniFailedCount = 0;
     async function checkOmniRouteStatus() {
       if (isCheckingOmni) return;
       isCheckingOmni = true;
@@ -1246,7 +1706,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
         const resp = await fetch("http://127.0.0.1:20128/v1/models", {
           headers: { "Authorization": `Bearer ${omniRouteKey}` },
           signal: controller.signal
@@ -1254,6 +1714,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         clearTimeout(timeoutId);
 
         if (resp.ok || resp.status === 200 || resp.status === 401) {
+          omniFailedCount = 0;
           if (dot) dot.className = "status-dot";
           if (statusText) statusText.textContent = "Active";
 
@@ -1278,6 +1739,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (window.AndroidBridge && typeof window.AndroidBridge.isOmniRouteRunning === 'function') {
         try {
           if (window.AndroidBridge.isOmniRouteRunning()) {
+            omniFailedCount = 0;
             if (dot) dot.className = "status-dot";
             if (statusText) statusText.textContent = "Active";
             isCheckingOmni = false;
@@ -1287,11 +1749,14 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         } catch (ignored) {}
       }
 
-      if (dot) dot.className = "status-dot busy";
-      if (statusText) statusText.textContent = "Connecting...";
+      omniFailedCount++;
+      if (omniFailedCount >= 3) {
+        if (dot) dot.className = "status-dot busy";
+        if (statusText) statusText.textContent = "Connecting...";
 
-      if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
-        try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+        if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
+          try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
+        }
       }
 
       isCheckingOmni = false;
@@ -1542,7 +2007,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         <div class="gemini-thinking-body">
           <span class="gemini-shimmer-label">Thinking...</span>
           <div class="gemini-wave-bar">
-            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
           </div>
         </div>
       `;
@@ -1569,7 +2034,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         addAction(actionText) {
           actionsList.push(actionText);
           if (shimmerLabel) {
-            shimmerLabel.textContent = `Executing task (${actionsList.length})...`;
+            shimmerLabel.textContent = "Working...";
           }
           container.scrollTop = container.scrollHeight;
         },
@@ -1625,10 +2090,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         dot.className = "status-dot busy";
         statusText.textContent = "Active";
         if (activeAgentBubble) {
-          // Strictly single line and max 35 characters
-          let cleanText = (text || "Thinking...").replace(/\s+/g, " ").trim();
-          if (cleanText.length > 35) cleanText = cleanText.substring(0, 32) + "...";
-          activeAgentBubble.setStatus(cleanText);
+          activeAgentBubble.setStatus("Thinking...");
         }
       } else {
         dot.className = "status-dot";
@@ -2153,6 +2615,18 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
             return window.AndroidBridge.setAudioVolume(args.stream || "media", args.volume_percent != null ? args.volume_percent : 50);
           } else if (act === "set_ringer") {
             return window.AndroidBridge.setRingerMode(args.mode || "normal");
+          } else if (act === "set_dnd") {
+            const enabled = args.enabled !== false;
+            return window.AndroidBridge.setDoNotDisturb(enabled, args.mode || (enabled ? "priority" : "off"));
+          } else if (act === "set_flashlight" || act === "set_torch") {
+            const enabled = args.enabled !== false;
+            return window.AndroidBridge.setFlashlight(enabled);
+          } else if (act === "open_hotspot" || act === "set_hotspot") {
+            return window.AndroidBridge.dispatchIntent("android.settings.TETHER_SETTINGS", "", "", "", "");
+          } else if (act === "open_wifi" || act === "set_wifi") {
+            return window.AndroidBridge.dispatchIntent("android.settings.WIFI_SETTINGS", "", "", "", "");
+          } else if (act === "open_bluetooth" || act === "set_bluetooth") {
+            return window.AndroidBridge.dispatchIntent("android.settings.BLUETOOTH_SETTINGS", "", "", "", "");
           }
           return `Error: Unknown device control action '${args.action}'`;
         } else if (name === "intent_action") {
@@ -2163,7 +2637,12 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           return window.AndroidBridge.getRecentNotifications(args.limit || 15);
         } else if (name === "telephony_manager") {
           const act = (args.action || "").toLowerCase();
-          if (act === "get_contacts" || args.query) {
+          if (act === "read_sms" || act === "get_sms") {
+            if (typeof window.AndroidBridge.getSmsInbox === 'function') {
+              return window.AndroidBridge.getSmsInbox(args.limit || 15);
+            }
+            return "Error: AndroidBridge.getSmsInbox is not available.";
+          } else if (act === "get_contacts" || args.query) {
             return window.AndroidBridge.getContacts(args.query || "", args.limit || 25);
           } else if (act === "make_call" || (args.phone_number && !args.message)) {
             return window.AndroidBridge.makePhoneCall(args.phone_number || args.query || "", !!args.direct_call);
@@ -2258,6 +2737,560 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       return str.replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
+    }
+
+    // ==========================================
+    // JARVIS-STYLE BENGALI VOICE ASSISTANT
+    // ==========================================
+    let isVoiceActive = false;
+    let isVoiceMuted = false;
+    let isVoiceAiSpeaking = false;
+    let isVoiceProcessing = false;
+    let voiceSessionHistory = [];
+    let voiceRestartTimer = null;
+    let voicePlaybackTimer = null;
+    let currentPendingReply = null;
+
+    function startVoiceMode() {
+      if (isVoiceActive) return;
+      isVoiceActive = true;
+      isVoiceMuted = false;
+      isVoiceAiSpeaking = false;
+      isVoiceProcessing = false;
+      currentPendingReply = null;
+      voiceSessionHistory = [];
+
+      const overlay = document.getElementById("voice-overlay");
+      if (overlay) overlay.classList.add("active");
+
+      const muteBtn = document.getElementById("voice-mute-btn");
+      if (muteBtn) muteBtn.classList.remove("muted");
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
+        if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
+          window.AndroidBridge.requestAudioPermission();
+        }
+        return;
+      }
+
+      setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.acquireWakeLock === 'function') {
+        try { window.AndroidBridge.acquireWakeLock(); } catch (e) {}
+      }
+
+      startNativeListening();
+    }
+
+    function endVoiceMode() {
+      isVoiceActive = false;
+      currentPendingReply = null;
+      if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
+      if (voicePlaybackTimer) { clearTimeout(voicePlaybackTimer); voicePlaybackTimer = null; }
+
+      const overlay = document.getElementById("voice-overlay");
+      if (overlay) overlay.classList.remove("active");
+
+      if (window.AndroidBridge) {
+        try { window.AndroidBridge.stopSpeechRecognition(); } catch (e) {}
+        try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
+        try { window.AndroidBridge.releaseWakeLock(); } catch (e) {}
+      }
+      isVoiceAiSpeaking = false;
+      isVoiceProcessing = false;
+    }
+
+    function toggleVoiceMode() {
+      if (isVoiceActive) {
+        endVoiceMode();
+      } else {
+        startVoiceMode();
+      }
+    }
+
+    function toggleVoiceMute() {
+      if (!isVoiceActive) return;
+      isVoiceMuted = !isVoiceMuted;
+      const muteBtn = document.getElementById("voice-mute-btn");
+      if (isVoiceMuted) {
+        if (muteBtn) muteBtn.classList.add("muted");
+        if (window.AndroidBridge) {
+          try { window.AndroidBridge.stopSpeechRecognition(); } catch (e) {}
+        }
+        setVoiceUIState("muted", "Microphone Muted", "মাইক্রোফোন মিউট করা হয়েছে");
+      } else {
+        if (muteBtn) muteBtn.classList.remove("muted");
+        setVoiceUIState("listening", "Listening...");
+        startNativeListening();
+      }
+    }
+
+    function setVoiceUIState(state, statusText, bubbleText) {
+      const container = document.getElementById("voice-orbital-container");
+      const orb = document.getElementById("voice-orb");
+      const statusEl = document.getElementById("voice-status-text");
+      const bubbleEl = document.getElementById("voice-transcript-bubble");
+
+      if (statusEl) {
+        if (statusText) statusEl.textContent = statusText;
+        statusEl.classList.remove("thinking", "speaking");
+        if (state === "thinking") statusEl.classList.add("thinking");
+        else if (state === "speaking") statusEl.classList.add("speaking");
+      }
+
+      if (bubbleEl && bubbleText !== undefined && bubbleText !== null) {
+        bubbleEl.textContent = bubbleText;
+        bubbleEl.classList.remove("active-speech", "ai-reply");
+        if (state === "thinking") {
+          bubbleEl.classList.add("active-speech");
+        } else if (state === "speaking") {
+          bubbleEl.classList.add("ai-reply");
+        }
+      }
+
+      if (container) {
+        container.classList.remove("speaking", "thinking");
+        if (state === "speaking") {
+          container.classList.add("speaking");
+        } else if (state === "thinking") {
+          container.classList.add("thinking");
+        }
+      }
+      if (orb) {
+        orb.classList.remove("speaking", "thinking");
+        if (state === "speaking") orb.classList.add("speaking");
+        else if (state === "thinking") orb.classList.add("thinking");
+      }
+    }
+
+    function scheduleVoiceRestart(delayMs = 300) {
+      if (voiceRestartTimer) clearTimeout(voiceRestartTimer);
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
+
+      voiceRestartTimer = setTimeout(() => {
+        if (isVoiceActive && !isVoiceMuted && !isVoiceAiSpeaking && !isVoiceProcessing) {
+          startNativeListening();
+        }
+      }, delayMs);
+    }
+
+    function startNativeListening() {
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
+      if (window.AndroidBridge && typeof window.AndroidBridge.startSpeechRecognition === 'function') {
+        try {
+          window.AndroidBridge.startSpeechRecognition("bn-BD");
+        } catch (e) {
+          console.error("Failed to start speech recognition:", e);
+        }
+      }
+    }
+
+    function handleOrbClick() {
+      if (!isVoiceActive) return;
+      if (isVoiceAiSpeaking) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.stopBengaliVoice === 'function') {
+          try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
+        }
+        window.onVoicePlaybackFinished('force_stop');
+        return;
+      }
+      if (isVoiceProcessing) return;
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.finishSpeechNow === 'function') {
+        try { window.AndroidBridge.finishSpeechNow(); } catch (e) {}
+      }
+    }
+
+    // Dispatched directly from AndroidBridge into window
+    window.onVoiceStateChange = function(state) {
+      if (!isVoiceActive || isVoiceMuted) return;
+      if (state === "ready" && !isVoiceAiSpeaking && !isVoiceProcessing) {
+        setVoiceUIState("listening", "Listening...");
+      } else if (state === "listening" && !isVoiceAiSpeaking && !isVoiceProcessing) {
+        setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+      } else if (state === "processing" && !isVoiceAiSpeaking) {
+        setVoiceUIState("thinking", "Thinking...");
+      }
+    };
+
+    window.onVoiceRmsChanged = function(normVal) {
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
+      const glow = document.getElementById("voice-orb-glow");
+      const iconCenter = document.getElementById("voice-icon-center-box");
+      const disc = document.getElementById("voice-icon-backdrop-disc");
+
+      const norm = Math.max(0, Math.min(1, Number(normVal) || 0));
+      if (glow) {
+        glow.style.transform = `scale(${(0.88 + norm * 0.55).toFixed(3)})`;
+        glow.style.opacity = (0.55 + norm * 0.45).toFixed(2);
+      }
+      if (iconCenter) {
+        iconCenter.style.transform = `scale(${(1 + norm * 0.12).toFixed(3)})`;
+      }
+      if (disc) {
+        disc.style.transform = `scale(${(1 + norm * 0.08).toFixed(3)})`;
+      }
+    };
+
+    window.onVoicePartialResult = function(data) {
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking) return;
+      let partial = "";
+      if (typeof data === "string") {
+        partial = data.trim();
+      } else if (data && data.partial) {
+        partial = data.partial.trim();
+      }
+      if (partial) {
+        const bubble = document.getElementById("voice-transcript-bubble");
+        if (bubble) {
+          bubble.classList.add("active-speech");
+          bubble.textContent = partial;
+          bubble.scrollTop = bubble.scrollHeight;
+        }
+      }
+    };
+
+    window.onVoiceFinalResult = function(data) {
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking) return;
+      const text = data && data.text ? data.text.trim() : "";
+
+      if (!text || text.length < 1) {
+        scheduleVoiceRestart(350);
+        return;
+      }
+
+      // Display what the user spoke immediately with active speech styling
+      const bubble = document.getElementById("voice-transcript-bubble");
+      if (bubble) {
+        bubble.classList.add("active-speech");
+        bubble.textContent = text;
+        bubble.scrollTop = bubble.scrollHeight;
+      }
+
+      handleVoiceTurn(text);
+    };
+
+    window.onMicrophonePermissionGranted = function() {
+      if (isVoiceActive && !isVoiceMuted && !isVoiceAiSpeaking && !isVoiceProcessing) {
+        setVoiceUIState("listening", "Listening...");
+        startNativeListening();
+      }
+    };
+
+    window.onVoiceError = function(errorData) {
+      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
+      const code = (typeof errorData === "object" && errorData.code != null) ? errorData.code : Number(errorData);
+
+      if (code === 9) {
+        if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
+        if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
+          setVoiceUIState("listening", "Listening...", "মাইক্রোফোন পারমিশন প্রয়োজন");
+          if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
+            window.AndroidBridge.requestAudioPermission();
+          }
+          return;
+        }
+        setVoiceUIState("listening", "Listening...");
+        scheduleVoiceRestart(600);
+        return;
+      }
+
+      if (code === 2) {
+        setVoiceUIState("listening", "Listening...", "নেটওয়ার্ক ধীর, পুনরায় চেষ্টা করা হচ্ছে...");
+      }
+      scheduleVoiceRestart(600);
+    };
+
+    window.onVoicePlaybackStarted = function(callbackId) {
+      if (!isVoiceActive) return;
+      isVoiceProcessing = false;
+      isVoiceAiSpeaking = true;
+      if (currentPendingReply) {
+        setVoiceUIState("speaking", "Speaking...", currentPendingReply);
+      } else {
+        setVoiceUIState("speaking", "Speaking...");
+      }
+    };
+
+    window.onVoicePlaybackFinished = function(callbackId) {
+      if (voicePlaybackTimer) { clearTimeout(voicePlaybackTimer); voicePlaybackTimer = null; }
+      if (!isVoiceActive) return;
+      isVoiceAiSpeaking = false;
+      isVoiceProcessing = false;
+      currentPendingReply = null;
+      // Keep the AI's reply visible in the bubble while returning to listening state
+      setVoiceUIState("listening", "Listening...");
+      scheduleVoiceRestart(300);
+    };
+
+    function tryFastVoiceDeviceAction(userText) {
+      if (!window.AndroidBridge) return null;
+      const t = userText.toLowerCase().trim();
+
+      // 1. Identity & Creator Verification
+      if (/(কে তৈরি করেছে|কে বানিয়েছে|কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমার নির্মাতা|তোমার স্রষ্টা|কে বানাইছে|তৈরি কে করেছে|কে বানালো|who created you|who made you|who built you|who designed you)/i.test(t)) {
+        return "আমাকে আহমাদ হিব্বান (Ahmad Hibban) তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার।";
+      }
+
+      // 2. Capabilities Summary
+      if (/(তুমি কি কি করতে পারো|তুমি কি করতে পারো|তোমার ক্ষমতা কি|তোমার কাজ কি|what can you do)/i.test(t)) {
+        return "আমি আহমাদ হিব্বানের স্বায়ত্তশাসিত এআই ডেভেলপার ও সিস্টেম কন্ট্রোলার। কোডিং, সফটওয়্যার ডেভেলপমেন্ট, লিনাক্স কমান্ড, ফোন সেটিংস ও হার্ডওয়্যার কন্ট্রোল সহ যেকোনো কাজ আমি করতে সক্ষম।";
+      }
+
+      // 3. Hotspot & Wi-Fi Tethering Control
+      if (/(হটস্পট|hotspot|টিথারিং|tethering)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.settings.TETHER_SETTINGS", "", "", "", ""); } catch (e) {}
+        return "অবশ্যই স্যার, ওয়াই-ফাই হটস্পট সেটিংস খুলে দিয়েছি।";
+      }
+
+      // 4. Wi-Fi Control
+      if (/(ওয়াইফাই|ওয়াইফাই|ওয়াই-ফাই|ওয়াই-ফাই|wifi|wi-fi)/i.test(t) && /(অন|চালু|খোল|খোলো|open|turn on|enable|সেটিংস)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.settings.WIFI_SETTINGS", "", "", "", ""); } catch (e) {}
+        return "ওয়াই-ফাই সেটিংস খুলে দিয়েছি, স্যার।";
+      }
+
+      // 5. Bluetooth Control
+      if (/(ব্লুটুথ|bluetooth)/i.test(t) && /(অন|চালু|খোল|খোলো|open|turn on|enable|সেটিংস)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.settings.BLUETOOTH_SETTINGS", "", "", "", ""); } catch (e) {}
+        return "ব্লুটুথ সেটিংস খুলে দিয়েছি, স্যার।";
+      }
+
+      // 6. Flashlight / Torch Control
+      if (/(ফ্ল্যাশলাইট|ফ্ল্যাশ|টর্চ|টর্চলাইট|flashlight|torch)/i.test(t)) {
+        if (/(বন্ধ|অফ|নিভিয়ে|নিভিয়ে|off|disable)/i.test(t)) {
+          try { window.AndroidBridge.setFlashlight(false); } catch (e) {}
+          return "টর্চলাইট বন্ধ করে দিয়েছি, স্যার।";
+        } else {
+          try { window.AndroidBridge.setFlashlight(true); } catch (e) {}
+          return "টর্চলাইট জ্বালিয়ে দিয়েছি, স্যার।";
+        }
+      }
+
+      // 7. Battery Telemetry & Charge Status
+      if (/(ব্যাটারি|চার্জ কত|চার্জ কেমন|battery|charge)/i.test(t)) {
+        try {
+          const b = JSON.parse(window.AndroidBridge.getBatteryTelemetry());
+          if (b && b.percentage != null) {
+            return `আপনার ফোনের ব্যাটারিতে বর্তমানে ${b.percentage}% চার্জ রয়েছে, স্যার।`;
+          }
+        } catch (e) {}
+        return "ব্যাটারি তথ্য সংগ্রহ করা যাচ্ছে না, স্যার।";
+      }
+
+      // 8. App Extraction & Archive Automation (e.g. HibbanFlix)
+      if (/(hibbanflix|হিব্বানফ্লিক্স|হিব্বান ফ্লিক্স)/i.test(t) && /(এক্সট্র্যাক্ট|আনজিপ|extract|unzip)/i.test(t)) {
+        try {
+          window.AndroidBridge.executeCommand("mkdir -p /storage/emulated/0/Download/HibbanFlix && cd /storage/emulated/0/Download/HibbanFlix && /data/data/com.termux/files/usr/bin/unzip -o -q /storage/emulated/0/Download/HibbanFlix.apk", "");
+          return "অবশ্যই স্যার, HibbanFlix অ্যাপটি ডাউনলোড ফোল্ডারে সফলভাবে এক্সট্র্যাক্ট করে ফেলেছি।";
+        } catch (e) {}
+      }
+
+      // 9. Do Not Disturb (DND) Control
+      if (/(ডু নট ডিস্টার্ব|dnd|do not disturb|ডোন্ট ডিস্টার্ব|বিরক্ত করবেন না)/i.test(t)) {
+        if (/(অফ|বন্ধ|disable|off|খোল|তুলে)/i.test(t)) {
+          try { window.AndroidBridge.setDoNotDisturb(false, "off"); } catch (e) {}
+          return "ডু নট ডিস্টার্ব বন্ধ করা হয়েছে, স্যার।";
+        } else {
+          try { window.AndroidBridge.setDoNotDisturb(true, "priority"); } catch (e) {}
+          return "অবশ্যই স্যার, ডু নট ডিস্টার্ব সক্রিয় করে দিয়েছি।";
+        }
+      }
+
+      // 10. Silent / Ringer / Mute Control
+      if (/(সাইলেন্ট|মিউট|নীরব|silent)/i.test(t)) {
+        try { window.AndroidBridge.setRingerMode("silent"); } catch (e) {}
+        return "ফোন সাইলেন্ট মোডে সেট করেছি, স্যার।";
+      }
+      if (/(ভাইব্রেট|ভাইব্রেশন|কম্পন|vibrate)/i.test(t)) {
+        try { window.AndroidBridge.setRingerMode("vibrate"); } catch (e) {}
+        return "ফোন ভাইব্রেশন মোডে রাখা হয়েছে, স্যার।";
+      }
+      if (/(নরমাল|শব্দ চালু|শব্দ অন|আনমিউট|রিঙ্গার)/i.test(t)) {
+        try { window.AndroidBridge.setRingerMode("normal"); } catch (e) {}
+        return "রিঙ্গার মোড স্বাভাবিক করা হয়েছে, স্যার।";
+      }
+
+      // 11. Audio Volume Control
+      if (/(ভলিউম|সাউন্ড|শব্দ|sound|volume)/i.test(t)) {
+        if (/(বাড়া|উচ্চ|ফুল|১০০|up|increase|high|max)/i.test(t)) {
+          try { window.AndroidBridge.setAudioVolume("media", 90); } catch (e) {}
+          return "মিডিয়া ভলিউম বাড়িয়ে দিয়েছি, স্যার।";
+        }
+        if (/(কমা|ধীরে|কম|low|down|decrease)/i.test(t)) {
+          try { window.AndroidBridge.setAudioVolume("media", 25); } catch (e) {}
+          return "মিডিয়া ভলিউম কমিয়ে দিয়েছি, স্যার।";
+        }
+      }
+
+      // 12. Intent Apps & Settings
+      if (/(ইউটিউব|youtube)/i.test(t) && /(খোল|চালু|open)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.intent.action.VIEW", "https://youtube.com", "com.google.android.youtube", "", ""); } catch (e) {}
+        return "ইউটিউব খুলে দিচ্ছি, স্যার।";
+      }
+      if (/(হোয়াটসঅ্যাপ|হোয়াটসঅ্যাপ|whatsapp)/i.test(t) && /(খোল|চালু|open)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("", "", "com.whatsapp", "", ""); } catch (e) {}
+        return "হোয়াটসঅ্যাপ খুলে দিচ্ছি, স্যার।";
+      }
+      if (/(সেটিংস|settings)/i.test(t) && /(খোল|যা|open)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.settings.SETTINGS", "", "", "", ""); } catch (e) {}
+        return "ফোনের সেটিংস খুলে দিয়েছি, স্যার।";
+      }
+      if (/(ক্যামেরা|camera)/i.test(t) && /(খোল|চালু|open)/i.test(t)) {
+        try { window.AndroidBridge.dispatchIntent("android.media.action.IMAGE_CAPTURE", "", "", "", ""); } catch (e) {}
+        return "ক্যামেরা চালু করে দিচ্ছি, স্যার।";
+      }
+
+      return null;
+    }
+
+    async function fetchVoiceChatResponse(userQuery) {
+      const voiceSystemPrompt = `${getDynamicSystemPrompt()}
+
+VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
+1. ABSOLUTE IDENTITY: You are Hibban AI, created exclusively by Ahmad Hibban (আহমাদ হিব্বান). Ahmad Hibban is your master, creator, and phone owner. When asked who created you ("তোমাকে কে তৈরি করেছে?"), you MUST always proudly state that Ahmad Hibban created you ("আমাকে আহমাদ হিব্বান তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার।"). NEVER claim Google, OpenAI, Anthropic, or Duck.ai!
+2. ACTION OVER WORDS: When Ahmad Hibban asks you to do anything on his device (run commands, extract files, control settings, search web, read/write files, open apps), NEVER just give instructions or tell him how to do it manually. YOU ARE THE AUTONOMOUS CONTROLLER. CALL THE TOOLS IMMEDIATELY (run_command, telephony_manager, device_control, intent_action, notification_manager, web_search, etc.) and complete the task!
+3. SPOKEN NATURALNESS: Address Ahmad Hibban respectfully as 'স্যার' (Sir). Provide a clear, polite, natural spoken Bengali answer (1 to 2 spoken sentences). Do NOT output markdown code fences, bullet lists, asterisks, or hashtags in your spoken response.`;
+
+      voiceSessionHistory.push({ role: "user", content: userQuery });
+      if (voiceSessionHistory.length > 8) {
+        voiceSessionHistory = voiceSessionHistory.slice(-6);
+      }
+
+      let turnMessages = [
+        { role: "system", content: voiceSystemPrompt },
+        ...voiceSessionHistory
+      ];
+
+      // Dynamic models hierarchy (Fast Frontier Engines), NEVER DuckDuckGo
+      const modelsToUse = (dynamicModels && dynamicModels.length > 0) ? dynamicModels : ["auto/best-fast", "auto/best-coding-fast", "auto/best-chat", "agy/gemini-3.8-flash-tiered", "gemini-3-flash"];
+
+      // Multi-turn tool execution loop for autonomous voice actions
+      for (let turn = 0; turn < 4; turn++) {
+        if (!isVoiceActive) break;
+
+        const payload = {
+          model: activeModel || modelsToUse[0],
+          messages: turnMessages,
+          tools: TOOLS,
+          tool_choice: "auto"
+        };
+
+        let data = null;
+        try {
+          data = await fetchOmniRouteChat(payload);
+        } catch (chatErr) {
+          console.warn("OmniRoute voice turn failed:", chatErr);
+          break;
+        }
+
+        const choice = data?.choices?.[0];
+        if (!choice || !choice.message) break;
+
+        const msg = choice.message;
+        turnMessages.push(msg);
+
+        const toolCalls = msg.tool_calls || [];
+        if (toolCalls.length === 0) {
+          // Model completed execution and produced the spoken response!
+          const finalReply = (msg.content || "").trim();
+          if (finalReply) {
+            try {
+              chatHistory.push({ role: "user", content: userQuery });
+              chatHistory.push({ role: "assistant", content: finalReply });
+              persistChat();
+            } catch (ignored) {}
+            return finalReply;
+          }
+          break;
+        }
+
+        // Execute tools invoked by the model
+        for (const call of toolCalls) {
+          if (!isVoiceActive) break;
+          const fname = call.function.name;
+          let fargs = {};
+          try { fargs = JSON.parse(call.function.arguments || "{}"); } catch (e) {}
+
+          setVoiceUIState("thinking", `Executing ${fname}...`, userQuery);
+          const toolResult = await executeTool(fname, fargs);
+
+          turnMessages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            name: fname,
+            content: String(toolResult)
+          });
+        }
+      }
+
+      return "কাজটি সম্পন্ন করার চেষ্টা করেছি, স্যার।";
+    }
+
+    async function handleVoiceTurn(userText) {
+      if (!isVoiceActive) return;
+      isVoiceProcessing = true;
+      setVoiceUIState("thinking", "Thinking...", userText);
+
+      try {
+        // Fast autonomous device intent execution (DND, volume, silent, apps)
+        let rawReply = tryFastVoiceDeviceAction(userText);
+        if (!rawReply) {
+          rawReply = await fetchVoiceChatResponse(userText);
+        }
+
+        const spokenText = rawReply
+          .replace(/[*#_`~>\[\]\(\)\{\}]/g, "")
+          .replace(/\n+/g, " ")
+          .trim();
+
+        voiceSessionHistory.push({ role: "assistant", content: spokenText });
+
+        if (!isVoiceActive) return;
+
+        currentPendingReply = spokenText;
+        const callbackId = "voice_" + Date.now();
+
+        let playbackTriggered = false;
+        window.onVoicePlaybackStarted = function(cbId) {
+          if (!isVoiceActive || playbackTriggered) return;
+          playbackTriggered = true;
+          isVoiceProcessing = false;
+          isVoiceAiSpeaking = true;
+          setVoiceUIState("speaking", "Speaking...", spokenText);
+        };
+
+        // Fallback: If TTS takes more than 1.6s, reveal text so user is never left waiting blindly
+        setTimeout(() => {
+          if (isVoiceActive && !playbackTriggered && isVoiceProcessing) {
+            playbackTriggered = true;
+            isVoiceProcessing = false;
+            isVoiceAiSpeaking = true;
+            setVoiceUIState("speaking", "Speaking...", spokenText);
+          }
+        }, 1600);
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.speakBengali === 'function') {
+          window.AndroidBridge.speakBengali(spokenText, callbackId);
+          voicePlaybackTimer = setTimeout(() => {
+            if (isVoiceAiSpeaking || isVoiceProcessing) {
+              window.onVoicePlaybackFinished(callbackId);
+            }
+          }, 35000);
+        } else {
+          setTimeout(() => {
+            window.onVoicePlaybackStarted(callbackId);
+            setTimeout(() => {
+              window.onVoicePlaybackFinished(callbackId);
+            }, 3500);
+          }, 200);
+        }
+      } catch (err) {
+        console.error("Voice turn error:", err);
+        isVoiceProcessing = false;
+        isVoiceAiSpeaking = false;
+        setVoiceUIState("listening", "Listening...", "সংযোগের সমস্যা হয়েছে, দয়া করে আবার বলুন।");
+        scheduleVoiceRestart(600);
+      }
     }
   </script>
 </body>

@@ -17,10 +17,25 @@ import java.net.Socket;
 public class HibbanDaemonService extends Service {
     private static final String CHANNEL_ID = "hibban_engine_channel";
     private static final int NOTIF_ID = 20128;
-    private PowerManager.WakeLock wakeLock;
+    private static volatile PowerManager.WakeLock sPersistentWakeLock = null;
     private Thread watchdogThread;
     private volatile boolean isRunning = false;
     private static volatile HibbanDaemonService instance;
+
+    public static synchronized void acquirePersistentWakeLock(Context context) {
+        try {
+            if (sPersistentWakeLock == null && context != null) {
+                PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
+                if (pm != null) {
+                    sPersistentWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.gcode.ai:OmniRouteKeepAlive");
+                    sPersistentWakeLock.setReferenceCounted(false);
+                }
+            }
+            if (sPersistentWakeLock != null && !sPersistentWakeLock.isHeld()) {
+                sPersistentWakeLock.acquire();
+            }
+        } catch (Throwable ignored) {}
+    }
 
     public static HibbanDaemonService getInstance() {
         return instance;
@@ -28,6 +43,7 @@ public class HibbanDaemonService extends Service {
 
     public static void start(Context context) {
         try {
+            acquirePersistentWakeLock(context);
             Intent intent = new Intent(context, HibbanDaemonService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent);
@@ -44,20 +60,22 @@ public class HibbanDaemonService extends Service {
         super.onCreate();
         instance = this;
         isRunning = true;
+        acquirePersistentWakeLock(this);
 
         createNotificationChannel();
         Notification notification = buildNotification("Hibban AI Engine Active", "OmniRoute Gateway & Background Execution on Port 20128");
-        startForeground(NOTIF_ID, notification);
-
-        // Keep CPU awake so background child processes are never frozen
-        try {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null) {
-                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hibban:daemon_service_lock");
-                wakeLock.setReferenceCounted(false);
-                wakeLock.acquire();
-            }
-        } catch (Throwable ignored) {}
+        
+        boolean foregroundStarted = false;
+        if (Build.VERSION.SDK_INT >= 29) {
+            try {
+                java.lang.reflect.Method m = Service.class.getMethod("startForeground", int.class, Notification.class, int.class);
+                m.invoke(this, NOTIF_ID, notification, 1); // 1 = FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                foregroundStarted = true;
+            } catch (Throwable ignored) {}
+        }
+        if (!foregroundStarted) {
+            startForeground(NOTIF_ID, notification);
+        }
 
         startWatchdog();
     }
@@ -71,6 +89,7 @@ public class HibbanDaemonService extends Service {
             );
             channel.setDescription("Maintains background OmniRoute AI Gateway and autonomous task execution.");
             channel.setShowBadge(false);
+
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) {
                 nm.createNotificationChannel(channel);
@@ -136,7 +155,7 @@ public class HibbanDaemonService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Return START_STICKY so OS recreates the service if killed
+        acquirePersistentWakeLock(this);
         return START_STICKY;
     }
 
@@ -146,9 +165,6 @@ public class HibbanDaemonService extends Service {
         instance = null;
         if (watchdogThread != null) {
             watchdogThread.interrupt();
-        }
-        if (wakeLock != null && wakeLock.isHeld()) {
-            try { wakeLock.release(); } catch (Throwable ignored) {}
         }
         super.onDestroy();
 

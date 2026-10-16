@@ -101,6 +101,8 @@ Hibban-AI/
 │   ├── setup.html        # Standalone extraction setup screen
 │   ├── icon.png          # App 3D branding icon
 │   ├── fonts/            # Kalpurush (Bengali) & Amiri (Arabic) fonts
+│   ├── edge_tts_bundle.tar.gz.part_aa # Neural Edge TTS dependencies
+│   ├── tts_synthesizer.py # Microsoft Edge Bengali neural voice synthesizer
 │   ├── system_bootstrap.tar.gz.part_a[a-d] # Embedded Linux rootfs (split parts)
 │   ├── omni_bootstrap.tar.gz.part_a[a-h]   # OmniRoute AI Gateway package
 │   ├── node_libs_bootstrap.tar.gz          # Node.js runtime libraries
@@ -108,13 +110,14 @@ Hibban-AI/
 ├── src/com/gcode/ai/
 │   ├── MainActivity.java # Setup progress extractor, OmniRoute lifecycle & WebView host
 │   ├── WebAppInterface.java # Standalone PRoot process engine, live web search & vision bridge
+│   ├── InAppSpeechRecognizer.java # Autonomous AudioRecord neural STT with fast silence cutoff
 │   ├── HibbanAccessibilityService.java # Screen reading, UI node clicks & gestures
 │   ├── HibbanNotificationListener.java # Notification stream auditing & interception
 │   └── HibbanDaemonService.java        # Background OmniRoute watchdog & CPU wake engine
 ├── res/                  # App drawables, launcher icons, strings
 ├── build_apk.sh          # Native Android build script (aapt + javac + d8 + apksigner)
 ├── debug.keystore        # Keystore for release APK signing
-├── HIBBAN_FEATURES.md    # Detailed technical specification & capabilities
+├── HIBBAN_FEATURES.md    # Complete microscopic technical specification & capabilities
 └── README.md             # Project documentation
 ```
 

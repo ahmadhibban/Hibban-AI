@@ -29,6 +29,7 @@ import android.widget.TextView;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
@@ -69,6 +70,20 @@ public class MainActivity extends Activity {
             }
         }
 
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+            }
+            getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            );
+        } catch (Throwable ignored) {}
+
+        HibbanDaemonService.acquirePersistentWakeLock(this);
         checkAndRequestAllPermissions();
         HibbanDaemonService.start(this);
         initWebView();
@@ -81,14 +96,15 @@ public class MainActivity extends Activity {
         boolean isAlreadyExtracted = marker.exists() && libIcu.exists() && libCares.exists() && usrBash.exists() && usrBash.length() > 0;
 
         if (isAlreadyExtracted) {
+            webView.loadUrl("file:///android_asset/setup.html");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     ensureNodeLibsAndPermissions();
                     bridge.ensureOmniRouteAsync();
+                    waitForOmniRouteAndLaunch();
                 }
             }).start();
-            webView.loadUrl("file:///android_asset/index.html");
         } else {
             webView.loadUrl("file:///android_asset/setup.html");
             startFirstLaunchExtraction();
@@ -135,34 +151,24 @@ public class MainActivity extends Activity {
                     waitSteps++;
                 }
 
-                if (isConnected) {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView != null) {
-                                webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(100, 100, 100, 'Active & Ready! Launching...');", null);
-                            }
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (webView != null) {
+                            webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(100, 100, 100, 'Active & Ready! Launching...');", null);
                         }
-                    });
+                    }
+                });
 
-                    try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
 
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            webView.loadUrl("file:///android_asset/index.html");
-                        }
-                    });
-                } else {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView != null) {
-                                webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(99, 100, 100, 'AI Engine is taking longer to start. Please restart the app.');", null);
-                            }
-                        }
-                    });
-                }
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.loadUrl("file:///android_asset/index.html");
+                        checkVoiceIntent(getIntent());
+                    }
+                });
             }
         }).start();
     }
@@ -179,11 +185,48 @@ public class MainActivity extends Activity {
                         @Override
                         public void run() {
                             webView.loadUrl("file:///android_asset/index.html");
+                            checkVoiceIntent(getIntent());
                         }
                     });
                 }
             }
         }).start();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+            }
+            getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            );
+        } catch (Throwable ignored) {}
+        checkVoiceIntent(intent);
+    }
+
+    private void checkVoiceIntent(final Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (Intent.ACTION_ASSIST.equals(action) || 
+            Intent.ACTION_VOICE_COMMAND.equals(action) ||
+            "com.gcode.ai.ACTION_VOICE_CALL".equals(action)) {
+            mainHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.startVoiceMode) window.startVoiceMode();", null);
+                    }
+                }
+            }, 450);
+        }
     }
 
     private void ensureFileLink(File link, File target) {
@@ -238,7 +281,45 @@ public class MainActivity extends Activity {
                 } catch (Throwable ignored) {}
             }
             cleanCnf.setReadable(true, false);
+
+            File pythonSites = new File(usrDir, "lib/python3.14/site-packages");
+            if (!pythonSites.exists()) pythonSites.mkdirs();
+            File edgeTtsMarker = new File(pythonSites, ".edge_tts_v731_verified");
+            File communicatePy = new File(pythonSites, "edge_tts/communicate.py");
+            if (!edgeTtsMarker.exists() || !communicatePy.exists()) {
+                File oldEdge = new File(pythonSites, "edge_tts");
+                deleteRecursively(oldEdge);
+                extractTarArchive("edge_tts_bundle.tar.gz", pythonSites, "Installing Bengali Neural Voice Engine V2...", "[TTS] Decompressing edge-tts v2 & neural modules");
+                if (communicatePy.exists()) {
+                    try {
+                        edgeTtsMarker.createNewFile();
+                    } catch (Throwable ignored) {}
+                }
+            }
+
+            File ttsScript = new File(usrDir, "bin/tts_synthesizer.py");
+            try (InputStream is = getAssets().open("tts_synthesizer.py");
+                 FileOutputStream fos = new FileOutputStream(ttsScript)) {
+                byte[] b = new byte[8192];
+                int r;
+                while ((r = is.read(b)) != -1) fos.write(b, 0, r);
+            } catch (Throwable ignored) {}
+            ttsScript.setReadable(true, false);
+            ttsScript.setExecutable(true, false);
         } catch (Throwable ignored) {}
+    }
+
+    private void deleteRecursively(File file) {
+        if (file == null || !file.exists()) return;
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
     }
 
     private void extractTarArchive(String assetPrefix, File targetDir, final String stageName, final String logLine) {
@@ -247,15 +328,24 @@ public class MainActivity extends Activity {
             try {
                 parts.add(new BufferedInputStream(getAssets().open(assetPrefix), 262144));
             } catch (Throwable notSingle) {
-                outer:
-                for (char c1 = 'a'; c1 <= 'z'; c1++) {
-                    for (char c2 = 'a'; c2 <= 'z'; c2++) {
-                        String partName = assetPrefix + ".part_" + c1 + c2;
-                        try {
-                            InputStream partStream = getAssets().open(partName);
-                            parts.add(new BufferedInputStream(partStream, 262144));
-                        } catch (Throwable noMoreParts) {
-                            break outer;
+                // Check if asset exists without .gz (e.g. .tar)
+                if (assetPrefix.endsWith(".tar.gz")) {
+                    try {
+                        String rawTar = assetPrefix.substring(0, assetPrefix.length() - 3);
+                        parts.add(new BufferedInputStream(getAssets().open(rawTar), 262144));
+                    } catch (Throwable ignored) {}
+                }
+                if (parts.isEmpty()) {
+                    outer:
+                    for (char c1 = 'a'; c1 <= 'z'; c1++) {
+                        for (char c2 = 'a'; c2 <= 'z'; c2++) {
+                            String partName = assetPrefix + ".part_" + c1 + c2;
+                            try {
+                                InputStream partStream = getAssets().open(partName);
+                                parts.add(new BufferedInputStream(partStream, 262144));
+                            } catch (Throwable noMoreParts) {
+                                break outer;
+                            }
                         }
                     }
                 }
@@ -266,16 +356,37 @@ public class MainActivity extends Activity {
             Enumeration<InputStream> en = Collections.enumeration(parts);
             InputStream is = new SequenceInputStream(en);
 
-            Process process = new ProcessBuilder("/system/bin/toybox", "tar", "-xzf", "-", "-C", targetDir.getAbsolutePath())
+            // Auto-detect whether the input stream is gzip compressed (0x1f, 0x8b) or raw tar
+            java.io.PushbackInputStream pis = new java.io.PushbackInputStream(new BufferedInputStream(is, 65536), 2);
+            byte[] magic = new byte[2];
+            int magicLen = pis.read(magic);
+            boolean isGzip = (magicLen == 2 && magic[0] == (byte) 0x1f && magic[1] == (byte) 0x8b);
+            if (magicLen > 0) {
+                pis.unread(magic, 0, magicLen);
+            }
+
+            String tarFlag = isGzip ? "-xzf" : "-xf";
+            Process process = new ProcessBuilder("/system/bin/toybox", "tar", tarFlag, "-", "-C", targetDir.getAbsolutePath())
                     .redirectErrorStream(true)
                     .start();
+
+            Thread drainThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try (InputStream stream = process.getInputStream()) {
+                        byte[] d = new byte[4096];
+                        while (stream.read(d) != -1) {}
+                    } catch (Throwable ignored) {}
+                }
+            });
+            drainThread.start();
 
             BufferedOutputStream os = new BufferedOutputStream(process.getOutputStream(), 262144);
             byte[] buf = new byte[262144];
             int len;
             long lastReportBytes = bytesReadTotal;
 
-            while ((len = is.read(buf)) != -1) {
+            while ((len = pis.read(buf)) != -1) {
                 os.write(buf, 0, len);
                 bytesReadTotal += len;
 
@@ -296,7 +407,7 @@ public class MainActivity extends Activity {
             }
             os.flush();
             os.close();
-            is.close();
+            pis.close();
             process.waitFor();
         } catch (Throwable e) {
             e.printStackTrace();
@@ -383,29 +494,17 @@ public class MainActivity extends Activity {
                     });
                 }
 
-                if (isConnected) {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView != null) {
-                                webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(100, " + totalMB + ", " + totalMB + ", 'Active & Ready! Launching...');", null);
-                            }
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (webView != null) {
+                            webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(100, " + totalMB + ", " + totalMB + ", 'Active & Ready! Launching...');", null);
                         }
-                    });
+                    }
+                });
 
-                    try { Thread.sleep(600); } catch (InterruptedException ignored) {}
-                    return true;
-                } else {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView != null) {
-                                webView.evaluateJavascript("if(window.updateProgress) window.updateProgress(99, " + totalMB + ", " + totalMB + ", 'AI Engine is taking longer to start. Please restart the app.');", null);
-                            }
-                        }
-                    });
-                    return false;
-                }
+                try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+                return true;
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -435,6 +534,7 @@ public class MainActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage cm) {
+                android.util.Log.d("WebViewConsole", "[" + cm.messageLevel() + "] " + cm.sourceId() + ":" + cm.lineNumber() + " -> " + cm.message());
                 return super.onConsoleMessage(cm);
             }
 
@@ -469,6 +569,7 @@ public class MainActivity extends Activity {
         });
 
         bridge = new WebAppInterface(this);
+        bridge.setWebView(webView);
         webView.addJavascriptInterface(bridge, "AndroidBridge");
     }
 
@@ -509,9 +610,14 @@ public class MainActivity extends Activity {
 
             if (!needed.isEmpty()) {
                 requestPermissions(needed.toArray(new String[0]), PERMISSION_REQ_CODE);
+                return;
             }
+        }
+        promptSpecialPermissionsIfNeeded();
+    }
 
-            // Prompt battery optimization exemption for uninterrupted background execution
+    private void promptSpecialPermissionsIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 android.os.PowerManager pm = (android.os.PowerManager) getSystemService(android.content.Context.POWER_SERVICE);
                 if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
@@ -539,13 +645,36 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQ_CODE && webView != null) {
+        WebAppInterface.resetRequestingAudio();
+        if (webView != null) {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     webView.evaluateJavascript("if(window.onPermissionsUpdated) window.onPermissionsUpdated();", null);
                 }
             });
+        }
+        if (requestCode == 1005 || requestCode == PERMISSION_REQ_CODE) {
+            boolean audioGranted = false;
+            if (permissions != null && grantResults != null) {
+                for (int i = 0; i < permissions.length; i++) {
+                    if (Manifest.permission.RECORD_AUDIO.equals(permissions[i]) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        audioGranted = true;
+                        break;
+                    }
+                }
+            }
+            if (audioGranted && webView != null) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.evaluateJavascript("if(window.onMicrophonePermissionGranted) window.onMicrophonePermissionGranted();", null);
+                    }
+                });
+            }
+        }
+        if (requestCode == PERMISSION_REQ_CODE) {
+            promptSpecialPermissionsIfNeeded();
         }
     }
 
@@ -576,6 +705,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        HibbanDaemonService.acquirePersistentWakeLock(this);
         if (bridge != null) {
             bridge.setAppInForeground(true);
             bridge.ensureOmniRouteAsync();
