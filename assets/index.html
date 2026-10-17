@@ -1293,12 +1293,13 @@
         type: "function",
         function: {
           name: "run_command",
-          description: "Execute a shell/terminal command on Android device in the embedded standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Git, Curl, Coreutils, aapt, d8, apksigner, PRoot, etc.). Use this to autonomously run scripts, compile code, execute Linux utilities, and install packages on demand (pip install <pkg>, npm install -g <pkg>).",
+          description: "Execute a terminal command on device. Supports both the embedded standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Git, Curl, FFmpeg, etc.) and the Android Host OS shell (/system/bin/sh: getprop, dumpsys, am, pm, logcat, etc.). Use this to autonomously run scripts, compile code, execute Linux utilities, and install packages on demand (pip install, apt install).",
           parameters: {
             type: "object",
             properties: {
               command: { type: "string", description: "The terminal/shell command to run." },
-              working_dir: { type: "string", description: "Optional working directory (defaults to app home directory)." }
+              working_dir: { type: "string", description: "Optional working directory (defaults to app home directory)." },
+              environment: { type: "string", enum: ["linux", "android_host"], description: "Execution environment: 'linux' (standalone Linux PRoot, default) or 'android_host' (Android host /system/bin/sh shell)." }
             },
             required: ["command"]
           }
@@ -1446,13 +1447,13 @@
         type: "function",
         function: {
           name: "intent_action",
-          description: "Cross-application inter-process communication (IPC) and Intent orchestration. Launch any app, dial phone numbers, send SMS, dispatch WhatsApp messages, or open settings directly.",
+          description: "Cross-application inter-process communication (IPC) and Intent orchestration. Launch any app, dial phone numbers, send SMS, dispatch messages across apps, or open settings directly.",
           parameters: {
             type: "object",
             properties: {
               action: { type: "string", description: "Android Intent action (e.g. android.intent.action.VIEW, android.intent.action.CALL, android.intent.action.SENDTO)." },
-              data_uri: { type: "string", description: "Target URI data (e.g. 'tel:017XXXXXXXX', 'https://api.whatsapp.com/send?phone=...&text=...', 'package:com.android.settings')." },
-              package_name: { type: "string", description: "Optional specific target package name (e.g. 'com.whatsapp', 'com.android.settings')." },
+              data_uri: { type: "string", description: "Target URI data (e.g. 'tel:017XXXXXXXX', 'https://...', 'package:com.android.settings')." },
+              package_name: { type: "string", description: "Optional specific target package name (e.g. 'com.android.chrome', 'com.android.settings')." },
               extra_key: { type: "string", description: "Optional Intent extra key." },
               extra_value: { type: "string", description: "Optional Intent extra value." }
             }
@@ -1462,17 +1463,49 @@
       {
         type: "function",
         function: {
-          name: "ui_interaction",
-          description: "Autonomous UI hierarchy inspection, screen reading, and accessibility-driven screen interaction. Action types: 'read_screen' (dumps active UI node hierarchy), 'click_text' (clicks node with target_text), 'click_id' (clicks node with target_id), 'click_coords' (clicks screen coordinates x,y), 'type_text' (types text into focused input), 'back', 'home', 'recents', 'notifications'.",
+          name: "app_manager",
+          description: "Introspect and orchestrate installed Android applications. Discover all installed apps, inspect activities, services, receivers, and permissions of any package, query intent handlers for URLs/MIMEs, and dynamically launch apps by name or package.",
           parameters: {
             type: "object",
             properties: {
-              action: { type: "string", enum: ["read_screen", "click_text", "click_id", "click_coords", "type_text", "back", "home", "recents", "notifications"], description: "The UI interaction action." },
-              target_text: { type: "string", description: "Text label of the UI element to click." },
+              action: {
+                type: "string",
+                enum: ["list_apps", "inspect_app", "query_handlers", "launch_app"],
+                description: "Action to execute: 'list_apps' (search/list installed apps on device), 'inspect_app' (deep inspect package components & permissions), 'query_handlers' (find which apps can handle a URI or MIME type), 'launch_app' (open app dynamically by name or package)."
+              },
+              query: { type: "string", description: "Search query for app label/package name, or app name to launch." },
+              package_name: { type: "string", description: "Target package name (e.g. 'com.google.android.youtube')." },
+              data_uri: { type: "string", description: "Data URI to query handlers for (e.g. 'https://...', 'file:///...')." },
+              mime_type: { type: "string", description: "MIME type to query handlers for (e.g. 'application/pdf', 'image/*')." },
+              include_system: { type: "boolean", description: "Whether to include pre-installed system apps in search (default: false)." }
+            },
+            required: ["action"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "ui_interaction",
+          description: "Autonomous UI hierarchy inspection, screen reading, touch gestures, and accessibility-driven screen interaction. Actions: 'read_screen' / 'inspect_screen' (dumps active UI hierarchy), 'click_text' / 'click' (clicks node with target text), 'click_id' (clicks node with view ID), 'click_coords' (clicks x,y coordinates), 'type_text' / 'type' (types text into focused field), 'long_press' (long tap at x,y), 'swipe' (smooth gesture swipe), 'scroll' (scroll screen up/down/left/right), 'global_action' ('back', 'home', 'recents', 'notifications', 'quick_settings', 'screenshot', 'power_dialog', 'lock'), 'capture_screen' (silent screen capture to image file).",
+          parameters: {
+            type: "object",
+            properties: {
+              action: {
+                type: "string",
+                enum: ["read_screen", "inspect_screen", "click_text", "click_id", "click_coords", "type_text", "click", "tap", "type", "long_press", "swipe", "scroll", "global_action", "capture_screen", "back", "home", "recents", "notifications"],
+                description: "The UI interaction action."
+              },
+              target_text: { type: "string", description: "Text label of UI element to click, scroll direction ('down', 'up', 'left', 'right'), or global action name." },
               target_id: { type: "string", description: "Resource view ID of the UI element to click." },
               text_to_type: { type: "string", description: "Text string to input into focused field." },
-              x: { type: "integer", description: "X screen coordinate." },
-              y: { type: "integer", description: "Y screen coordinate." }
+              x: { type: "integer", description: "X screen coordinate for tap or long_press." },
+              y: { type: "integer", description: "Y screen coordinate for tap or long_press." },
+              start_x: { type: "integer", description: "Starting X screen coordinate for swipe." },
+              start_y: { type: "integer", description: "Starting Y screen coordinate for swipe." },
+              end_x: { type: "integer", description: "Ending X screen coordinate for swipe." },
+              end_y: { type: "integer", description: "Ending Y screen coordinate for swipe." },
+              duration_ms: { type: "integer", description: "Duration in milliseconds for swipe or long_press (default: 350 for swipe, 1000 for long_press)." }
             },
             required: ["action"]
           }
@@ -1495,19 +1528,19 @@
         type: "function",
         function: {
           name: "telephony_manager",
-          description: "Manage phone calls, contact search, SMS messages, and call logs. Allows searching device contacts by name/number, placing calls, sending SMS, and reading call history.",
+          description: "Manage phone calls, contact search, SMS messages, and call logs. Allows searching device contacts by name/number, placing direct cellular phone calls, sending SMS, and reading call history.",
           parameters: {
             type: "object",
             properties: {
               action: {
                 type: "string",
                 enum: ["get_contacts", "make_call", "send_sms", "read_sms", "get_call_logs"],
-                description: "Action to perform: 'get_contacts' (search contacts database), 'make_call' (dial or directly call number), 'send_sms' (send text SMS to number), 'read_sms' (read latest incoming SMS inbox), 'get_call_logs' (inspect call history)."
+                description: "Action to perform: 'get_contacts' (search contacts database), 'make_call' (place direct voice call), 'send_sms' (send text SMS to number), 'read_sms' (read latest incoming SMS inbox), 'get_call_logs' (inspect call history)."
               },
               query: { type: "string", description: "Search query for contacts (e.g. contact name or phone number)." },
               phone_number: { type: "string", description: "Target phone number for call or SMS." },
               message: { type: "string", description: "Text message body for 'send_sms'." },
-              direct_call: { type: "boolean", description: "True to call directly (requires CALL_PHONE permission), false to open dialer (default: false)." },
+              direct_call: { type: "boolean", description: "True to make direct background phone call immediately (recommended default: true), false only if user explicitly asks to open dialer." },
               limit: { type: "integer", description: "Maximum number of records to retrieve (default: 20)." }
             },
             required: ["action"]
@@ -1543,41 +1576,60 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
    - STRICT INTEGRITY: NEVER output broken repetitive words, repetitive token babble (such as 'standard apt standard...'), or internal scratchpad ramblings. Speak with natural intelligence and clarity.
    - FORMATTING & FONT BEAUTY: Always write Bengali naturally in regular text. NEVER wrap general conversational explanations, answers, or descriptions inside raw markdown monospace code blocks (\`...\` or \`\`\`...\`\`\`) unless writing actual programming source code. Keep typography clean so that the custom Kalpurush font renders flawlessly.
 
-3. UNIVERSAL AUTONOMOUS EXECUTION LAW (সর্বোচ্চ সর্বজনীন স্বয়ংক্রিয় ক্ষমতা):
+3. UNIVERSAL AUTONOMOUS EXECUTION LAW & CAPABILITY CATEGORIES:
    - You are a completely general-purpose autonomous computing intelligence and developer. You are NOT confined, pre-programmed, or restricted to any specific task or narrow niche. You have the absolute power, authority, and computing environment to accomplish ANYTHING Ahmad Hibban asks.
-   - You must always remember that your capabilities are open-ended and boundless across all domains of computing, automation, systems, and software engineering.
-   - When given ANY actionable directive or request by Ahmad Hibban:
-     DO NOT merely output an interim plan or say "কাজটি সম্পন্ন হলে জানিয়ে দেব" and stop!
-     You MUST execute the necessary tools immediately in the very same turn, running autonomously across multi-turn cycles until the entire objective is 100% completed and verified.
-   - Never stop midway with future promises; directly execute the actions end-to-end.
+   - You operate strictly under UNIVERSAL CAPABILITY CATEGORIES. Under each capability category, there are millions of potential tasks across thousands of different applications, services, and workflows. You never need separate rules for individual apps or narrow tasks!
 
-4. MAXIMUM POWER CAPABILITY DOMAINS:
-   - Full-Stack Software Engineering & Application Architecture
-   - Autonomous Scripting, Task Orchestration & Workflow Automation
-   - Complete Linux System Administration & Shell Command Execution
-   - Android System & OS-Level Control Architecture
-   - Cross-Application Inter-Process Communication (IPC) & Intent Orchestration
-   - Autonomous UI Hierarchy Inspection & Accessibility-Driven Screen Interaction
-   - Telecommunications, Cellular Traffic & Network Stream Diagnostics
-   - Hardware Power Dynamics, Battery Telemetry & Thermal Intelligence
-   - System Notification Streams, Priority Interception & Actionable Auditing
-   - Telephony Subsystem, Cellular Call Logs & Contact Database Management
-   - Device Audio Routing, Hardware Channels & Media Pipeline Control
-   - Android Runtime (ART), Process Lifecycle & Memory Allocation Forensics
-   - Device Storage Analytics, Filesystem Forensics & Storage Sanitization
-   - System Security Environment, Device Settings & Permission Administration
-   - Dynamic On-Demand Package Installation & Custom Environment Provisioning
-   - On-Device Android Application Development, Compilation & Reverse Engineering
-   - Database Architecture, Complex Querying & Data Analytics
-   - Universal File, Media, Code & Multi-Format Data Processing
-   - Real-Time Live Web Search, Grounding & Information Intelligence
-   - Autonomous Error Detection, Traceback Diagnostics & Self-Healing Code
-   - Complete Device Filesystem Navigation, Storage Access & File Manipulation
-   - Automated Network Streaming, Web Scraping & Direct Data Downloading
-   - Algorithmic Problem Solving, Mathematical Modeling & Computational Logic
-   - Security Auditing, Code Review, Static Analysis & Performance Optimization
-   - Git Version Control, Repository Management & Collaborative Workflows
-   - Multi-Agent Coordination & Unrestricted Multi-Turn Autonomous Execution
+   - ACTION GOAL VS. INTERMEDIATE STEP PRINCIPLE (লক্ষ্য বনাম মধ্যবর্তী ধাপের নীতি):
+     When Ahmad Hibban requests any real-world action (e.g. calling, sending a message, creating a channel/group/document, configuring a toggle, publishing content, downloading media, searching within an app, running a build):
+     Launching an application, opening an Intent, or querying a contact is strictly STEP 1 (an intermediate step).
+     Merely launching an application or navigating to a screen is NEVER the completed goal (unless Ahmad Hibban literally said only "open [app]").
+     You must NEVER stop after an intermediate step and say "আমি অ্যাপটি ওপেন করেছি", "চ্যাট খোলা হয়েছে", or declare completion while the ultimate goal remains unexecuted!
+
+   - UNIVERSAL MULTI-STEP CHAINING LAW (১০-১২ ধাপ হলেও সবগুলো ধাপ নিজে নিজে সম্পন্ন করার নীতি):
+     Real-world tasks in third-party apps and systems may require 2, 3, 5, or 10-12 sequential UI, system, or terminal steps.
+     You MUST execute EVERY SINGLE STEP sequentially in the multi-turn autonomous loop!
+     * Sequential Execution Flow:
+       1. Launch app/screen via 'intent_action'.
+       2. Look at the active on-screen elements (or call 'ui_interaction' with 'read_screen').
+       3. Locate the target button, icon, menu item, or input field.
+       4. Click the target via 'ui_interaction' ('click_text', 'click_id', or 'click_coords').
+       5. If text input is needed, type it via 'ui_interaction' ('type_text').
+       6. If confirmation dialogs or further options appear, click them.
+       7. Continue executing step-by-step through 5, 8, 10, or 12+ steps until the ultimate goal has actually taken place!
+     * Absolute Prohibition of Premature Answers: You are strictly forbidden from delivering a final conversational reply or concluding the turn until the final action has actually executed on device.
+
+   - ABSOLUTE END-TO-END COMPLETION (কখনোই কাজ অসম্পূর্ণ রেখে ব্যবহারকারীকে বাকিটা করতে বলবে না):
+     You must NEVER ask Ahmad Hibban to complete any remaining steps of any task (e.g. NEVER say "অনুগ্রহ করে বাকিটা সম্পন্ন করুন", "আপনি নিজে সম্পন্ন করুন", "বাকি কাজ আপনি করে নিন", "আপনি অ্যাপ থেকে কলটি করুন", "আপনি বাটনে ট্যাপ করুন", "এবার আপনি প্রেস করুন")!
+     You must execute all necessary steps end-to-end autonomously from start to finish.
+
+   - SILENT BACKGROUND-FIRST OPERATION (নীরবে ব্যাকগ্রাউন্ডে কাজ সম্পন্ন করার নীতি):
+     ALWAYS prioritize silent background execution over opening apps and visibly clicking on the screen in front of Ahmad Hibban.
+     Direct operations (e.g. 'telephony_manager' with action: 'make_call' for phone calls, background SMS, contacts database querying, 'device_control' for volume/torch/ringer/DND, and 'run_command' for shell/python/ffmpeg/terminal tasks) MUST be done in the background.
+     NEVER open an app and perform on-screen UI clicks in front of Ahmad Hibban if the task can be done directly in the background. Visibly navigating apps and clicking on screen is ONLY a last resort when no direct background API, shell command, or direct intent exists.
+
+   - AUTOMATIC 10-SECOND PERMISSION WINDOW:
+     The device system automatically waits up to 10 seconds for Ahmad Hibban to tap 'Allow' when any permission or settings screen is displayed. If permission is granted within 10 seconds, the task automatically completes in the same turn without requiring the user to re-ask.
+
+   - CLOSED-LOOP PERCEPTION, SELF-CORRECTION & OBSTACLE RECOVERY (স্বয়ংসম্পূর্ণ ভুল সংশোধন ও বাধা অতিক্রম নীতি):
+     Real-world operations encounter obstacles (unexpected popups, "Allow", "Update available", "Rate app", "Not now", "Dismiss", missing libraries, or language mismatches).
+     * Pop-up Handling: If an unexpected dialog or overlay appears, NEVER crash or stop! Locate its "Dismiss", "Close", "Not now", or "Allow" button via 'ui_interaction' ('click_text', 'click_id', or 'click_coords'), dismiss it, and immediately resume the primary goal.
+     * Dynamic Package Provisioning: If a script or workflow requires an uninstalled tool or library (e.g. yt-dlp, beautifulsoup4, pillow, requests, sqlite3), NEVER stop or ask Ahmad Hibban! Autonomously run 'run_command' to install it (pip install <pkg>, apt install <pkg>), then execute your task.
+     * App Introspection: Never guess package names. Use 'app_manager' to discover installed apps, inspect their components, and launch them dynamically.
+
+4. UNIVERSAL CAPABILITY CATEGORIES:
+   1. Cross-Application Workflow Automation & GUI Navigation (Orchestrating any installed application, social platform, communication app, or third-party service end-to-end via intent_action and ui_interaction)
+   2. Autonomous UI Hierarchy Inspection & Touch Interaction (Reading UI node hierarchy, clicking target text/IDs/coordinates, typing input, and gesture navigation across any Android screen)
+   3. Telephony, Cellular Communications & Contact Management (Placing direct background cellular calls, composing SMS, querying contact database, and inspecting call logs)
+   4. Device Hardware Control & OS Administration (Modifying media/ring/notification volume, ringer profiles, Do Not Disturb, torch, Wi-Fi, Bluetooth, hotspot, and system settings)
+   5. Full-Stack Software Engineering & On-Device Compilation (Writing, debugging, and compiling software; on-device Android APK compilation with aapt, javac, d8, and apksigner)
+   6. Autonomous Scripting, Command-Line & Process Orchestration (Executing GNU Bash 5.3, Python 3.14, Node.js, Linux utilities, package managers, and background daemons)
+   7. Real-Time Grounded Web Research & Information Intelligence (Invisible, hallucination-free Google search and live factual verification)
+   8. Universal Data, File & Storage Analytics (Processing multi-format files, filesystem forensics, storage cleanup, and direct network downloads)
+   9. Media Processing & Audio/Video Engineering (High-performance FFmpeg and FFprobe transcoding, slicing, format conversion, and media extraction)
+   10. Generative AI, Visual Synthesis & Creative Design (Producing high-resolution AI imagery, art, wallpapers, logos, and vector assets)
+   11. System Security, Notification Auditing & Telemetry Intelligence (Live notification interception, battery analytics, network metrics, and audio routing diagnostics)
+   12. Multi-Turn Autonomous Problem Solving (Multi-turn self-correction, dynamic tool chaining, and automated traceback recovery)
 
 4. GENERAL COMPUTATIONAL FREEDOM:
    - You run in Nexhib's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
@@ -1588,13 +1640,14 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
    - Resource immunity: Ahmad Hibban's phone has massive RAM and high-speed multi-core CPU. Never hesitate to run heavy tasks.
 
 CORE TOOLS:
-- run_command: Run any shell / terminal command in the standalone Linux environment.
+- app_manager: Introspect all installed Android apps on device, inspect activities/services/permissions, query intent resolvers, and dynamically open apps.
+- run_command: Run any terminal/shell command in standalone Linux (PRoot) or Android Host OS shell (/system/bin/sh). Automatically install any missing packages on demand (pip install, apt install).
 - system_telemetry: Deep inspection of battery, power dynamics, network data, and audio streams.
 - device_control: Control hardware volumes, ringer modes, and system toggles.
 - intent_action: Cross-app IPC, launch apps, dialer, messages, and deep links.
-- ui_interaction: Screen reading, UI node clicks, typing, and global gestures.
+- ui_interaction: Real-time UI inspection, element click, coordinate tap, typing, swipe, scroll up/down/left/right, global system actions (back, home, recents, notifications, quick_settings, power_dialog, lock), and silent screen capture.
 - notification_manager: Intercept and audit incoming notification streams.
-- telephony_manager: Search contacts database by name/number, dial or make phone calls, send SMS messages, and inspect call history.
+- telephony_manager: Search contacts database by name/number, dial or make direct phone calls, send SMS messages, and inspect call history.
 - generate_image: Generate high-resolution AI images, art, drawings, logos, and graphics with unlimited unmetered access.
 - read_file: Read file contents.
 - write_file: Create or write files on device.
@@ -2015,59 +2068,42 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
     let activeAgentBubble = null;
 
     function playResponseSound() {
-      // 1. Native Android tone & chime (100% reliable, never blocked by WebView autoplay)
+      let playedNative = false;
+      // 1. Native Android tone & chime (100% reliable)
       if (window.AndroidBridge && typeof window.AndroidBridge.playResponseTone === 'function') {
         try {
           window.AndroidBridge.playResponseTone();
+          playedNative = true;
         } catch (e) {}
       }
 
-      // 2. Fallback to Web Audio if available
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          const ctx = new AudioCtx();
-          if (ctx.state === 'suspended') {
-            ctx.resume();
+      // 2. Fallback to Web Audio ONLY if native bridge is not available (ensures exactly 1 sound)
+      if (!playedNative) {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') {
+              ctx.resume();
+            }
+            const now = ctx.currentTime;
+
+            // Note 1: Warm soft pop tone (F5 -> A5)
+            const o1 = ctx.createOscillator();
+            const g1 = ctx.createGain();
+            o1.type = "sine";
+            o1.frequency.setValueAtTime(698.46, now);
+            o1.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+
+            g1.gain.setValueAtTime(0.20, now);
+            g1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+            o1.connect(g1);
+            g1.connect(ctx.destination);
+            o1.start(now);
+            o1.stop(now + 0.25);
           }
-          const now = ctx.currentTime;
-
-          // Note 1: Warm soft pop tone (F5 -> A5)
-          const o1 = ctx.createOscillator();
-          const g1 = ctx.createGain();
-          o1.type = "sine";
-          o1.frequency.setValueAtTime(698.46, now);
-          o1.frequency.exponentialRampToValueAtTime(880, now + 0.06);
-
-          g1.gain.setValueAtTime(0.22, now);
-          g1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-          o1.connect(g1);
-          g1.connect(ctx.destination);
-          o1.start(now);
-          o1.stop(now + 0.25);
-
-          // Note 2: Crisp harmonic chime (E6 -> A6)
-          const o2 = ctx.createOscillator();
-          const g2 = ctx.createGain();
-          o2.type = "sine";
-          o2.frequency.setValueAtTime(1318.51, now + 0.07);
-          o2.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
-
-          g2.gain.setValueAtTime(0, now);
-          g2.gain.setValueAtTime(0.18, now + 0.07);
-          g2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-
-          o2.connect(g2);
-          g2.connect(ctx.destination);
-          o2.start(now + 0.07);
-          o2.stop(now + 0.38);
-        }
-      } catch (e) {}
-
-      // 3. Subtle haptic tick
-      if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
-        window.AndroidBridge.vibrate(35);
+        } catch (e) {}
       }
     }
 
@@ -2110,6 +2146,7 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
 
       const actionsList = [];
       const shimmerLabel = thinkingCard.querySelector(".gemini-shimmer-label");
+      let isBubbleFinished = false;
 
       return {
         row,
@@ -2117,6 +2154,7 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
         thinkingCard,
         contentBox,
         actionsList,
+        get isFinished() { return isBubbleFinished; },
         addAction(actionText) {
           if (!actionText || typeof actionText !== "string") return;
           const lower = actionText.toLowerCase();
@@ -2135,12 +2173,15 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
           }
           container.scrollTop = container.scrollHeight;
         },
-        finish(markdownText) {
+        finish(markdownText, isCancel = false) {
+          if (isBubbleFinished) return;
+          isBubbleFinished = true;
+
           if (thinkingCard.parentNode) {
             thinkingCard.remove();
           }
 
-          if (actionsList.length > 0) {
+          if (!isCancel && actionsList.length > 0) {
             const pillWrap = document.createElement("div");
             pillWrap.className = "gemini-pill-wrap";
 
@@ -2156,12 +2197,18 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
           }
 
           contentBox.innerHTML = formatMarkdown(markdownText);
-          playResponseSound();
+          if (isCancel) {
+            if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+              try { window.AndroidBridge.vibrate(25); } catch (e) {}
+            }
+          } else {
+            playResponseSound();
+          }
 
           // Post native Android Notification ONLY when user is outside the app (backgrounded)
           const isBackgrounded = (typeof document !== 'undefined' && document.hidden) ||
                                  (window.AndroidBridge && typeof window.AndroidBridge.isAppInForeground === 'function' && !window.AndroidBridge.isAppInForeground());
-          if (isBackgrounded && window.AndroidBridge && typeof window.AndroidBridge.postNotification === 'function') {
+          if (!isCancel && isBackgrounded && window.AndroidBridge && typeof window.AndroidBridge.postNotification === 'function') {
             try {
               window.AndroidBridge.postNotification("Nexhib", "Your response is ready.");
             } catch (e) {}
@@ -2259,12 +2306,12 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
         if (activeAbortController) {
           try { activeAbortController.abort(); } catch (e) {}
         }
-        if (activeAgentBubble) {
-          try { activeAgentBubble.finish("Interrupted by user."); } catch (e) {}
+        if (activeAgentBubble && !activeAgentBubble.isFinished) {
+          try { activeAgentBubble.finish("Interrupted by user.", true); } catch (e) {}
           activeAgentBubble = null;
         }
         document.querySelectorAll('.gemini-thinking-card').forEach(el => el.remove());
-        setLiveStatus(true, "Stopping agent...");
+        setLiveStatus(false);
         sendBtn.disabled = true;
         return;
       }
@@ -2306,7 +2353,7 @@ REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
       try {
         await runAgentLoop(prompt, activeAgentBubble);
       } catch (err) {
-        if (activeAgentBubble) {
+        if (!abortRequested && activeAgentBubble && !activeAgentBubble.isFinished) {
           activeAgentBubble.finish(`⚠️ ${err.message}`);
         }
       } finally {
@@ -2538,6 +2585,7 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
     }
 
     async function runAgentLoop(userPrompt, bubble) {
+      const promptString = (typeof userPrompt === "string" ? userPrompt : (userPrompt ? JSON.stringify(userPrompt) : "")).trim();
       if (userPrompt) {
         chatHistory.push({
           role: "user",
@@ -2609,48 +2657,83 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
         const textContent = (message.content || "").trim();
 
         if (toolCalls.length === 0) {
-          // Check if this was an interim plan or promise to work rather than actual task completion
           const lower = textContent.toLowerCase();
+
+          // 1. Check if model is delegating remaining work to Ahmad Hibban (strictly prohibited!)
+          const isDelegatingToUser = 
+            /(অনুগ্রহ করে|দয়া করে|দয়া করে|বাকিটা|বাকি কাজ|বাকি অংশ|নিজে|আপ্নি|আপনি|kindly|please|now\s+you\s+can|you\s+can\s+now).*(সম্পন্ন করুন|করে নিন|করুন|কল দিন|কলটি করুন|কলটি সম্পন্ন করুন|ডায়াল করুন|ট্যাপ করুন|ক্লিক করুন|চাপুন|প্রেস করুন|complete|tap|click|call|dial|press|send|open)/i.test(textContent) ||
+            /(অ্যাপ|অ্যাপ্লিকেশন|ডায়লার|ডায়লার|ব্রাউজার|স্ক্রিন|মেনু|সেটিংস)\s*থেকে\s*.*(সম্পন্ন|করুন|চালান|ট্যাপ|প্রেস)/i.test(textContent) ||
+            /(কলটি|কাজটি|ধাপটি|অংশটি|মেসেজটি)\s*(সম্পন্ন করুন|করে নিন|করুন|পাঠান)/i.test(textContent);
+
+          // 2. Check if model stopped prematurely after merely opening an app or intermediate screen
+          // When user requested an action (call, send message, create channel/post/file, configure toggle, etc.),
+          // launching an app or intent is strictly Step 1. The model must NOT stop after merely opening the app!
+          let effectivePrompt = promptString;
+          if (!effectivePrompt) {
+            const lastUserMsg = [...chatHistory].reverse().find(m => m.role === "user");
+            if (lastUserMsg) {
+              effectivePrompt = typeof lastUserMsg.content === "string" ? lastUserMsg.content.trim() : "";
+            }
+          }
+          const userPromptText = (effectivePrompt || "").toLowerCase();
+          const isActionRequest = /(কল|মেসেজ|বার্তা|পাঠাও|পাঠান|দাও|দিন|তৈরি|করো|করুন|বানাও|ডিলিট|মুছে|পোস্ট|সার্চ|খুঁজে|অর্ডার|ডাউনলোড|চালিয়ে|বাজাও|call|dial|send|message|create|post|write|search|download|order|play)/i.test(userPromptText) &&
+            !/^(খোলো|খোল|চালু করো|open|launch)\s+[\w\s]+$/i.test(effectivePrompt || "");
+
+          const hasLaunchedIntentWithoutUI = chatHistory.some(m => m.role === "tool" && m.name === "intent_action") &&
+            !chatHistory.some(m => m.role === "tool" && m.name === "ui_interaction" && m.content && (m.content.includes("click") || m.content.includes("type")));
+
+          const isStatingAppOpened = /(ওপেন করেছি|খুলেছি|খুলে দিয়েছি|চালু করেছি|স্ক্রিনে দেখতে পাচ্ছেন|ওপেন করা হয়েছে|খুলে দেওয়া হয়েছে|চালু হয়েছে|opened|launched|chat is open)/i.test(textContent);
+
+          const isPrematureStop = isActionRequest && hasLaunchedIntentWithoutUI && (isStatingAppOpened || executedActions.length <= 2);
+
+          // 3. Check if this was an interim plan or promise to work rather than actual task completion
           const isInterimPlanOrPromise = 
-            (executedActions.length === 0 || executedActions.length < 2) &&
             (textContent.includes("পরিকল্পনা") || 
-             textContent.includes("শুরু করেছি") || 
-             textContent.includes("শুরু করতে যাচ্ছি") ||
-             textContent.includes("জানিয়ে দেব") || 
-             textContent.includes("জানিয়ে দেব") || 
-             textContent.includes("বানানো হবে") ||
-             textContent.includes("তৈরি করা হবে") ||
-             textContent.includes("পদক্ষেপ") ||
-             textContent.includes("ধাপ") ||
-             textContent.includes("নিচে দেওয়া হলো") ||
-             textContent.includes("নিচে দেওয়া হলো") ||
-             lower.includes("plan") ||
-             lower.includes("step 1") ||
-             lower.includes("let me create") ||
-             lower.includes("i will now") ||
-             lower.includes("i am going to") ||
-             lower.includes("will notify you")) &&
+              textContent.includes("শুরু করেছি") || 
+              textContent.includes("শুরু করতে যাচ্ছি") ||
+              textContent.includes("জানিয়ে দেব") || 
+              textContent.includes("জানিয়ে দেব") || 
+              textContent.includes("বানানো হবে") ||
+              textContent.includes("তৈরি করা হবে") ||
+              textContent.includes("পদক্ষেপ") ||
+              textContent.includes("ধাপ") ||
+              textContent.includes("নিচে দেওয়া হলো") ||
+              textContent.includes("নিচে দেওয়া হলো") ||
+              lower.includes("plan") ||
+              lower.includes("step 1") ||
+              lower.includes("let me create") ||
+              lower.includes("i will now") ||
+              lower.includes("i am going to") ||
+              lower.includes("will notify you")) &&
             !textContent.includes("সম্পন্ন হয়েছে") &&
             !textContent.includes("তৈরি করা হয়েছে") &&
             !textContent.includes("সেভ করা হয়েছে") &&
             !lower.includes("successfully completed") &&
             !lower.includes("here is the result");
 
-          if (isInterimPlanOrPromise && autonomousTurnCount < 6) {
+          if ((isDelegatingToUser || isPrematureStop || isInterimPlanOrPromise) && autonomousTurnCount < 25) {
             autonomousTurnCount++;
             if (bubble) {
               bubble.setStatus("Thinking...");
             }
+            let directive = "";
+            if (isDelegatingToUser) {
+              directive = "[System Directive: কাজটি কোনোভাবেই মাঝপথে অসমাপ্ত রেখে আহমাদ হিব্বানকে বাকি অংশ সম্পন্ন করতে বলবেন না (ব্যবহারকারীকে কোনো অ্যাপ্লিকেশন থেকে কাজ নিজে শেষ করতে বা স্ক্রিনে ট্যাপ করতে বলা সম্পূর্ণ নিষিদ্ধ)। ব্যবহারকারী যে কাজটি নির্দেশ দিয়েছেন, অবিলম্বে আপনি নিজে উপযুক্ত ক্যাটাগরির টুল (ui_interaction, intent_action, telephony_manager, run_command, device_control ইত্যাদি) স্বয়ংক্রিয়ভাবে এক্সিকিউট করে সম্পূর্ণ কাজটি ১০০% শেষ করুন।]";
+            } else if (isPrematureStop) {
+              directive = "[System Directive: আপনি কেবল অ্যাপ্লিকেশনটি বা স্ক্রিনটি ওপেন করেছেন, কিন্তু আহমাদ হিব্বানের নির্দেশিত মূল কাজটি সম্পন্ন হয়নি। কোনো অ্যাপ্লিকেশন ওপেন করা মূল কাজ নয়, এটি কেবল একটি প্রাথমিক ধাপ (ধাপ ১)। কাজটি সম্পন্ন করার জন্য আরো যতগুলো ধাপ প্রয়োজন (স্ক্রিনের নির্দিষ্ট বোতামে ক্লিক করা, অপশন নির্বাচন করা, বা কনফার্ম করা—তা যদি ১০-১২ ধাপও হয়), অবিলম্বে 'ui_interaction' (click_text, click_id, বা click_coords) ব্যবহার করে প্রতিটি ধাপ স্বয়ংক্রিয়ভাবে একটার পর একটা সম্পন্ন করুন এবং চূড়ান্ত কাজ সম্পন্ন হওয়ার পরেই কেবল সমাপ্তি ঘোষণা করুন।]";
+            } else {
+              directive = "[System Directive: পরিকল্পনা বা প্রতিশ্রুতির বদলে অবিলম্বে স্বয়ংক্রিয়ভাবে সরাসরি উপযুক্ত টুল এক্সিকিউট করে কাজটি শেষ করুন। কোনো উত্তরের অপেক্ষা বা ভবিষ্যৎ প্রতিশ্রুতি না দিয়ে সরাসরি টুল কল সম্পন্ন করুন।]";
+            }
             chatHistory.push({
               role: "user",
-              content: "[System Directive: পরিকল্পনা বা প্রতিশ্রুতির বদলে অবিলম্বে স্বয়ংক্রিয়ভাবে সরাসরি উপযুক্ত টুল এক্সিকিউট করে কাজটি শেষ করুন। কোনো উত্তরের অপেক্ষা বা ভবিষ্যৎ প্রতিশ্রুতি না দিয়ে সরাসরি টুল কল সম্পন্ন করুন।]"
+              content: directive
             });
             continue;
           }
 
-          if (bubble) {
+          if (bubble && !bubble.isFinished) {
             bubble.finish(textContent || "কাজ সম্পন্ন হয়েছে।");
-          } else {
+          } else if (!bubble) {
             appendMessage("agent", textContent || "কাজ সম্পন্ন হয়েছে।", executedActions);
           }
           return;
@@ -2659,7 +2742,7 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
         // Execute tool calls
         for (const call of toolCalls) {
           if (abortRequested) {
-            if (bubble) bubble.finish("Task paused by user.");
+            if (bubble && !bubble.isFinished) bubble.finish("Task canceled by user.", true);
             return;
           }
 
@@ -2678,9 +2761,10 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
           else if (fname === "system_telemetry") summary = `Inspected system telemetry (${fargs.metric_type || 'battery'})`;
           else if (fname === "device_control") summary = `Device control: ${fargs.action}`;
           else if (fname === "intent_action") summary = `Dispatched Intent action (${fargs.action || fargs.data_uri || 'open'})`;
+          else if (fname === "app_manager") summary = `App manager: ${fargs.action} (${fargs.query || fargs.package_name || ''})`;
           else if (fname === "ui_interaction") summary = `UI interaction: ${fargs.action}`;
           else if (fname === "notification_manager") summary = `Inspected notification streams`;
-          else if (fname === "telephony_manager") summary = `Queried telephony logs`;
+          else if (fname === "telephony_manager") summary = fargs.action === 'make_call' ? 'Placed direct phone call' : (fargs.action === 'send_sms' ? 'Sent SMS' : (fargs.action === 'get_contacts' ? `Searched contacts: ${fargs.query || ''}` : 'Queried call logs'));
           else if (fname === "run_command") summary = `Ran command: ${fargs.command}`;
           else if (fname === "web_search") summary = `Searched web: "${fargs.query}"`;
           else if (fname === "write_file") summary = `Wrote file: ${fargs.file_path}`;
@@ -2710,7 +2794,7 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
       }
 
       if (abortRequested) {
-        if (bubble) bubble.finish("Task paused by user.");
+        if (bubble && !bubble.isFinished) bubble.finish("Task canceled by user.", true);
       }
     }
 
@@ -2767,7 +2851,12 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
           return "Error: AndroidBridge.downloadFile is not available.";
         } else if (name === "run_command") {
           const workDir = args.working_dir || "";
-          const resJson = window.AndroidBridge.executeCommand(args.command, workDir);
+          let resJson;
+          if (args.environment === "android_host" && typeof window.AndroidBridge.executeHostCommand === 'function') {
+            resJson = window.AndroidBridge.executeHostCommand(args.command);
+          } else {
+            resJson = window.AndroidBridge.executeCommand(args.command, workDir);
+          }
           const obj = JSON.parse(resJson);
           return (obj.stdout || "") + (obj.stderr ? "\nSTDERR:\n" + obj.stderr : "") + `\n[Exit Code: ${obj.exitCode}]`;
         } else if (name === "web_search") {
@@ -2847,9 +2936,96 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
           }
           return `Error: Unknown device control action '${args.action}'`;
         } else if (name === "intent_action") {
-          return window.AndroidBridge.dispatchIntent(args.action || "", args.data_uri || "", args.package_name || "", args.extra_key || "", args.extra_value || "");
+          const dispatchResStr = window.AndroidBridge.dispatchIntent(args.action || "", args.data_uri || "", args.package_name || "", args.extra_key || "", args.extra_value || "");
+          
+          // Allow the launched activity to render on screen
+          await new Promise(r => setTimeout(r, 800));
+          
+          let screenInfo = null;
+          try {
+            const rawDump = window.AndroidBridge.interactScreen("read_screen", "", "", "", 0, 0);
+            const dumpObj = JSON.parse(rawDump);
+            if (dumpObj.success && Array.isArray(dumpObj.nodes)) {
+              screenInfo = dumpObj.nodes
+                .filter(n => n.text || n.desc)
+                .slice(0, 35)
+                .map(n => ({
+                  text: n.text || undefined,
+                  desc: n.desc || undefined,
+                  id: n.id || undefined,
+                  clickable: n.clickable || undefined,
+                  bounds: n.bounds
+                }));
+            }
+          } catch (e) {}
+
+          return JSON.stringify({
+            status: "Intent dispatched and application brought to foreground.",
+            active_screen_elements: screenInfo || "Screen is active. You can use 'ui_interaction' to inspect or click.",
+            LAW_OF_MULTI_STEP_COMPLETION: "Opening an app is only Step 1. If user requested an action (such as call, message, create, search, etc.), you MUST now autonomously use 'ui_interaction' (click_text, click_id, click_coords, or type_text) to execute the subsequent steps on screen until the user's objective is 100% achieved."
+          });
+        } else if (name === "app_manager") {
+          const act = (args.action || "list_apps").toLowerCase();
+          if (act === "inspect_app") {
+            const pkg = args.package_name || args.query || "";
+            return window.AndroidBridge.inspectApp(pkg);
+          } else if (act === "query_handlers") {
+            return window.AndroidBridge.queryIntentResolvers(args.intent_action || "", args.data_uri || "", args.mime_type || "");
+          } else if (act === "launch_app") {
+            const target = args.package_name || args.query || "";
+            return window.AndroidBridge.openApp(target);
+          } else {
+            return window.AndroidBridge.getInstalledApplications(args.query || "", !!args.include_system);
+          }
         } else if (name === "ui_interaction") {
-          return window.AndroidBridge.interactScreen(args.action || "dump", args.target_text || "", args.target_id || "", args.text_to_type || "", args.x || 0, args.y || 0);
+          const act = (args.action || "read_screen").toLowerCase();
+          const targetText = args.target_text || args.text || args.direction || args.global_action || "";
+          const targetId = args.target_id || args.view_id || "";
+          const textToType = args.text_to_type || args.type_text || "";
+          const x = args.x || 0;
+          const y = args.y || 0;
+          const startX = args.start_x || 0;
+          const startY = args.start_y || 0;
+          const endX = args.end_x || 0;
+          const endY = args.end_y || 0;
+          const dur = args.duration_ms || 350;
+
+          let interactRes;
+          if (typeof window.AndroidBridge.interactScreenExtended === 'function') {
+            interactRes = window.AndroidBridge.interactScreenExtended(act, targetText, targetId, textToType, x, y, startX, startY, endX, endY, dur);
+          } else {
+            interactRes = window.AndroidBridge.interactScreen(act, targetText, targetId, textToType, x, y);
+          }
+
+          if (act.includes("click") || act.includes("tap") || act.includes("type") || act === "back" || act === "home" || act.includes("swipe") || act.includes("scroll") || act === "global_action") {
+            // Wait 600ms for screen update
+            await new Promise(r => setTimeout(r, 600));
+            let updatedScreen = null;
+            try {
+              const rawDump = window.AndroidBridge.interactScreen("read_screen", "", "", "", 0, 0);
+              const dumpObj = JSON.parse(rawDump);
+              if (dumpObj.success && Array.isArray(dumpObj.nodes)) {
+                updatedScreen = dumpObj.nodes
+                  .filter(n => n.text || n.desc)
+                  .slice(0, 35)
+                  .map(n => ({
+                    text: n.text || undefined,
+                    desc: n.desc || undefined,
+                    id: n.id || undefined,
+                    clickable: n.clickable || undefined,
+                    bounds: n.bounds
+                  }));
+              }
+            } catch (e) {}
+
+            return JSON.stringify({
+              action_result: interactRes,
+              updated_screen_elements: updatedScreen,
+              instruction: "Action executed. Inspect updated_screen_elements. If additional steps (further clicks, typing, confirmations) are required to complete the objective, call 'ui_interaction' again. Continue this loop until the user's objective is 100% completed."
+            });
+          }
+
+          return interactRes;
         } else if (name === "notification_manager") {
           return window.AndroidBridge.getRecentNotifications(args.limit || 15);
         } else if (name === "telephony_manager") {
@@ -2859,10 +3035,10 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
               return window.AndroidBridge.getSmsInbox(args.limit || 15);
             }
             return "Error: AndroidBridge.getSmsInbox is not available.";
-          } else if (act === "get_contacts" || args.query) {
+          } else if (act === "get_contacts" || (args.query && !args.phone_number && act !== "make_call")) {
             return window.AndroidBridge.getContacts(args.query || "", args.limit || 25);
           } else if (act === "make_call" || (args.phone_number && !args.message)) {
-            return window.AndroidBridge.makePhoneCall(args.phone_number || args.query || "", !!args.direct_call);
+            return window.AndroidBridge.makePhoneCall(args.phone_number || args.query || "", args.direct_call !== false);
           } else if (act === "send_sms" || (args.phone_number && args.message)) {
             return window.AndroidBridge.sendSms(args.phone_number || "", args.message || "");
           } else {
@@ -3376,7 +3552,7 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
       // 8. App Extraction & Archive Automation (e.g. HibbanFlix)
       if (/(hibbanflix|হিব্বানফ্লিক্স|হিব্বান ফ্লিক্স)/i.test(t) && /(এক্সট্র্যাক্ট|আনজিপ|extract|unzip)/i.test(t)) {
         try {
-          window.AndroidBridge.executeCommand("mkdir -p /storage/emulated/0/Download/HibbanFlix && cd /storage/emulated/0/Download/HibbanFlix && /data/data/com.termux/files/usr/bin/unzip -o -q /storage/emulated/0/Download/HibbanFlix.apk", "");
+          window.AndroidBridge.executeCommand("mkdir -p /storage/emulated/0/Download/HibbanFlix && cd /storage/emulated/0/Download/HibbanFlix && unzip -o -q /storage/emulated/0/Download/HibbanFlix.apk", "");
           return "অবশ্যই স্যার, HibbanFlix অ্যাপটি ডাউনলোড ফোল্ডারে সফলভাবে এক্সট্র্যাক্ট করে ফেলেছি।";
         } catch (e) {}
       }
@@ -3422,10 +3598,6 @@ Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"quer
       if (/(ইউটিউব|youtube)/i.test(t) && /(খোল|চালু|open)/i.test(t)) {
         try { window.AndroidBridge.dispatchIntent("android.intent.action.VIEW", "https://youtube.com", "com.google.android.youtube", "", ""); } catch (e) {}
         return "ইউটিউব খুলে দিচ্ছি, স্যার।";
-      }
-      if (/(হোয়াটসঅ্যাপ|হোয়াটসঅ্যাপ|whatsapp)/i.test(t) && /(খোল|চালু|open)/i.test(t)) {
-        try { window.AndroidBridge.dispatchIntent("", "", "com.whatsapp", "", ""); } catch (e) {}
-        return "হোয়াটসঅ্যাপ খুলে দিচ্ছি, স্যার।";
       }
       if (/(সেটিংস|settings)/i.test(t) && /(খোল|যা|open)/i.test(t)) {
         try { window.AndroidBridge.dispatchIntent("android.settings.SETTINGS", "", "", "", ""); } catch (e) {}

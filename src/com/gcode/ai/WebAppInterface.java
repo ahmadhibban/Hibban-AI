@@ -7,12 +7,17 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.accessibilityservice.AccessibilityService;
 import android.content.ComponentName;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -1459,20 +1464,21 @@ public class WebAppInterface {
 
             if (isSilentTarget && !hasPolicyAccess) {
                 // If setting silent mode without DND policy access, Android throws SecurityException.
-                // Auto-open permission screen and fallback to Vibrate safely
-                openNotificationPolicySettings();
-                try {
-                    am.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-                    res.put("success", true);
-                    res.put("ringer_mode", "vibrate");
-                    res.put("notice", "Silent mode requires Notification Policy Access. Opened settings screen automatically and temporarily switched to Vibrate.");
-                    return res.toString();
-                } catch (Throwable fallbackErr) {
-                    res.put("success", false);
-                    res.put("need_permission", true);
-                    res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
-                    res.put("error", "Notification Policy Access is required for Silent Mode. Settings screen has been opened automatically.");
-                    return res.toString();
+                // Wait up to 10 seconds for user to grant DND access
+                if (!waitForNotificationPolicyAccess(nm, 10000)) {
+                    try {
+                        am.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+                        res.put("success", true);
+                        res.put("ringer_mode", "vibrate");
+                        res.put("notice", "Silent mode requires Notification Policy Access which was not granted within 10s. Switched safely to Vibrate.");
+                        return res.toString();
+                    } catch (Throwable fallbackErr) {
+                        res.put("success", false);
+                        res.put("need_permission", true);
+                        res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
+                        res.put("error", "Notification Policy Access is required for Silent Mode. Permission was not granted within 10s.");
+                        return res.toString();
+                    }
                 }
             }
 
@@ -1504,29 +1510,29 @@ public class WebAppInterface {
             boolean hasPolicyAccess = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || (nm != null && nm.isNotificationPolicyAccessGranted());
 
             if (!hasPolicyAccess) {
-                // Auto-open the DND Permission settings screen directly
-                openNotificationPolicySettings();
-
-                // Also attempt accessibility fallback if enabled
-                HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
-                if (service != null) {
-                    service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS);
-                    try { Thread.sleep(400); } catch (Exception ignored) {}
-                    boolean clicked = service.clickByText("Do Not Disturb") || service.clickByText("DND") || service.clickByText("ডোন্ট ডিস্টার্ব");
-                    if (clicked) {
-                        res.put("success", true);
-                        res.put("dnd_active", enabled);
-                        res.put("via", "accessibility");
-                        res.put("message", "Toggled Do Not Disturb via Accessibility Service.");
-                        return res.toString();
+                // Wait up to 10 seconds for user to grant DND access
+                if (!waitForNotificationPolicyAccess(nm, 10000)) {
+                    // Also attempt accessibility fallback if enabled
+                    HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
+                    if (service != null) {
+                        service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS);
+                        try { Thread.sleep(400); } catch (Exception ignored) {}
+                        boolean clicked = service.clickByText("Do Not Disturb") || service.clickByText("DND") || service.clickByText("ডোন্ট ডিস্টার্ব");
+                        if (clicked) {
+                            res.put("success", true);
+                            res.put("dnd_active", enabled);
+                            res.put("via", "accessibility");
+                            res.put("message", "Toggled Do Not Disturb via Accessibility Service.");
+                            return res.toString();
+                        }
                     }
-                }
 
-                res.put("success", false);
-                res.put("need_permission", true);
-                res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
-                res.put("error", "Do Not Disturb (Notification Policy) access is not granted. Nexhib has automatically opened the 'Do Not Disturb Access' settings screen. Please toggle Nexhib to Allowed.");
-                return res.toString();
+                    res.put("success", false);
+                    res.put("need_permission", true);
+                    res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
+                    res.put("error", "Do Not Disturb access was not granted within 10 seconds. Please toggle Nexhib to Allowed in settings.");
+                    return res.toString();
+                }
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && nm != null) {
@@ -1631,50 +1637,146 @@ public class WebAppInterface {
         }
     }
 
+    private boolean waitForPermission(String permission, long timeoutMs) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+        if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) return true;
+        requestRuntimePermissionOnDemand(permission);
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            try {
+                Thread.sleep(350);
+            } catch (InterruptedException ignored) {
+                break;
+            }
+            if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+                return true;
+            }
+        }
+        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean waitForAccessibilityService(long timeoutMs) {
+        if (HibbanAccessibilityService.getInstance() != null) return true;
+        openAccessibilitySettings();
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            try {
+                Thread.sleep(350);
+            } catch (InterruptedException ignored) {
+                break;
+            }
+            if (HibbanAccessibilityService.getInstance() != null) {
+                return true;
+            }
+        }
+        return HibbanAccessibilityService.getInstance() != null;
+    }
+
+    private boolean waitForNotificationPolicyAccess(NotificationManager nm, long timeoutMs) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || nm == null) return true;
+        if (nm.isNotificationPolicyAccessGranted()) return true;
+        openNotificationPolicySettings();
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            try {
+                Thread.sleep(350);
+            } catch (InterruptedException ignored) {
+                break;
+            }
+            if (nm.isNotificationPolicyAccessGranted()) {
+                return true;
+            }
+        }
+        return nm.isNotificationPolicyAccessGranted();
+    }
+
+    private boolean waitForNotificationListener(long timeoutMs) {
+        if (HibbanNotificationListener.getInstance() != null) return true;
+        openNotificationListenerSettings();
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            try {
+                Thread.sleep(350);
+            } catch (InterruptedException ignored) {
+                break;
+            }
+            if (HibbanNotificationListener.getInstance() != null) {
+                return true;
+            }
+        }
+        return HibbanNotificationListener.getInstance() != null;
+    }
+
     @JavascriptInterface
     public String interactScreen(String actionType, String targetText, String targetId, String textToType, int x, int y) {
+        return interactScreenExtended(actionType, targetText, targetId, textToType, x, y, 0, 0, 0, 0, 0);
+    }
+
+    @JavascriptInterface
+    public String interactScreenExtended(String actionType, String targetText, String targetId, String textToType, int x, int y, int startX, int startY, int endX, int endY, int durationMs) {
         JSONObject res = new JSONObject();
         try {
-            HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
-            if (service == null) {
-                openAccessibilitySettings();
+            if (!waitForAccessibilityService(10000)) {
                 res.put("success", false);
                 res.put("need_permission", true);
-                res.put("error", "Accessibility Service is not enabled. Nexhib has automatically opened Accessibility settings on screen. Please toggle 'Nexhib' on and try again.");
+                res.put("error", "Accessibility Service was not enabled within 10 seconds. Please toggle 'Nexhib' on in Accessibility settings.");
+                return res.toString();
+            }
+            HibbanAccessibilityService service = HibbanAccessibilityService.getInstance();
+            if (service == null) {
+                res.put("success", false);
+                res.put("need_permission", true);
+                res.put("error", "Accessibility Service is not available.");
                 return res.toString();
             }
 
             String action = actionType != null ? actionType.trim().toLowerCase() : "dump";
-            if ("dump".equals(action) || "read_screen".equals(action)) {
+            if ("dump".equals(action) || "read_screen".equals(action) || "inspect_screen".equals(action)) {
                 return service.dumpScreenHierarchy().toString();
-            } else if ("click_text".equals(action)) {
+            } else if ("click_text".equals(action) || ("click".equals(action) && targetText != null && !targetText.trim().isEmpty()) || ("tap".equals(action) && targetText != null && !targetText.trim().isEmpty())) {
                 boolean ok = service.clickByText(targetText);
                 res.put("success", ok);
                 res.put("message", ok ? "Clicked node with text: " + targetText : "Text node not found on screen: " + targetText);
-            } else if ("click_id".equals(action)) {
+            } else if ("click_id".equals(action) || ("click".equals(action) && targetId != null && !targetId.trim().isEmpty()) || ("tap".equals(action) && targetId != null && !targetId.trim().isEmpty())) {
                 boolean ok = service.clickById(targetId);
                 res.put("success", ok);
                 res.put("message", ok ? "Clicked node with id: " + targetId : "View id not found on screen: " + targetId);
-            } else if ("type".equals(action) || "type_text".equals(action)) {
-                boolean ok = service.typeText(textToType);
-                res.put("success", ok);
-                res.put("message", ok ? "Typed text into focused field." : "No focused input field found.");
-            } else if ("click_coords".equals(action)) {
+            } else if ("click_coords".equals(action) || ("click".equals(action) && (x > 0 || y > 0)) || ("tap".equals(action) && (x > 0 || y > 0))) {
                 boolean ok = service.clickCoordinates(x, y);
                 res.put("success", ok);
                 res.put("message", ok ? "Dispatched click at (" + x + ", " + y + ")" : "Failed to dispatch coordinate gesture.");
-            } else if ("back".equals(action)) {
-                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_BACK);
+            } else if ("type".equals(action) || "type_text".equals(action) || (textToType != null && !textToType.isEmpty() && !"dump".equals(action))) {
+                boolean ok = service.typeText(textToType != null ? textToType : targetText);
                 res.put("success", ok);
-            } else if ("home".equals(action)) {
-                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_HOME);
+                res.put("message", ok ? "Typed text into focused field." : "No focused input field found.");
+            } else if ("long_press".equals(action)) {
+                boolean ok = service.longPress(x, y, durationMs > 0 ? durationMs : 1000);
                 res.put("success", ok);
-            } else if ("recents".equals(action)) {
-                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_RECENTS);
+                res.put("message", ok ? "Dispatched long press at (" + x + ", " + y + ")" : "Failed to dispatch long press.");
+            } else if ("swipe".equals(action)) {
+                boolean ok = service.swipe(startX, startY, endX, endY, durationMs > 0 ? durationMs : 350);
                 res.put("success", ok);
-            } else if ("notifications".equals(action)) {
-                boolean ok = service.triggerGlobal(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS);
+                res.put("message", ok ? "Swiped from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")" : "Failed to dispatch swipe.");
+            } else if ("scroll".equals(action) || "scroll_down".equals(action) || "scroll_up".equals(action)) {
+                String dir = "down";
+                if (targetText != null && !targetText.isEmpty()) dir = targetText;
+                else if ("scroll_up".equals(action)) dir = "up";
+                boolean ok = service.scrollDirection(dir);
                 res.put("success", ok);
+                res.put("message", ok ? "Scrolled screen " + dir : "Failed to scroll screen.");
+            } else if ("global_action".equals(action) || "global".equals(action) || "back".equals(action) || "home".equals(action) || "recents".equals(action) || "notifications".equals(action)) {
+                String gAction = (targetText != null && !targetText.isEmpty()) ? targetText : action;
+                boolean ok = service.triggerNamedGlobal(gAction);
+                res.put("success", ok);
+                res.put("message", ok ? "Triggered global action: " + gAction : "Failed to trigger global action.");
+            } else if ("capture_screen".equals(action) || "screenshot".equals(action)) {
+                File outDir = new File(context.getExternalFilesDir(null), "screenshots");
+                if (!outDir.exists()) outDir.mkdirs();
+                File outFile = new File(outDir, "screen_" + System.currentTimeMillis() + ".jpg");
+                boolean ok = service.takeScreenCapture(outFile.getAbsolutePath());
+                res.put("success", ok);
+                res.put("file_path", outFile.getAbsolutePath());
+                res.put("message", ok ? "Captured screen to: " + outFile.getAbsolutePath() : "Failed to capture screen.");
             } else {
                 res.put("success", false);
                 res.put("error", "Unknown screen action: " + actionType);
@@ -1692,12 +1794,17 @@ public class WebAppInterface {
     public String getRecentNotifications(int limit) {
         JSONObject res = new JSONObject();
         try {
-            HibbanNotificationListener listener = HibbanNotificationListener.getInstance();
-            if (listener == null) {
-                openNotificationListenerSettings();
+            if (!waitForNotificationListener(10000)) {
                 res.put("success", false);
                 res.put("need_permission", true);
-                res.put("error", "Notification Access is not enabled. Nexhib has automatically opened Notification Access settings on screen. Please toggle 'Nexhib' on and try again.");
+                res.put("error", "Notification Access was not enabled within 10 seconds. Please toggle 'Nexhib' on in Notification Access settings.");
+                return res.toString();
+            }
+            HibbanNotificationListener listener = HibbanNotificationListener.getInstance();
+            if (listener == null) {
+                res.put("success", false);
+                res.put("need_permission", true);
+                res.put("error", "Notification Access service is not active.");
                 return res.toString();
             }
             res.put("success", true);
@@ -1715,10 +1822,9 @@ public class WebAppInterface {
     public String getCallLogs(int limit) {
         JSONObject res = new JSONObject();
         try {
-            if (context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
-                requestRuntimePermissionOnDemand(Manifest.permission.READ_CALL_LOG);
+            if (!waitForPermission(Manifest.permission.READ_CALL_LOG, 10000)) {
                 res.put("success", false);
-                res.put("error", "READ_CALL_LOG permission not granted. Nexhib has automatically requested permission on screen now. Please tap Allow and retry.");
+                res.put("error", "READ_CALL_LOG permission not granted within 10 seconds. Please tap Allow in permissions and retry.");
                 return res.toString();
             }
             int max = (limit > 0) ? limit : 15;
@@ -1760,10 +1866,9 @@ public class WebAppInterface {
     public String getContacts(String query, int limit) {
         JSONObject res = new JSONObject();
         try {
-            if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                requestRuntimePermissionOnDemand(Manifest.permission.READ_CONTACTS);
+            if (!waitForPermission(Manifest.permission.READ_CONTACTS, 10000)) {
                 res.put("success", false);
-                res.put("error", "READ_CONTACTS permission not granted. Nexhib has automatically requested permission on screen now. Please tap Allow and retry.");
+                res.put("error", "READ_CONTACTS permission not granted within 10 seconds. Please tap Allow in permissions and retry.");
                 return res.toString();
             }
             int max = (limit > 0) ? limit : 25;
@@ -1828,10 +1933,9 @@ public class WebAppInterface {
             String cleanNum = phoneNumber.trim().replaceAll("[^0-9+*#]", "");
             Intent intent;
             if (directCall) {
-                if (context.checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                if (waitForPermission(Manifest.permission.CALL_PHONE, 10000)) {
                     intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Uri.encode(cleanNum)));
                 } else {
-                    requestRuntimePermissionOnDemand(Manifest.permission.CALL_PHONE);
                     intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(cleanNum)));
                 }
             } else {
@@ -1850,6 +1954,7 @@ public class WebAppInterface {
         return res.toString();
     }
 
+
     @JavascriptInterface
     public String sendSms(String phoneNumber, String message) {
         JSONObject res = new JSONObject();
@@ -1860,20 +1965,19 @@ public class WebAppInterface {
                 return res.toString();
             }
             String cleanNum = phoneNumber.trim().replaceAll("[^0-9+*#]", "");
-            if (context.checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            if (waitForPermission(Manifest.permission.SEND_SMS, 10000)) {
                 SmsManager sms = SmsManager.getDefault();
                 sms.sendTextMessage(cleanNum, null, message != null ? message : "", null, null);
                 res.put("success", true);
                 res.put("status", "SMS sent successfully to " + cleanNum);
             } else {
-                requestRuntimePermissionOnDemand(Manifest.permission.SEND_SMS);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse("sms:" + cleanNum));
                 intent.putExtra("sms_body", message != null ? message : "");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
                 res.put("success", true);
-                res.put("status", "SMS permission prompt requested on screen. Opened SMS draft with " + cleanNum);
+                res.put("status", "SMS permission was not granted within 10 seconds. Opened SMS draft with " + cleanNum);
             }
         } catch (Throwable e) {
             try {
@@ -1890,7 +1994,7 @@ public class WebAppInterface {
         JSONArray list = new JSONArray();
         int max = limit > 0 ? Math.min(limit, 50) : 15;
         try {
-            if (context.checkSelfPermission(Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
+            if (waitForPermission(Manifest.permission.READ_SMS, 10000)) {
                 Uri inboxUri = Uri.parse("content://sms/inbox");
                 try (Cursor cursor = context.getContentResolver().query(inboxUri, new String[]{"_id", "address", "body", "date"}, null, null, "date DESC LIMIT " + max)) {
                     if (cursor != null && cursor.moveToFirst()) {
@@ -1910,9 +2014,8 @@ public class WebAppInterface {
                 res.put("count", list.length());
                 res.put("messages", list);
             } else {
-                requestRuntimePermissionOnDemand(Manifest.permission.READ_SMS);
                 res.put("success", false);
-                res.put("error", "READ_SMS permission not granted. Permission dialog requested.");
+                res.put("error", "READ_SMS permission not granted within 10 seconds. Permission dialog timed out.");
             }
         } catch (Throwable e) {
             try {
@@ -2453,6 +2556,273 @@ public class WebAppInterface {
         } catch (Throwable e) {
             dispatchJs("window.onVoicePlaybackFinished && window.onVoicePlaybackFinished('" + callbackId + "');");
         }
+    }
+
+    @JavascriptInterface
+    public String getInstalledApplications(String query, boolean includeSystem) {
+        JSONObject res = new JSONObject();
+        JSONArray list = new JSONArray();
+        try {
+            PackageManager pm = context.getPackageManager();
+            List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+            String q = (query != null) ? query.trim().toLowerCase() : "";
+
+            for (ApplicationInfo ai : apps) {
+                boolean isSys = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+                if (isSys && !includeSystem && q.isEmpty()) continue;
+
+                CharSequence label = pm.getApplicationLabel(ai);
+                String appName = (label != null) ? label.toString() : ai.packageName;
+                String pkg = ai.packageName;
+
+                if (!q.isEmpty()) {
+                    boolean match = appName.toLowerCase().contains(q) || pkg.toLowerCase().contains(q);
+                    if (!match) continue;
+                }
+
+                JSONObject app = new JSONObject();
+                app.put("name", appName);
+                app.put("package_name", pkg);
+                app.put("is_system", isSys);
+                Intent launchIntent = pm.getLaunchIntentForPackage(pkg);
+                app.put("is_launchable", launchIntent != null);
+                if (launchIntent != null && launchIntent.getComponent() != null) {
+                    app.put("launch_activity", launchIntent.getComponent().getClassName());
+                }
+                try {
+                    PackageInfo pi = pm.getPackageInfo(pkg, 0);
+                    app.put("version_name", pi.versionName != null ? pi.versionName : "");
+                    app.put("version_code", pi.versionCode);
+                } catch (Exception ignored) {}
+                list.put(app);
+                if (list.length() >= 150) break;
+            }
+            res.put("success", true);
+            res.put("count", list.length());
+            res.put("apps", list);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String inspectApp(String packageName) {
+        JSONObject res = new JSONObject();
+        try {
+            if (packageName == null || packageName.trim().isEmpty()) {
+                res.put("success", false);
+                res.put("error", "packageName is required");
+                return res.toString();
+            }
+            String pkg = packageName.trim();
+            PackageManager pm = context.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(pkg,
+                    PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES |
+                    PackageManager.GET_RECEIVERS | PackageManager.GET_PERMISSIONS);
+
+            res.put("success", true);
+            res.put("package_name", pi.packageName);
+            res.put("app_name", pm.getApplicationLabel(pi.applicationInfo).toString());
+            res.put("version_name", pi.versionName != null ? pi.versionName : "");
+            res.put("version_code", pi.versionCode);
+            res.put("source_dir", pi.applicationInfo.sourceDir);
+            res.put("data_dir", pi.applicationInfo.dataDir);
+
+            JSONArray activities = new JSONArray();
+            if (pi.activities != null) {
+                for (ActivityInfo a : pi.activities) {
+                    JSONObject act = new JSONObject();
+                    act.put("name", a.name);
+                    act.put("exported", a.exported);
+                    activities.put(act);
+                }
+            }
+            res.put("activities", activities);
+
+            JSONArray services = new JSONArray();
+            if (pi.services != null) {
+                for (ServiceInfo s : pi.services) {
+                    JSONObject srv = new JSONObject();
+                    srv.put("name", s.name);
+                    srv.put("exported", s.exported);
+                    services.put(srv);
+                }
+            }
+            res.put("services", services);
+
+            JSONArray permissions = new JSONArray();
+            if (pi.requestedPermissions != null) {
+                for (String perm : pi.requestedPermissions) {
+                    permissions.put(perm);
+                }
+            }
+            res.put("permissions", permissions);
+
+            Intent launch = pm.getLaunchIntentForPackage(pkg);
+            res.put("launch_intent", launch != null ? launch.toString() : null);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String queryIntentResolvers(String action, String dataUri, String mimeType) {
+        JSONObject res = new JSONObject();
+        JSONArray list = new JSONArray();
+        try {
+            Intent intent = new Intent();
+            if (action != null && !action.trim().isEmpty()) {
+                intent.setAction(action.trim());
+            } else {
+                intent.setAction(Intent.ACTION_VIEW);
+            }
+            if (dataUri != null && !dataUri.trim().isEmpty()) {
+                if (mimeType != null && !mimeType.trim().isEmpty()) {
+                    intent.setDataAndType(Uri.parse(dataUri.trim()), mimeType.trim());
+                } else {
+                    intent.setData(Uri.parse(dataUri.trim()));
+                }
+            } else if (mimeType != null && !mimeType.trim().isEmpty()) {
+                intent.setType(mimeType.trim());
+            }
+
+            PackageManager pm = context.getPackageManager();
+            List<ResolveInfo> resolves = pm.queryIntentActivities(intent, 0);
+            for (ResolveInfo ri : resolves) {
+                JSONObject item = new JSONObject();
+                item.put("package_name", ri.activityInfo.packageName);
+                item.put("activity_name", ri.activityInfo.name);
+                CharSequence label = ri.loadLabel(pm);
+                item.put("label", label != null ? label.toString() : ri.activityInfo.name);
+                list.put(item);
+            }
+            res.put("success", true);
+            res.put("count", list.length());
+            res.put("handlers", list);
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String openApp(String appNameOrPackage) {
+        JSONObject res = new JSONObject();
+        try {
+            if (appNameOrPackage == null || appNameOrPackage.trim().isEmpty()) {
+                res.put("success", false);
+                res.put("error", "App name or package is required");
+                return res.toString();
+            }
+            String target = appNameOrPackage.trim();
+            PackageManager pm = context.getPackageManager();
+            Intent launch = pm.getLaunchIntentForPackage(target);
+            if (launch == null) {
+                List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+                for (ApplicationInfo ai : apps) {
+                    CharSequence label = pm.getApplicationLabel(ai);
+                    if (label != null && label.toString().equalsIgnoreCase(target)) {
+                        launch = pm.getLaunchIntentForPackage(ai.packageName);
+                        target = ai.packageName;
+                        break;
+                    }
+                }
+                if (launch == null) {
+                    for (ApplicationInfo ai : apps) {
+                        CharSequence label = pm.getApplicationLabel(ai);
+                        if (label != null && label.toString().toLowerCase().contains(target.toLowerCase())) {
+                            launch = pm.getLaunchIntentForPackage(ai.packageName);
+                            target = ai.packageName;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launch);
+                res.put("success", true);
+                res.put("package_name", target);
+                res.put("message", "Launched app: " + target);
+            } else {
+                res.put("success", false);
+                res.put("error", "No launchable app found matching: " + appNameOrPackage);
+            }
+        } catch (Throwable e) {
+            try {
+                res.put("success", false);
+                res.put("error", e.getMessage());
+            } catch (Exception ignored) {}
+        }
+        return res.toString();
+    }
+
+    @JavascriptInterface
+    public String executeHostCommand(String command) {
+        JSONObject result = new JSONObject();
+        StringBuilder output = new StringBuilder();
+        int exitCode = -1;
+        try {
+            Process process = Runtime.getRuntime().exec(new String[]{"/system/bin/sh", "-c", command});
+            try {
+                process.getOutputStream().close();
+            } catch (Exception ignored) {}
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)
+            );
+            BufferedReader errReader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8)
+            );
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (output.length() < 120000) {
+                    output.append(line).append("\n");
+                }
+            }
+            reader.close();
+
+            StringBuilder errOut = new StringBuilder();
+            while ((line = errReader.readLine()) != null) {
+                if (errOut.length() < 60000) {
+                    errOut.append(line).append("\n");
+                }
+            }
+            errReader.close();
+
+            boolean finished = process.waitFor(60, TimeUnit.SECONDS);
+            if (finished) {
+                exitCode = process.exitValue();
+            } else {
+                process.destroyForcibly();
+                output.append("\n[Host command timed out after 60 seconds]");
+            }
+
+            result.put("success", exitCode == 0);
+            result.put("stdout", output.toString());
+            result.put("stderr", errOut.toString());
+            result.put("exitCode", exitCode);
+        } catch (Throwable e) {
+            try {
+                result.put("success", false);
+                result.put("stdout", output.toString());
+                result.put("stderr", "Host execution error: " + e.getMessage());
+                result.put("exitCode", -1);
+            } catch (Exception ignored) {}
+        }
+        return result.toString();
     }
 }
 
