@@ -869,27 +869,28 @@
     .voice-transcript-bubble {
       width: 86%;
       max-width: 380px;
-      max-height: 86px;
-      overflow-y: auto;
+      max-height: 95px;
       box-sizing: border-box;
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 20px;
-      padding: 12px 18px;
+      border-radius: 18px;
+      padding: 10px 16px;
       color: #f8fafc;
-      font-size: 15.5px;
-      line-height: 1.55;
+      font-size: 15px;
+      line-height: 1.5;
       text-align: center;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      word-wrap: break-word;
+      word-break: break-word;
       font-family: 'Kalpurush', system-ui, -apple-system, sans-serif;
       letter-spacing: 0.2px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       transition: opacity 0.25s ease, transform 0.25s ease;
-      scrollbar-width: none;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .voice-transcript-bubble::-webkit-scrollbar {
@@ -2851,7 +2852,17 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
     }
 
-    function startUserListening() {
+    function formatVoiceSubtitleText(text, maxChars = 160) {
+      if (!text) return "";
+      let clean = String(text).replace(/[\r\n]+/g, " ").trim();
+      clean = clean.replace(/[*#`_~>\[\]\(\)\{\}]/g, "").trim();
+      if (clean.length > maxChars) {
+        clean = clean.slice(0, maxChars - 3).trim() + "...";
+      }
+      return clean;
+    }
+
+    function startUserListening(silentMode = false) {
       if (!isVoiceActive) return;
       if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
 
@@ -2866,7 +2877,12 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       isVoiceAiSpeaking = false;
       isVoiceProcessing = false;
 
-      setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+      if (silentMode) {
+        // Continuous conversational turn: wait silently for next question without distracting text
+        setVoiceUIState("listening", "", "");
+      } else {
+        setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+      }
 
       if (window.AndroidBridge && typeof window.AndroidBridge.startSpeechRecognition === 'function') {
         try {
@@ -2893,7 +2909,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
         }
         isVoiceAiSpeaking = false;
-        startUserListening();
+        startUserListening(false);
         return;
       }
 
@@ -2911,7 +2927,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         }
       } else {
         // Mic was in standby, tap starts listening
-        startUserListening();
+        startUserListening(false);
       }
     }
 
@@ -2935,21 +2951,24 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
 
       if (bubbleEl) {
-        if (bubbleText !== undefined && bubbleText !== null && bubbleText.trim().length > 0) {
-          bubbleEl.textContent = bubbleText;
-          bubbleEl.style.display = "block";
-          bubbleEl.classList.remove("active-speech", "ai-reply");
-          if (state === "thinking" || state === "listening") {
-            bubbleEl.classList.add("active-speech");
-          } else if (state === "speaking") {
-            bubbleEl.classList.add("ai-reply");
+        if (bubbleText !== undefined && bubbleText !== null) {
+          const formatted = formatVoiceSubtitleText(bubbleText);
+          if (formatted.length > 0) {
+            bubbleEl.textContent = formatted;
+            bubbleEl.style.display = "-webkit-box";
+            bubbleEl.classList.remove("active-speech", "ai-reply");
+            if (state === "thinking" || state === "listening") {
+              bubbleEl.classList.add("active-speech");
+            } else if (state === "speaking") {
+              bubbleEl.classList.add("ai-reply");
+            }
+          } else {
+            bubbleEl.textContent = "";
+            bubbleEl.style.display = "none";
+            bubbleEl.classList.remove("active-speech", "ai-reply");
           }
-          bubbleEl.scrollTop = bubbleEl.scrollHeight;
-        } else {
-          bubbleEl.textContent = "";
-          bubbleEl.style.display = "none";
-          bubbleEl.classList.remove("active-speech", "ai-reply");
         }
+        // If bubbleText is undefined, KEEP existing bubble content! Do NOT hide or erase it!
       }
 
       if (micBtn) {
@@ -2981,10 +3000,11 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     window.onVoiceStateChange = function(state) {
       if (!isVoiceActive || !isVoiceListening) return;
       if (state === "ready" && !isVoiceAiSpeaking && !isVoiceProcessing) {
-        setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+        // Keep current state
       } else if (state === "listening" && !isVoiceAiSpeaking && !isVoiceProcessing) {
-        setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+        // Listening state
       } else if (state === "processing" && !isVoiceAiSpeaking) {
+        // Bubble text undefined ensures the transcript box NEVER disappears!
         setVoiceUIState("thinking", "Thinking...");
       }
     };
@@ -3019,10 +3039,9 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (partial) {
         const bubble = document.getElementById("voice-transcript-bubble");
         if (bubble) {
-          bubble.style.display = "block";
+          bubble.style.display = "-webkit-box";
           bubble.classList.add("active-speech");
-          bubble.textContent = partial;
-          bubble.scrollTop = bubble.scrollHeight;
+          bubble.textContent = formatVoiceSubtitleText(partial);
         }
       }
     };
@@ -3032,13 +3051,15 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const text = data && data.text ? data.text.trim() : "";
 
       if (!text || text.length < 1) {
-        stopUserListening();
-        setVoiceUIState("standby", "", "");
+        if (isVoiceActive && !isVoiceAiSpeaking) {
+          startUserListening(true);
+        }
         return;
       }
 
       isVoiceListening = false;
       isVoiceProcessing = true;
+      // Show user's text in the bubble AND Thinking... above simultaneously!
       setVoiceUIState("thinking", "Thinking...", text);
 
       handleVoiceTurn(text);
@@ -3046,15 +3067,20 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
     window.onMicrophonePermissionGranted = function() {
       if (isVoiceActive && !isVoiceAiSpeaking && !isVoiceProcessing) {
-        startUserListening();
+        startUserListening(false);
       }
     };
 
     window.onVoiceError = function(errorData) {
       if (!isVoiceActive) return;
       if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
-      stopUserListening();
-      setVoiceUIState("standby", "", "");
+      if (isVoiceActive && !isVoiceAiSpeaking && !isVoiceProcessing) {
+        setTimeout(() => {
+          if (isVoiceActive && !isVoiceAiSpeaking && !isVoiceProcessing) {
+            startUserListening(true);
+          }
+        }, 500);
+      }
     };
 
     window.onVoicePlaybackStarted = function(callbackId) {
@@ -3076,8 +3102,14 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       isVoiceProcessing = false;
       isVoiceListening = false;
       currentPendingReply = null;
-      stopUserListening();
-      setVoiceUIState("standby", "", "");
+
+      // DO NOT kick user out of voice mode!
+      // Continuous Conversation: Silently wait & listen for user's next question without extra text!
+      setTimeout(() => {
+        if (isVoiceActive && !isVoiceAiSpeaking && !isVoiceProcessing) {
+          startUserListening(true);
+        }
+      }, 350);
     };
 
     // Close voice mode immediately whenever user leaves or backgrounds the app

@@ -59,14 +59,17 @@ public class MainActivity extends Activity {
             requestWindowFeature(Window.FEATURE_NO_TITLE);
         } catch (Throwable ignored) {}
 
+        // Set window background to match setup.html (#030712) to eliminate startup black screen flash
+        getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xFF030712));
+
         // Dark status bar and navigation bar matching dark theme
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(0xFF07090E);
+            window.setStatusBarColor(0xFF030712);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                window.setNavigationBarColor(0xFF07090E);
+                window.setNavigationBarColor(0xFF030712);
             }
         }
 
@@ -514,7 +517,7 @@ public class MainActivity extends Activity {
 
     private void initWebView() {
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFF07090E);
+        webView.setBackgroundColor(0xFF030712);
         setContentView(webView);
 
         WebSettings ws = webView.getSettings();
