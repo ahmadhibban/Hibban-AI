@@ -566,6 +566,14 @@ public class MainActivity extends Activity {
                 view.loadUrl(url);
                 return true;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (url != null && url.contains("index.html")) {
+                    view.clearHistory();
+                }
+            }
         });
 
         bridge = new WebAppInterface(this);
@@ -735,12 +743,15 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (bridge != null) {
-            bridge.terminateVoiceMode();
+            if (bridge.isVoiceModeActive()) {
+                bridge.terminateVoiceMode();
+                return;
+            }
+            if (bridge.isModalOpen()) {
+                bridge.closeActiveModal();
+                return;
+            }
         }
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        moveTaskToBack(true);
     }
 }

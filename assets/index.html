@@ -1825,11 +1825,21 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
     function openClearModal() {
       document.getElementById("clear-modal").style.display = "flex";
+      if (window.AndroidBridge && typeof window.AndroidBridge.setModalOpen === 'function') {
+        try { window.AndroidBridge.setModalOpen(true); } catch (e) {}
+      }
     }
 
     function closeClearModal() {
       document.getElementById("clear-modal").style.display = "none";
+      if (window.AndroidBridge && typeof window.AndroidBridge.setModalOpen === 'function') {
+        try { window.AndroidBridge.setModalOpen(false); } catch (e) {}
+      }
     }
+
+    window.closeAllModals = function() {
+      closeClearModal();
+    };
 
     function confirmClearChat() {
       closeClearModal();
@@ -2791,6 +2801,10 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const overlay = document.getElementById("voice-overlay");
       if (overlay) overlay.classList.add("active");
 
+      if (window.AndroidBridge && typeof window.AndroidBridge.setVoiceModeActive === 'function') {
+        try { window.AndroidBridge.setVoiceModeActive(true); } catch (e) {}
+      }
+
       if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
         if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
           window.AndroidBridge.requestAudioPermission();
@@ -2819,6 +2833,9 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (overlay) overlay.classList.remove("active");
 
       if (window.AndroidBridge) {
+        if (typeof window.AndroidBridge.setVoiceModeActive === 'function') {
+          try { window.AndroidBridge.setVoiceModeActive(false); } catch (e) {}
+        }
         try { window.AndroidBridge.stopSpeechRecognition(); } catch (e) {}
         try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
         try { window.AndroidBridge.releaseWakeLock(); } catch (e) {}

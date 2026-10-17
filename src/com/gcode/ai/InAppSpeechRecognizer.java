@@ -109,7 +109,7 @@ public class InAppSpeechRecognizer {
         try {
             try {
                 audioRecord = new AudioRecord(
-                        MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                        MediaRecorder.AudioSource.MIC,
                         SAMPLE_RATE,
                         CHANNEL,
                         ENCODING,
@@ -118,30 +118,21 @@ public class InAppSpeechRecognizer {
             } catch (Throwable ignored) {}
 
             if (audioRecord == null || audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-                audioRecord = new AudioRecord(
-                        MediaRecorder.AudioSource.MIC,
-                        SAMPLE_RATE,
-                        CHANNEL,
-                        ENCODING,
-                        bufSize
-                );
+                try {
+                    audioRecord = new AudioRecord(
+                            MediaRecorder.AudioSource.DEFAULT,
+                            SAMPLE_RATE,
+                            CHANNEL,
+                            ENCODING,
+                            bufSize
+                    );
+                } catch (Throwable ignored) {}
             }
 
-            if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            if (audioRecord == null || audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                 notifyError(9, "AudioRecord initialization failed. Verify microphone permissions.");
                 return;
             }
-
-            try {
-                if (android.media.audiofx.NoiseSuppressor.isAvailable()) {
-                    android.media.audiofx.NoiseSuppressor.create(audioRecord.getAudioSessionId()).setEnabled(true);
-                }
-            } catch (Throwable ignored) {}
-            try {
-                if (android.media.audiofx.AcousticEchoCanceler.isAvailable()) {
-                    android.media.audiofx.AcousticEchoCanceler.create(audioRecord.getAudioSessionId()).setEnabled(true);
-                }
-            } catch (Throwable ignored) {}
 
             audioRecord.startRecording();
             notifyReady();
@@ -149,8 +140,8 @@ public class InAppSpeechRecognizer {
             byte[] chunk = new byte[1600]; // 50ms chunks at 16kHz 16-bit mono
             ByteArrayOutputStream speechBuffer = new ByteArrayOutputStream();
 
-            // Pre-speech rolling buffer (approx 400ms = 8 chunks) to avoid clipping beginning of speech
-            int preSpeechChunksCount = 8;
+            // Pre-speech rolling buffer (approx 500ms = 10 chunks) to capture crisp speech onset
+            int preSpeechChunksCount = 10;
             byte[][] preSpeechRing = new byte[preSpeechChunksCount][];
             int preIndex = 0;
 
@@ -160,7 +151,7 @@ public class InAppSpeechRecognizer {
             int consecutiveSpeechFrames = 0;
 
             // Baseline ambient noise calibration
-            double baselineRms = 180.0;
+            double baselineRms = 120.0;
             int calibrationFrames = 0;
 
             while (isRecording && !Thread.currentThread().isInterrupted()) {
@@ -179,25 +170,24 @@ public class InAppSpeechRecognizer {
                 }
                 double rms = Math.sqrt((double) sum / samples);
 
-                // Dynamically update baseline noise when user is not speaking
+                // Dynamically track ambient baseline room noise
                 if (!speechStarted) {
-                    if (calibrationFrames < 15) {
+                    if (calibrationFrames < 10) {
                         baselineRms = (baselineRms * calibrationFrames + rms) / (calibrationFrames + 1);
                         calibrationFrames++;
                     } else {
-                        baselineRms = baselineRms * 0.96 + rms * 0.04;
+                        baselineRms = baselineRms * 0.95 + rms * 0.05;
                     }
                 }
 
-                float normRms = (float) Math.min(1.0, Math.max(0.0, (rms - baselineRms) / 1800.0));
+                float normRms = (float) Math.min(1.0, Math.max(0.0, (rms - baselineRms) / 1000.0));
                 notifyRms(normRms);
 
                 long now = System.currentTimeMillis();
 
-                // Dynamic speech and silence thresholds based on ambient room noise
-                // High speech threshold so ambient room noise, fan, or breath will NEVER trigger
-                double speechThresh = Math.max(550.0, baselineRms * 2.2 + 100.0);
-                double silenceThresh = Math.max(220.0, baselineRms * 1.25 + 30.0);
+                // Sensitive dynamic thresholds (like Gboard / Google Voice Typing)
+                double speechThresh = Math.max(120.0, baselineRms * 1.30 + 20.0);
+                double silenceThresh = Math.max(80.0, baselineRms * 1.15 + 10.0);
 
                 if (!speechStarted) {
                     preSpeechRing[preIndex % preSpeechChunksCount] = Arrays.copyOf(chunk, read);
@@ -209,8 +199,8 @@ public class InAppSpeechRecognizer {
                         consecutiveSpeechFrames = Math.max(0, consecutiveSpeechFrames - 1);
                     }
 
-                    // Require at least 3 consecutive frames (150ms) of sustained human vocal power
-                    if (consecutiveSpeechFrames >= 3 || forceFinishSpeech) {
+                    // Trigger immediately on vocal onset (1 frame = 50ms)
+                    if (consecutiveSpeechFrames >= 1 || forceFinishSpeech) {
                         speechStarted = true;
                         speechStartTime = now;
                         silenceStartTime = 0;
@@ -236,15 +226,15 @@ public class InAppSpeechRecognizer {
                     if (rms < silenceThresh) {
                         if (silenceStartTime == 0) {
                             silenceStartTime = now;
-                        } else if (now - silenceStartTime >= 1300) { // 1.3s of natural silence before finalizing turn
+                        } else if (now - silenceStartTime >= 1200) { // 1.2s of natural pause
                             break;
                         }
                     } else {
                         silenceStartTime = 0;
                     }
 
-                    // Max 10s speech turn limit
-                    if (now - speechStartTime > 10000) {
+                    // Max 15s speech turn limit
+                    if (now - speechStartTime > 15000) {
                         break;
                     }
                 }
@@ -259,8 +249,8 @@ public class InAppSpeechRecognizer {
             if (!isRecording) return;
 
             byte[] pcmData = speechBuffer.toByteArray();
-            // If total speech audio is under 600ms (just a transient noise spike/cough) or speech never started
-            if (!speechStarted || pcmData.length < SAMPLE_RATE * 2 * 0.6) {
+            // If total speech audio is under 300ms or speech never started
+            if (!speechStarted || pcmData.length < SAMPLE_RATE * 2 * 0.3) {
                 // Do NOT send to STT, do NOT flash Thinking, just silently loop back to listening
                 if (isRecording) {
                     notifyReady();
