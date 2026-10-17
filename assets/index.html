@@ -838,14 +838,15 @@
     }
 
     .voice-status-text {
-      font-size: 23px;
+      font-size: 21px;
       font-weight: 700;
       color: #f8fafc;
       margin-top: 14px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       letter-spacing: 0.5px;
       text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
+      min-height: 26px;
     }
 
     .voice-status-text.thinking {
@@ -861,32 +862,44 @@
       text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
     }
 
-    @keyframes textShimmer {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
+    .voice-status-text:empty {
+      display: none;
     }
 
     .voice-transcript-bubble {
-      width: 90%;
-      max-width: 440px;
-      min-height: 58px;
-      max-height: 180px;
+      width: 86%;
+      max-width: 380px;
+      max-height: 86px;
       overflow-y: auto;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 24px;
-      padding: 16px 22px;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 20px;
+      padding: 12px 18px;
       color: #f8fafc;
-      font-size: 17.5px;
-      line-height: 1.65;
+      font-size: 15.5px;
+      line-height: 1.55;
       text-align: center;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       word-wrap: break-word;
       font-family: 'Kalpurush', system-ui, -apple-system, sans-serif;
       letter-spacing: 0.2px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    }
+
+    .voice-transcript-bubble::-webkit-scrollbar {
+      display: none;
+    }
+
+    .voice-transcript-bubble:empty {
+      display: none;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .voice-transcript-bubble.active-speech {
@@ -907,7 +920,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 34px;
+      gap: 36px;
       width: 100%;
     }
 
@@ -918,7 +931,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.2s ease;
+      transition: transform 0.15s ease, background 0.25s ease, box-shadow 0.25s ease;
       touch-action: manipulation;
     }
 
@@ -926,23 +939,38 @@
       transform: scale(0.9);
     }
 
-    .voice-mute-btn {
-      width: 58px;
-      height: 58px;
+    .voice-mic-btn {
+      width: 66px;
+      height: 66px;
       background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #fff;
+      border: 1.5px solid rgba(255, 255, 255, 0.22);
+      color: #f8fafc;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
     }
 
-    .voice-mute-btn.muted {
-      background: rgba(239, 68, 68, 0.25);
-      border-color: rgba(239, 68, 68, 0.5);
-      color: #f87171;
+    .voice-mic-btn.active-listening {
+      background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+      border-color: #7dd3fc;
+      color: #ffffff;
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.65), 0 0 50px rgba(56, 189, 248, 0.3);
+      animation: micPulseGlow 1.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes micPulseGlow {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), 0 0 40px rgba(56, 189, 248, 0.2);
+      }
+      100% {
+        transform: scale(1.08);
+        box-shadow: 0 0 35px rgba(56, 189, 248, 0.85), 0 0 65px rgba(56, 189, 248, 0.4);
+      }
     }
 
     .voice-end-btn {
-      width: 70px;
-      height: 70px;
+      width: 66px;
+      height: 66px;
       background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: #fff;
       box-shadow: 0 6px 22px rgba(239, 68, 68, 0.5);
@@ -1188,7 +1216,7 @@
     </div>
 
     <div class="voice-center">
-      <div class="voice-orbital-container" id="voice-orbital-container" onclick="handleOrbClick()" title="ট্যাপ করে কথা শেষ করুন বা থামান">
+      <div class="voice-orbital-container" id="voice-orbital-container" onclick="handleOrbClick()" title="ট্যাপ করে কথা বলুন বা থামান">
         <div class="voice-orb-glow" id="voice-orb-glow"></div>
         <div class="voice-ring-cyan" id="voice-ring-cyan"></div>
         <div class="voice-ring-purple" id="voice-ring-purple"></div>
@@ -1200,14 +1228,14 @@
         <div id="voice-orb" style="display:none;"></div>
       </div>
 
-      <div class="voice-status-text" id="voice-status-text">Listening...</div>
+      <div class="voice-status-text" id="voice-status-text" style="display:none;"></div>
 
-      <div class="voice-transcript-bubble" id="voice-transcript-bubble">আমি শুনছি, বলুন...</div>
+      <div class="voice-transcript-bubble" id="voice-transcript-bubble" style="display:none;"></div>
     </div>
 
     <div class="voice-controls">
-      <button class="voice-ctrl-btn voice-mute-btn" id="voice-mute-btn" onclick="toggleVoiceMute()" title="Mute Microphone">
-        <svg id="voice-mute-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+      <button class="voice-ctrl-btn voice-mic-btn" id="voice-mic-btn" onclick="handleVoiceMicClick()" title="ট্যাপ করে কথা বলুন (Tap to Speak)">
+        <svg id="voice-mic-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
           <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
           <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
         </svg>
@@ -2743,7 +2771,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     // JARVIS-STYLE BENGALI VOICE ASSISTANT
     // ==========================================
     let isVoiceActive = false;
-    let isVoiceMuted = false;
+    let isVoiceListening = false;
     let isVoiceAiSpeaking = false;
     let isVoiceProcessing = false;
     let voiceSessionHistory = [];
@@ -2754,7 +2782,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     function startVoiceMode() {
       if (isVoiceActive) return;
       isVoiceActive = true;
-      isVoiceMuted = false;
+      isVoiceListening = false;
       isVoiceAiSpeaking = false;
       isVoiceProcessing = false;
       currentPendingReply = null;
@@ -2763,9 +2791,6 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const overlay = document.getElementById("voice-overlay");
       if (overlay) overlay.classList.add("active");
 
-      const muteBtn = document.getElementById("voice-mute-btn");
-      if (muteBtn) muteBtn.classList.remove("muted");
-
       if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
         if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
           window.AndroidBridge.requestAudioPermission();
@@ -2773,17 +2798,19 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         return;
       }
 
-      setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
-
       if (window.AndroidBridge && typeof window.AndroidBridge.acquireWakeLock === 'function') {
         try { window.AndroidBridge.acquireWakeLock(); } catch (e) {}
       }
 
-      startNativeListening();
+      // Open in Standby - Clean screen, NO text anywhere!
+      setVoiceUIState("standby", "", "");
     }
 
     function endVoiceMode() {
       isVoiceActive = false;
+      isVoiceListening = false;
+      isVoiceAiSpeaking = false;
+      isVoiceProcessing = false;
       currentPendingReply = null;
       if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
       if (voicePlaybackTimer) { clearTimeout(voicePlaybackTimer); voicePlaybackTimer = null; }
@@ -2796,8 +2823,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
         try { window.AndroidBridge.releaseWakeLock(); } catch (e) {}
       }
-      isVoiceAiSpeaking = false;
-      isVoiceProcessing = false;
+      setVoiceUIState("standby", "", "");
     }
 
     function toggleVoiceMode() {
@@ -2808,21 +2834,72 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
     }
 
-    function toggleVoiceMute() {
+    function startUserListening() {
       if (!isVoiceActive) return;
-      isVoiceMuted = !isVoiceMuted;
-      const muteBtn = document.getElementById("voice-mute-btn");
-      if (isVoiceMuted) {
-        if (muteBtn) muteBtn.classList.add("muted");
-        if (window.AndroidBridge) {
-          try { window.AndroidBridge.stopSpeechRecognition(); } catch (e) {}
+      if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
+        if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
+          window.AndroidBridge.requestAudioPermission();
         }
-        setVoiceUIState("muted", "Microphone Muted", "মাইক্রোফোন মিউট করা হয়েছে");
-      } else {
-        if (muteBtn) muteBtn.classList.remove("muted");
-        setVoiceUIState("listening", "Listening...");
-        startNativeListening();
+        return;
       }
+
+      isVoiceListening = true;
+      isVoiceAiSpeaking = false;
+      isVoiceProcessing = false;
+
+      setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.startSpeechRecognition === 'function') {
+        try {
+          window.AndroidBridge.startSpeechRecognition("bn-BD");
+        } catch (e) {
+          console.error("Failed to start speech recognition:", e);
+        }
+      }
+    }
+
+    function stopUserListening() {
+      isVoiceListening = false;
+      if (window.AndroidBridge && typeof window.AndroidBridge.stopSpeechRecognition === 'function') {
+        try { window.AndroidBridge.stopSpeechRecognition(); } catch (e) {}
+      }
+    }
+
+    function handleVoiceMicClick() {
+      if (!isVoiceActive) return;
+
+      if (isVoiceAiSpeaking) {
+        // Interrupt AI, start listening to user immediately
+        if (window.AndroidBridge && typeof window.AndroidBridge.stopBengaliVoice === 'function') {
+          try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
+        }
+        isVoiceAiSpeaking = false;
+        startUserListening();
+        return;
+      }
+
+      if (isVoiceProcessing) {
+        isVoiceProcessing = false;
+        stopUserListening();
+        setVoiceUIState("standby", "", "");
+        return;
+      }
+
+      if (isVoiceListening) {
+        // User was speaking, tap mic sends/finishes speech now
+        if (window.AndroidBridge && typeof window.AndroidBridge.finishSpeechNow === 'function') {
+          try { window.AndroidBridge.finishSpeechNow(); } catch (e) {}
+        }
+      } else {
+        // Mic was in standby, tap starts listening
+        startUserListening();
+      }
+    }
+
+    function handleOrbClick() {
+      handleVoiceMicClick();
     }
 
     function setVoiceUIState(state, statusText, bubbleText) {
@@ -2830,21 +2907,41 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const orb = document.getElementById("voice-orb");
       const statusEl = document.getElementById("voice-status-text");
       const bubbleEl = document.getElementById("voice-transcript-bubble");
+      const micBtn = document.getElementById("voice-mic-btn");
 
       if (statusEl) {
-        if (statusText) statusEl.textContent = statusText;
+        statusEl.textContent = statusText || "";
         statusEl.classList.remove("thinking", "speaking");
         if (state === "thinking") statusEl.classList.add("thinking");
         else if (state === "speaking") statusEl.classList.add("speaking");
+        statusEl.style.display = (statusText && statusText.trim().length > 0) ? "block" : "none";
       }
 
-      if (bubbleEl && bubbleText !== undefined && bubbleText !== null) {
-        bubbleEl.textContent = bubbleText;
-        bubbleEl.classList.remove("active-speech", "ai-reply");
-        if (state === "thinking") {
-          bubbleEl.classList.add("active-speech");
-        } else if (state === "speaking") {
-          bubbleEl.classList.add("ai-reply");
+      if (bubbleEl) {
+        if (bubbleText !== undefined && bubbleText !== null && bubbleText.trim().length > 0) {
+          bubbleEl.textContent = bubbleText;
+          bubbleEl.style.display = "block";
+          bubbleEl.classList.remove("active-speech", "ai-reply");
+          if (state === "thinking" || state === "listening") {
+            bubbleEl.classList.add("active-speech");
+          } else if (state === "speaking") {
+            bubbleEl.classList.add("ai-reply");
+          }
+          bubbleEl.scrollTop = bubbleEl.scrollHeight;
+        } else {
+          bubbleEl.textContent = "";
+          bubbleEl.style.display = "none";
+          bubbleEl.classList.remove("active-speech", "ai-reply");
+        }
+      }
+
+      if (micBtn) {
+        if (state === "listening") {
+          micBtn.classList.add("active-listening");
+          micBtn.setAttribute("title", "কথা শুনছি... ট্যাপ করে পাঠান (Listening... Tap to send)");
+        } else {
+          micBtn.classList.remove("active-listening");
+          micBtn.setAttribute("title", "ট্যাপ করে কথা বলুন (Tap to speak)");
         }
       }
 
@@ -2863,49 +2960,11 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
     }
 
-    function scheduleVoiceRestart(delayMs = 300) {
-      if (voiceRestartTimer) clearTimeout(voiceRestartTimer);
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
-
-      voiceRestartTimer = setTimeout(() => {
-        if (isVoiceActive && !isVoiceMuted && !isVoiceAiSpeaking && !isVoiceProcessing) {
-          startNativeListening();
-        }
-      }, delayMs);
-    }
-
-    function startNativeListening() {
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
-      if (window.AndroidBridge && typeof window.AndroidBridge.startSpeechRecognition === 'function') {
-        try {
-          window.AndroidBridge.startSpeechRecognition("bn-BD");
-        } catch (e) {
-          console.error("Failed to start speech recognition:", e);
-        }
-      }
-    }
-
-    function handleOrbClick() {
-      if (!isVoiceActive) return;
-      if (isVoiceAiSpeaking) {
-        if (window.AndroidBridge && typeof window.AndroidBridge.stopBengaliVoice === 'function') {
-          try { window.AndroidBridge.stopBengaliVoice(); } catch (e) {}
-        }
-        window.onVoicePlaybackFinished('force_stop');
-        return;
-      }
-      if (isVoiceProcessing) return;
-
-      if (window.AndroidBridge && typeof window.AndroidBridge.finishSpeechNow === 'function') {
-        try { window.AndroidBridge.finishSpeechNow(); } catch (e) {}
-      }
-    }
-
     // Dispatched directly from AndroidBridge into window
     window.onVoiceStateChange = function(state) {
-      if (!isVoiceActive || isVoiceMuted) return;
+      if (!isVoiceActive || !isVoiceListening) return;
       if (state === "ready" && !isVoiceAiSpeaking && !isVoiceProcessing) {
-        setVoiceUIState("listening", "Listening...");
+        setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
       } else if (state === "listening" && !isVoiceAiSpeaking && !isVoiceProcessing) {
         setVoiceUIState("listening", "Listening...", "আমি শুনছি, বলুন...");
       } else if (state === "processing" && !isVoiceAiSpeaking) {
@@ -2914,7 +2973,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     };
 
     window.onVoiceRmsChanged = function(normVal) {
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
+      if (!isVoiceActive || !isVoiceListening || isVoiceAiSpeaking || isVoiceProcessing) return;
       const glow = document.getElementById("voice-orb-glow");
       const iconCenter = document.getElementById("voice-icon-center-box");
       const disc = document.getElementById("voice-icon-backdrop-disc");
@@ -2933,7 +2992,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     };
 
     window.onVoicePartialResult = function(data) {
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking) return;
+      if (!isVoiceActive || !isVoiceListening || isVoiceAiSpeaking) return;
       let partial = "";
       if (typeof data === "string") {
         partial = data.trim();
@@ -2943,6 +3002,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (partial) {
         const bubble = document.getElementById("voice-transcript-bubble");
         if (bubble) {
+          bubble.style.display = "block";
           bubble.classList.add("active-speech");
           bubble.textContent = partial;
           bubble.scrollTop = bubble.scrollHeight;
@@ -2951,58 +3011,38 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     };
 
     window.onVoiceFinalResult = function(data) {
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking) return;
+      if (!isVoiceActive || isVoiceAiSpeaking) return;
       const text = data && data.text ? data.text.trim() : "";
 
       if (!text || text.length < 1) {
-        scheduleVoiceRestart(350);
+        stopUserListening();
+        setVoiceUIState("standby", "", "");
         return;
       }
 
-      // Display what the user spoke immediately with active speech styling
-      const bubble = document.getElementById("voice-transcript-bubble");
-      if (bubble) {
-        bubble.classList.add("active-speech");
-        bubble.textContent = text;
-        bubble.scrollTop = bubble.scrollHeight;
-      }
+      isVoiceListening = false;
+      isVoiceProcessing = true;
+      setVoiceUIState("thinking", "Thinking...", text);
 
       handleVoiceTurn(text);
     };
 
     window.onMicrophonePermissionGranted = function() {
-      if (isVoiceActive && !isVoiceMuted && !isVoiceAiSpeaking && !isVoiceProcessing) {
-        setVoiceUIState("listening", "Listening...");
-        startNativeListening();
+      if (isVoiceActive && !isVoiceAiSpeaking && !isVoiceProcessing) {
+        startUserListening();
       }
     };
 
     window.onVoiceError = function(errorData) {
-      if (!isVoiceActive || isVoiceMuted || isVoiceAiSpeaking || isVoiceProcessing) return;
-      const code = (typeof errorData === "object" && errorData.code != null) ? errorData.code : Number(errorData);
-
-      if (code === 9) {
-        if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
-        if (window.AndroidBridge && typeof window.AndroidBridge.hasAudioPermission === 'function' && !window.AndroidBridge.hasAudioPermission()) {
-          setVoiceUIState("listening", "Listening...", "মাইক্রোফোন পারমিশন প্রয়োজন");
-          if (typeof window.AndroidBridge.requestAudioPermission === 'function') {
-            window.AndroidBridge.requestAudioPermission();
-          }
-          return;
-        }
-        setVoiceUIState("listening", "Listening...");
-        scheduleVoiceRestart(600);
-        return;
-      }
-
-      if (code === 2) {
-        setVoiceUIState("listening", "Listening...", "নেটওয়ার্ক ধীর, পুনরায় চেষ্টা করা হচ্ছে...");
-      }
-      scheduleVoiceRestart(600);
+      if (!isVoiceActive) return;
+      if (voiceRestartTimer) { clearTimeout(voiceRestartTimer); voiceRestartTimer = null; }
+      stopUserListening();
+      setVoiceUIState("standby", "", "");
     };
 
     window.onVoicePlaybackStarted = function(callbackId) {
       if (!isVoiceActive) return;
+      isVoiceListening = false;
       isVoiceProcessing = false;
       isVoiceAiSpeaking = true;
       if (currentPendingReply) {
@@ -3017,11 +3057,24 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (!isVoiceActive) return;
       isVoiceAiSpeaking = false;
       isVoiceProcessing = false;
+      isVoiceListening = false;
       currentPendingReply = null;
-      // Keep the AI's reply visible in the bubble while returning to listening state
-      setVoiceUIState("listening", "Listening...");
-      scheduleVoiceRestart(300);
+      stopUserListening();
+      setVoiceUIState("standby", "", "");
     };
+
+    // Close voice mode immediately whenever user leaves or backgrounds the app
+    document.addEventListener("visibilitychange", function() {
+      if (document.hidden && isVoiceActive) {
+        endVoiceMode();
+      }
+    });
+
+    window.addEventListener("pagehide", function() {
+      if (isVoiceActive) {
+        endVoiceMode();
+      }
+    });
 
     function tryFastVoiceDeviceAction(userText) {
       if (!window.AndroidBridge) return null;
@@ -3211,7 +3264,7 @@ VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
           let fargs = {};
           try { fargs = JSON.parse(call.function.arguments || "{}"); } catch (e) {}
 
-          setVoiceUIState("thinking", `Executing ${fname}...`, userQuery);
+          setVoiceUIState("thinking", "Thinking...", userQuery);
           const toolResult = await executeTool(fname, fargs);
 
           turnMessages.push({
@@ -3288,8 +3341,8 @@ VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
         console.error("Voice turn error:", err);
         isVoiceProcessing = false;
         isVoiceAiSpeaking = false;
-        setVoiceUIState("listening", "Listening...", "সংযোগের সমস্যা হয়েছে, দয়া করে আবার বলুন।");
-        scheduleVoiceRestart(600);
+        stopUserListening();
+        setVoiceUIState("standby", "", "");
       }
     }
   </script>

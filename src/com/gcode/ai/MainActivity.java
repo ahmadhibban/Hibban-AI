@@ -718,12 +718,25 @@ public class MainActivity extends Activity {
         super.onPause();
         if (bridge != null) {
             bridge.setAppInForeground(false);
+            bridge.terminateVoiceMode();
         }
         HibbanDaemonService.start(this);
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (bridge != null) {
+            bridge.setAppInForeground(false);
+            bridge.terminateVoiceMode();
+        }
+    }
+
+    @Override
     public void onBackPressed() {
+        if (bridge != null) {
+            bridge.terminateVoiceMode();
+        }
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {

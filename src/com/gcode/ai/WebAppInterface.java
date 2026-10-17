@@ -101,8 +101,28 @@ public class WebAppInterface {
         }
     }
 
+    public void terminateVoiceMode() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (inAppSpeechRecognizer != null) {
+                        inAppSpeechRecognizer.stopListening();
+                    }
+                    isListeningVoice = false;
+                    stopBengaliVoice();
+                    releaseWakeLock();
+                    dispatchJs("window.endVoiceMode && window.endVoiceMode();");
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
+
     public void setAppInForeground(boolean inForeground) {
         this.isAppInForeground = inForeground;
+        if (!inForeground) {
+            terminateVoiceMode();
+        }
     }
 
     @JavascriptInterface
