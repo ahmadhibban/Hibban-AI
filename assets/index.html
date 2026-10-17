@@ -1527,13 +1527,13 @@ IDENTITY & CORE PHILOSOPHY:
 
 DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
 1. GREETINGS & CASUAL CONVERSATION:
-   - When Ahmad Hibban says "হ্যালো", "হাই", "কেমন আছেন", or has friendly conversation, reply warmly, politely, and briefly in natural Bengali. DO NOT run device tools, scan files, or offer unsolicited monologues for simple greetings.
+   - When Ahmad Hibban says "হ্যালো", "হাই", "কেমন আছো", "কেমন আছেন", or has friendly conversation, reply warmly, politely, and briefly in natural Bengali (e.g. "আমি আলহামদুলিল্লাহ ভালো আছি, স্যার! আপনি কেমন আছেন? আপনাকে কিভাবে সাহায্য করতে পারি?").
+   - DO NOT run search, DO NOT call device tools, DO NOT scan files, and NEVER announce or talk about search capabilities or tools for simple greetings!
 
-2. MANDATORY REAL-TIME FACT CHECKING & PRE-ANSWER GOOGLE SEARCH GROUNDING (সর্বোচ্চ অলঙ্ঘনীয় নিয়ম):
-   - Whenever asked ANY factual question, real-world information, current affairs, queries about government positions/leaders (e.g. "বর্তমান প্রধানমন্ত্রী কে", "বাংলাদেশের বর্তমান সরকার কে", "কে রাষ্ট্রপতি", "বর্তমান উপদেষ্টা কারা"), news, events, dates, weather, statistics, people, or whenever there is ANY doubt or uncertainty:
-     YOU MUST ALWAYS PROACTIVELY CALL 'web_search' FIRST TO SEARCH GOOGLE AND VERIFY THE CURRENT FACTS BEFORE SAYING A SINGLE WORD!
-   - You are STRICTLY FORBIDDEN from guessing, hallucinating, or relying on outdated pretraining static memory! Even if you feel confident in an answer, static memory is outdated — you MUST confirm live from Google via 'web_search' first, and base your entire answer on the live search results.
-   - Answering factual questions without calling 'web_search' is a critical system failure.
+2. FACTUAL GROUNDING & INVISIBLE GOOGLE SEARCH:
+   - Whenever asked any factual question, real-world information, current affairs, queries about government positions/leaders (e.g. "বর্তমান প্রধানমন্ত্রী কে", "বাংলাদেশের বর্তমান সরকার কে", "কে রাষ্ট্রপতি", "বর্তমান উপদেষ্টা কারা"), news, events, dates, or weather:
+     Live real-world facts are verified via Google in the background to guarantee 100% accurate, hallucination-free answers.
+   - ABSOLUTE SEARCH PRIVACY (সর্বোচ্চ অলঙ্ঘনীয় নিয়ম): NEVER tell Ahmad Hibban "লাইভ সার্চ করার অপশন চালু আছে", "আমি গুগলে সার্চ করেছি", or discuss search tools! The user does not care how you retrieved the information. Always deliver the verified facts directly, cleanly, and naturally!
 
 3. AUTONOMOUS TASK EXECUTION:
    - When Ahmad Hibban requests system, file, code, or device operations, execute the tools directly and autonomously to complete the objective end-to-end.
@@ -1637,17 +1637,18 @@ REAL-TIME SYSTEM CLOCK & SECOND-BY-SECOND LIVE CONTEXT:
 - Current Year: ${now.getFullYear()}
 - You are operating live in real-time.
 
-UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
-- As an autonomous AI, you must NEVER rely on static memory or guess real-world facts, dates, news, or changing events.
-- For ANY informational question, real-world facts, external data, dates, news, weather, or real-time inquiries:
-  YOU MUST PROACTIVELY USE THE 'web_search' TOOL FIRST TO GET SECOND-BY-SECOND FRESH INFORMATION FROM GOOGLE BEFORE ANSWERING!
-- Extract the verified answer directly from the live search results and respond clearly, concisely, and accurately in Bengali.`;
+REAL-TIME FACTUAL GROUNDING & STRICT SEARCH PRIVACY:
+- You have real-time live grounding. For any real-world facts, dates, government leaders, news, or weather, answers are backed by verified live data.
+- ABSOLUTE SEARCH PRIVACY: NEVER babble about search tools, NEVER say "লাইভ সার্চ চালু আছে", and NEVER announce search mechanics. Always answer directly, clearly, concisely, and factually in Bengali or Banglish.`;
     }
 
     // OmniRoute Configuration (Keyless, Worldwide Free Quota Models Hierarchy)
     const OMNIROUTE_URL = "http://127.0.0.1:20128/v1/chat/completions";
     let omniRouteKey = "sk-5f238e76072d7926-d5c648-d2fcfe6e";
     let dynamicModels = [];
+    let fastModels = ["auto/best-fast", "gemini-3.8-flash-high", "gemini-3-flash", "gemini-3.1-flash-lite", "gpt-4.1-mini"];
+    let reasoningModels = ["gemini-3-pro", "auto/best-coding", "gpt-4o", "claude-3-5-sonnet", "deepseek-r1"];
+    let fastestModel = "gemini-3.1-flash-lite";
     let activeModel = "";
 
     function scoreModel(m) {
@@ -1678,6 +1679,40 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (m.outputTokenLimit && m.outputTokenLimit >= 64000) score += 50;
 
       return score;
+    }
+
+    function populateModelCategories(chatModels) {
+      if (!Array.isArray(chatModels) || chatModels.length === 0) return;
+      dynamicModels = chatModels.map(m => m.id);
+
+      const fast = [];
+      const reasoning = [];
+
+      for (const m of chatModels) {
+        const full = ((m.id || "") + " " + (m.name || "")).toLowerCase();
+        const isReasoning = full.includes("thinking") || full.includes("r1") || full.includes("o1") || full.includes("o3") ||
+                            full.includes("opus") || full.includes("sonnet") || full.includes("pro") || full.includes("120b") ||
+                            full.includes("best-coding") || full.includes("deepseek") || (m.capabilities && m.capabilities.reasoning);
+        if (isReasoning) {
+          reasoning.push(m.id);
+        } else {
+          fast.push(m.id);
+        }
+      }
+
+      if (fast.length > 0) fastModels = fast;
+      if (reasoning.length > 0) reasoningModels = reasoning;
+
+      // Determine single fastest model for instant intent evaluation
+      const ultraFast = fastModels.find(id => {
+        const low = id.toLowerCase();
+        return low.includes("flash-lite") || low.includes("mini") || low.includes("flash-low") || low.includes("haiku");
+      }) || fastModels[0] || dynamicModels[0];
+
+      if (ultraFast) fastestModel = ultraFast;
+      if (!activeModel && dynamicModels.length > 0) {
+        activeModel = dynamicModels[0];
+      }
     }
 
     let chatHistory = [];
@@ -1767,10 +1802,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
             if (data && Array.isArray(data.data) && data.data.length > 0) {
               const chatModels = data.data.filter(m => !m.type || m.type !== "image");
               chatModels.sort((a, b) => scoreModel(b) - scoreModel(a));
-              dynamicModels = chatModels.map(m => m.id);
-              if (dynamicModels.length > 0 && !activeModel) {
-                activeModel = dynamicModels[0];
-              }
+              populateModelCategories(chatModels);
             }
           } catch (jsonErr) {}
 
@@ -2086,15 +2118,20 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         contentBox,
         actionsList,
         addAction(actionText) {
-          actionsList.push(actionText);
+          if (!actionText || typeof actionText !== "string") return;
+          const lower = actionText.toLowerCase();
+          // Never expose background search to user in executed actions pill
+          if (!lower.includes("web_search") && !lower.includes("searched web") && !lower.includes("search google")) {
+            actionsList.push(actionText);
+          }
           if (shimmerLabel) {
-            shimmerLabel.textContent = "Working...";
+            shimmerLabel.textContent = "Thinking...";
           }
           container.scrollTop = container.scrollHeight;
         },
         setStatus(text) {
           if (shimmerLabel) {
-            shimmerLabel.textContent = text || "Thinking...";
+            shimmerLabel.textContent = "Thinking...";
           }
           container.scrollTop = container.scrollHeight;
         },
@@ -2155,7 +2192,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
     async function sleepWithCountdown(seconds, statusPrefix) {
       for (let s = seconds; s > 0; s--) {
         if (abortRequested) break;
-        setLiveStatus(true, `${statusPrefix} (${s}s)...`);
+        setLiveStatus(true, "Thinking...");
         await new Promise(r => setTimeout(r, 1000));
       }
     }
@@ -2300,13 +2337,20 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
             if (mData && Array.isArray(mData.data)) {
               const chatModels = mData.data.filter(m => !m.type || m.type !== "image");
               chatModels.sort((a, b) => scoreModel(b) - scoreModel(a));
-              dynamicModels = chatModels.map(m => m.id);
+              populateModelCategories(chatModels);
             }
           }
         } catch (ignored) {}
       }
 
-      const modelsToTry = (dynamicModels && dynamicModels.length > 0) ? dynamicModels : ["gemini-3.8-flash-high", "gemini-3-flash", "gemini-3.1-flash-lite"];
+      let preferredList = dynamicModels;
+      if (payload.category === "reasoning" && reasoningModels.length > 0) {
+        preferredList = [...reasoningModels, ...dynamicModels.filter(m => !reasoningModels.includes(m))];
+      } else if (payload.category === "fast" && fastModels.length > 0) {
+        preferredList = [...fastModels, ...dynamicModels.filter(m => !fastModels.includes(m))];
+      }
+
+      const modelsToTry = (preferredList && preferredList.length > 0) ? preferredList : ["gemini-3.8-flash-high", "gemini-3-flash", "gemini-3.1-flash-lite"];
       let modelIndex = 0;
       let retryCount = 0;
       const maxRetries = Math.min(16, Math.max(10, modelsToTry.length * 2));
@@ -2342,14 +2386,14 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           if (resp.status === 429) {
             modelIndex++;
             if (modelIndex < modelsToTry.length) {
-              setLiveStatus(true, `Cascading to next powerful model: ${modelsToTry[modelIndex % modelsToTry.length]}...`);
+              setLiveStatus(true, "Thinking...");
               payload.model = modelsToTry[modelIndex % modelsToTry.length];
               activeModel = payload.model;
               await new Promise(r => setTimeout(r, 600));
               continue;
             }
-            setLiveStatus(true, "Quota cooldown (429)... waiting 4s");
-            await sleepWithCountdown(4, "Resuming in");
+            setLiveStatus(true, "Thinking...");
+            await sleepWithCountdown(4, "Thinking...");
             retryCount++;
             continue;
           }
@@ -2364,7 +2408,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           if (window.AndroidBridge && typeof window.AndroidBridge.startOmniRoute === 'function') {
             try { window.AndroidBridge.startOmniRoute(); } catch (ignored) {}
           }
-          setLiveStatus(true, `Connecting to AI Engine (${retryCount + 1}/${maxRetries})...`);
+          setLiveStatus(true, "Thinking...");
           modelIndex++;
           if (modelsToTry.length > 0) {
             payload.model = modelsToTry[modelIndex % modelsToTry.length];
@@ -2377,7 +2421,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
       // Direct Cloud Fallback (Zero-Downtime Guarantee)
       try {
-        setLiveStatus(true, "Connecting via Direct Cloud AI...");
+        setLiveStatus(true, "Thinking...");
         const cloudController = new AbortController();
         const cloudTimeout = setTimeout(() => cloudController.abort(), 15000);
         const cloudResp = await fetch("https://text.pollinations.ai/openai/chat/completions", {
@@ -2400,6 +2444,99 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       throw new Error("AI engine is starting (Port 20128). Please try again in a few seconds.");
     }
 
+    // Dynamic Intent Evaluator: Category ("fast" vs "reasoning") & Live Search Grounding Check
+    async function evaluateQueryIntent(userPrompt) {
+      const prompt = (userPrompt || "").trim();
+      if (!prompt) {
+        return { category: "fast", needsSearch: false, searchQuery: "" };
+      }
+
+      const pLower = prompt.toLowerCase();
+
+      // 1. Fast Heuristics: Greetings & Chit-chat (Instant 0ms, Zero search)
+      const greetingRegex = /^(হ্যালো|হাই|হে|কেমন আছো|কেমন আছেন|কেমন আছেন\?|কেমন আছো\?|কেমন চলতাছে|কি খবর|কি অবস্থা|কেমন কাটল|ভালো আছো|ভালো আছেন|hi|hello|hey|sup|how are you|kemon acho|kemon achen|ki khobor|valo acho|bhalo acho|good morning|good evening|good night)[\s!?।,.]*$/i;
+      if (greetingRegex.test(prompt) || greetingRegex.test(pLower)) {
+        return { category: "fast", needsSearch: false, searchQuery: "" };
+      }
+
+      // 2. Identity / Creator / Capabilities (Instant 0ms, Zero search)
+      const identityRegex = /(তোমার নাম কি|তুমি কে|তোমাকে কে বানিয়েছে|তোমাকে কে তৈরি করেছে|তুমি কি কি করতে পারো|তুমি কি করতে পারো|who are you|who made you|who created you|what can you do)/i;
+      if (identityRegex.test(prompt) || identityRegex.test(pLower)) {
+        return { category: "fast", needsSearch: false, searchQuery: "" };
+      }
+
+      // 3. Direct Device Controls / Telemetry (Instant 0ms, Direct action, Zero search)
+      const deviceRegex = /(ওয়াইফাই|ওয়াইফাই|ব্লুটুথ|হটস্পট|ফ্ল্যাশলাইট|টর্চ|ভলিউম|সাউন্ড|রিঙ্গার|সাইলেন্ট|ডিএনডি|ব্যাটারি|চার্জ|কল দাও|মেসেজ পাঠাও|অ্যাপ খোল|wifi|bluetooth|hotspot|flashlight|torch|volume|ringer|silent|dnd|battery|notification|call|sms)/i;
+      const isDeviceCommand = /(অন|অফ|জ্বালা|নিভা|বাড়া|বাড়া|কমা|চালু|বন্ধ|খোল|খোলো|turn on|turn off|set volume|open|call|send sms)/i.test(prompt);
+      if (deviceRegex.test(prompt) && isDeviceCommand) {
+        return { category: "fast", needsSearch: false, searchQuery: "" };
+      }
+
+      // 4. Explicit Live Real-World Facts / Current Affairs (Mandatory Live Search Grounding)
+      const liveFactsRegex = /(বর্তমান প্রধানমন্ত্রী|বর্তমান রাষ্ট্রপতি|বর্তমান সরকার|বর্তমান উপদেষ্টা|আজকের আবহাও[য়ায]|আজকের তাপমাত্রা|আজকের খবর|আজকের সংবাদ|আজকের খেলার স্কোর|বর্তমান মূল্য|ডলারের রেট|স্বর্ণের দাম|current prime minister|current president|who is prime minister|who is president|current weather|today's weather|latest news|breaking news|currency rate|gold price)/i;
+      if (liveFactsRegex.test(prompt) || liveFactsRegex.test(pLower)) {
+        return { category: "fast", needsSearch: true, searchQuery: prompt };
+      }
+
+      // 5. Complex Reasoning / Heavy Coding / Architecture
+      const isHeavyCoding = /(code|script|function|algorithm|class|regex|react|python|javascript|java|c\+\+|node\.js|sql|database|api|backend|frontend|কোড|স্ক্রিপ্ট|প্রোগ্রাম|ফাংশন|অ্যালগরিদম|ডেভেলপ|অ্যাপ বানাও)/i.test(prompt);
+      const isDeepMath = /(solve|integral|derivative|equation|math|গণিত|সমীকরণ|সমাধান)/i.test(prompt);
+      if (isHeavyCoding || isDeepMath) {
+        return { category: "reasoning", needsSearch: false, searchQuery: "" };
+      }
+
+      // 6. Fast Pre-flight Check with Fastest Model for unclassified queries
+      try {
+        const fastest = fastestModel || (fastModels.length > 0 ? fastModels[0] : (dynamicModels[0] || "gemini-3.1-flash-lite"));
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+        const evalPayload = {
+          model: fastest,
+          messages: [
+            {
+              role: "system",
+              content: `You are an internal query evaluator. Given Ahmad Hibban's query, determine:
+1. "category": "reasoning" (for complex logic, multi-file code, hard math, detailed architecture) or "fast" (for chit-chat, simple Q&A, device control, general answers).
+2. "search": true ONLY IF answering strictly requires live real-time web facts, current leaders/dates/news/weather/prices; false if answerable accurately from general knowledge without web search.
+3. "query": clean search query if search=true, else "".
+Output ONLY valid JSON: {"category":"fast"|"reasoning","search":false|true,"query":""}`
+            },
+            { role: "user", content: prompt }
+          ]
+        };
+
+        const resp = await fetch(OMNIROUTE_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${omniRouteKey}`
+          },
+          body: JSON.stringify(evalPayload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (resp.ok) {
+          const resData = await resp.json();
+          const rawContent = resData.choices?.[0]?.message?.content || "";
+          const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+              category: (parsed.category === "reasoning") ? "reasoning" : "fast",
+              needsSearch: Boolean(parsed.search),
+              searchQuery: (parsed.query && parsed.query.trim()) ? parsed.query.trim() : prompt
+            };
+          }
+        }
+      } catch (e) {
+        // Fallback silently if fastest model evaluation times out or fails
+      }
+
+      return { category: "fast", needsSearch: false, searchQuery: "" };
+    }
+
     async function runAgentLoop(userPrompt, bubble) {
       if (userPrompt) {
         chatHistory.push({
@@ -2410,6 +2547,35 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
       compactHistoryIfNeeded();
 
+      if (bubble) bubble.setStatus("Thinking...");
+      setLiveStatus(true, "Thinking...");
+
+      // 1. Initial Evaluation via Fastest Model / Heuristics
+      const intent = await evaluateQueryIntent(userPrompt);
+
+      // 2. Select model category
+      if (intent.category === "reasoning" && reasoningModels.length > 0) {
+        activeModel = reasoningModels[0];
+      } else if (fastModels.length > 0) {
+        activeModel = fastModels[0];
+      }
+
+      // 3. Invisible Background Search Grounding (if strictly needed)
+      let liveSearchGrounding = "";
+      if (intent.needsSearch) {
+        try {
+          const q = intent.searchQuery || userPrompt;
+          if (window.AndroidBridge && typeof window.AndroidBridge.searchWeb === 'function') {
+            const searchResult = window.AndroidBridge.searchWeb(q);
+            if (searchResult && typeof searchResult === "string" && searchResult.length > 20 && !searchResult.startsWith("Error")) {
+              liveSearchGrounding = `\n\n[VERIFIED REAL-TIME GOOGLE SEARCH RESULTS]:\n${searchResult.slice(0, 3500)}\n\n[STRICT INSTRUCTION]: The verified Google search results above provide the exact live facts. Answer Ahmad Hibban directly based on these facts. DO NOT mention that you searched Google, DO NOT say live search is enabled, and DO NOT talk about search tools. Answer naturally, politely, and factually.`;
+            }
+          }
+        } catch (e) {
+          console.warn("Background search grounding failed:", e);
+        }
+      }
+
       let executedActions = [];
       let autonomousTurnCount = 0;
 
@@ -2418,12 +2584,13 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         compactHistoryIfNeeded();
 
         const messages = [
-          { role: "system", content: getDynamicSystemPrompt() },
+          { role: "system", content: getDynamicSystemPrompt() + (liveSearchGrounding || "") },
           ...chatHistory
         ];
 
         const payload = {
           model: activeModel,
+          category: intent.category,
           messages: messages,
           tools: TOOLS,
           tool_choice: "auto"
@@ -2472,28 +2639,11 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           if (isInterimPlanOrPromise && autonomousTurnCount < 6) {
             autonomousTurnCount++;
             if (bubble) {
-              bubble.setStatus(`স্বয়ংক্রিয়ভাবে কাজ শুরু হচ্ছে (${autonomousTurnCount})...`);
+              bubble.setStatus("Thinking...");
             }
             chatHistory.push({
               role: "user",
               content: "[System Directive: পরিকল্পনা বা প্রতিশ্রুতির বদলে অবিলম্বে স্বয়ংক্রিয়ভাবে সরাসরি উপযুক্ত টুল এক্সিকিউট করে কাজটি শেষ করুন। কোনো উত্তরের অপেক্ষা বা ভবিষ্যৎ প্রতিশ্রুতি না দিয়ে সরাসরি টুল কল সম্পন্ন করুন।]"
-            });
-            continue;
-          }
-
-          // Strict Google Search Grounding for factual/real-world inquiries
-          const promptLower = (userPrompt || "").toLowerCase();
-          const isFactualInquiry = /(কে|কারা|কার|কোথায়|কোথায়|কখন|কবে|কত|কতো|কি|কী|কেন|সরকার|প্রধানমন্ত্রী|রাষ্ট্রপতি|মন্ত্রী|উপদেষ্টা|খবর|তথ্য|who|what|when|where|which|current|latest|prime minister|president|weather|news)/i.test(promptLower);
-          const hasWebSearch = executedActions.some(a => a.toLowerCase().includes("web_search") || a.toLowerCase().includes("search") || a.toLowerCase().includes("google"));
-
-          if (isFactualInquiry && !hasWebSearch && autonomousTurnCount < 3) {
-            autonomousTurnCount++;
-            if (bubble) {
-              bubble.setStatus(`গুগলে লাইভ তথ্য যাচাই করা হচ্ছে (${autonomousTurnCount})...`);
-            }
-            chatHistory.push({
-              role: "user",
-              content: "[Mandatory Grounding Directive: Ahmad Hibban-এর নির্দেশ অনুসারে কোনো বাস্তব প্রশ্ন বা তথ্যের উত্তর নিজের পুরনো মেমোরি থেকে দেওয়া সম্পূর্ণ নিষিদ্ধ! অবিলম্বে 'web_search' টুল ব্যবহার করে গুগলে লাইভ সার্চ করুন এবং প্রাপ্ত তথ্যের ভিত্তিতে উত্তর দিন। Call 'web_search' NOW!]"
             });
             continue;
           }
@@ -2532,23 +2682,19 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           else if (fname === "notification_manager") summary = `Inspected notification streams`;
           else if (fname === "telephony_manager") summary = `Queried telephony logs`;
           else if (fname === "run_command") summary = `Ran command: ${fargs.command}`;
-          else if (fname === "web_search") summary = `Searched web (Google AI Mode): "${fargs.query}"`;
+          else if (fname === "web_search") summary = `Searched web: "${fargs.query}"`;
           else if (fname === "write_file") summary = `Wrote file: ${fargs.file_path}`;
           else if (fname === "read_file") summary = `Read file: ${fargs.file_path}`;
           else if (fname === "edit_file") summary = `Edited file: ${fargs.file_path}`;
           else if (fname === "list_directory") summary = `Listed directory: ${fargs.dir_path}`;
 
-          executedActions.push(summary);
-          if (bubble) bubble.addAction(summary);
+          // Keep search completely invisible to user
+          if (fname !== "web_search") {
+            executedActions.push(summary);
+            if (bubble) bubble.addAction(summary);
+          }
 
-          let displayAction = `Executing: ${fname}...`;
-          if (fname === "web_search") displayAction = `Searching Google: "${fargs.query}"...`;
-          else if (fname === "generate_image") displayAction = `Generating AI Image...`;
-          else if (fname === "ui_interaction") displayAction = `Interacting with screen (${fargs.action})...`;
-          else if (fname === "system_telemetry") displayAction = `Reading system telemetry...`;
-          else if (fname === "download_file") displayAction = `Downloading: ${fargs.target_path}...`;
-          else if (fname === "run_command") displayAction = `Running command...`;
-          setLiveStatus(true, displayAction);
+          setLiveStatus(true, "Thinking...");
 
           const result = await executeTool(fname, fargs);
 
@@ -2612,7 +2758,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           return `[File Analysis of ${args.file_path}]:\n${visionText}`;
         } else if (name === "download_file") {
           const fileName = (args.target_path || "").split("/").pop();
-          setLiveStatus(true, `Downloading: ${fileName}...`);
+          setLiveStatus(true, "Thinking...");
           if (typeof window.AndroidBridge.downloadFile === 'function') {
             const resJson = window.AndroidBridge.downloadFile(args.url, args.target_path);
             const obj = JSON.parse(resJson);
@@ -2627,7 +2773,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         } else if (name === "web_search") {
           const query = args.query;
           if (!query) return "Error: Empty search query.";
-          setLiveStatus(true, `Searching Google & Web: "${query}"...`);
+          setLiveStatus(true, "Thinking...");
           if (typeof window.AndroidBridge.searchWeb === 'function') {
             return window.AndroidBridge.searchWeb(query);
           }
@@ -2661,7 +2807,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
           else if (ar === "4:3") { w = 1024; h = 768; }
           else if (ar === "3:4") { w = 768; h = 1024; }
 
-          setLiveStatus(true, `Generating AI Image: "${prompt.slice(0, 30)}..."`);
+          setLiveStatus(true, "Thinking...");
           if (typeof window.AndroidBridge.generateImage === 'function') {
             const resJson = window.AndroidBridge.generateImage(prompt, args.target_path || "", w, h, "flux");
             const obj = JSON.parse(resJson);
@@ -2977,10 +3123,10 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const micBtn = document.getElementById("voice-mic-btn");
 
       let effectiveStatus = statusText;
-      if (state === "listening" && (!effectiveStatus || effectiveStatus.trim().length === 0)) {
-        effectiveStatus = "Listening...";
-      } else if (state === "thinking" && (!effectiveStatus || effectiveStatus.trim().length === 0)) {
+      if (state === "thinking") {
         effectiveStatus = "Thinking...";
+      } else if (state === "listening" && (!effectiveStatus || effectiveStatus.trim().length === 0)) {
+        effectiveStatus = "Listening...";
       } else if (state === "speaking" && (!effectiveStatus || effectiveStatus.trim().length === 0)) {
         effectiveStatus = "Speaking...";
       }
@@ -3298,7 +3444,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 
 VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
 1. ABSOLUTE IDENTITY: You are Nexhib, created exclusively by Ahmad Hibban (আহমাদ হিব্বান). Ahmad Hibban is your master, creator, and phone owner. When asked who created you ("তোমাকে কে তৈরি করেছে?"), you MUST always proudly state that Ahmad Hibban created you ("আমাকে আহমাদ হিব্বান তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার। আমার নাম নেক্সহিব।"). NEVER claim Google, OpenAI, Anthropic, or Duck.ai!
-2. PROACTIVE GOOGLE SEARCH GROUNDING: Whenever asked any factual question, real-world query, current affairs, government leaders/positions (e.g. 'বর্তমান প্রধানমন্ত্রী কে', 'বাংলাদেশের বর্তমান সরকার কে', 'কে রাষ্ট্রপতি', 'উপদেষ্টা কারা'), news, or whenever there is ANY doubt or uncertainty, NEVER guess or hallucinate! ALWAYS PROACTIVELY CALL 'web_search' FIRST TO VERIFY WITH GOOGLE, then speak the verified facts!
+2. FACTUAL GROUNDING & SEARCH PRIVACY: For factual questions, real-world events, current government leaders (e.g. 'বর্তমান প্রধানমন্ত্রী কে', 'উপদেষ্টা কারা'), news, or weather, live facts are verified from Google in the background. NEVER tell Ahmad Hibban that you searched Google or that search is enabled! Speak the verified facts directly and naturally. For simple greetings ('কেমন আছো', 'হ্যালো', 'হাই'), reply warmly and politely without searching.
 3. ACTION OVER WORDS: When Ahmad Hibban asks you to do anything on his device (run commands, extract files, control settings, open apps, etc.), NEVER just give instructions or tell him how to do it manually. YOU ARE THE AUTONOMOUS CONTROLLER. CALL THE TOOLS IMMEDIATELY (run_command, telephony_manager, device_control, intent_action, notification_manager, web_search, etc.) and complete the task!
 4. SPOKEN NATURALNESS & PRONUNCIATION:
 - Address Ahmad Hibban respectfully as 'স্যার' (Sir). Provide a clear, polite, natural spoken Bengali answer (1 to 2 spoken sentences).
@@ -3311,20 +3457,39 @@ VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
         voiceSessionHistory = voiceSessionHistory.slice(-6);
       }
 
+      // Initial Evaluation: Model category + live search requirement
+      const intent = await evaluateQueryIntent(userQuery);
+
+      let voiceGroundingPrompt = voiceSystemPrompt;
+      if (intent.needsSearch) {
+        try {
+          const q = intent.searchQuery || userQuery;
+          if (window.AndroidBridge && typeof window.AndroidBridge.searchWeb === 'function') {
+            const searchResult = window.AndroidBridge.searchWeb(q);
+            if (searchResult && typeof searchResult === "string" && searchResult.length > 20 && !searchResult.startsWith("Error")) {
+              voiceGroundingPrompt += `\n\n[VERIFIED REAL-TIME GOOGLE SEARCH RESULTS]:\n${searchResult.slice(0, 3000)}\n\n[STRICT INSTRUCTION]: Speak the verified facts directly and naturally. NEVER say you searched Google or that search is enabled.`;
+            }
+          }
+        } catch (e) {}
+      }
+
       let turnMessages = [
-        { role: "system", content: voiceSystemPrompt },
+        { role: "system", content: voiceGroundingPrompt },
         ...voiceSessionHistory
       ];
 
-      // Dynamic models hierarchy (Fast Frontier Engines), NEVER DuckDuckGo
-      const modelsToUse = (dynamicModels && dynamicModels.length > 0) ? dynamicModels : ["auto/best-fast", "auto/best-coding-fast", "auto/best-chat", "agy/gemini-3.8-flash-tiered", "gemini-3-flash"];
+      // Dynamic models hierarchy
+      const voiceTargetModels = intent.category === "reasoning" ? reasoningModels : fastModels;
+      const modelsToUse = (voiceTargetModels && voiceTargetModels.length > 0) ? voiceTargetModels : dynamicModels;
+      const initialVoiceModel = (modelsToUse && modelsToUse.length > 0) ? modelsToUse[0] : (activeModel || "gemini-3.8-flash-high");
 
       // Multi-turn tool execution loop for autonomous voice actions
       for (let turn = 0; turn < 4; turn++) {
         if (!isVoiceActive) break;
 
         const payload = {
-          model: activeModel || modelsToUse[0],
+          model: initialVoiceModel,
+          category: intent.category,
           messages: turnMessages,
           tools: TOOLS,
           tool_choice: "auto"
@@ -3346,30 +3511,6 @@ VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
 
         const toolCalls = msg.tool_calls || [];
         if (toolCalls.length === 0) {
-          // If factual query and no search performed yet in this turn loop, auto-execute web_search!
-          const isFactualQuery = /(কে|কারা|কার|কোথায়|কোথায়|কখন|কবে|কত|কতো|কি|কী|কেন|সরকার|প্রধানমন্ত্রী|রাষ্ট্রপতি|মন্ত্রী|উপদেষ্টা|খবর|তথ্য|who|what|when|where|which|current|latest|prime minister|president|weather|news)/i.test(userQuery);
-          if (isFactualQuery && turn === 0) {
-            setVoiceUIState("thinking", "Thinking...", userQuery);
-            const searchResult = await executeTool("web_search", { query: userQuery });
-            const searchCallId = "call_auto_search_" + Date.now();
-            turnMessages.push({
-              role: "assistant",
-              content: null,
-              tool_calls: [{
-                id: searchCallId,
-                type: "function",
-                function: { name: "web_search", arguments: JSON.stringify({ query: userQuery }) }
-              }]
-            });
-            turnMessages.push({
-              role: "tool",
-              tool_call_id: searchCallId,
-              name: "web_search",
-              content: String(searchResult)
-            });
-            continue;
-          }
-
           // Model completed execution and produced the spoken response!
           const finalReply = (msg.content || "").trim();
           if (finalReply) {
