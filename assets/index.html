@@ -869,7 +869,7 @@
     .voice-transcript-bubble {
       width: 86%;
       max-width: 380px;
-      max-height: 95px;
+      height: auto;
       box-sizing: border-box;
       background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(255, 255, 255, 0.14);
@@ -887,7 +887,7 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       transition: opacity 0.25s ease, transform 0.25s ease;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2852,12 +2852,18 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
     }
 
-    function formatVoiceSubtitleText(text, maxChars = 160) {
+    function formatVoiceSubtitleText(text, maxChars = 85) {
       if (!text) return "";
       let clean = String(text).replace(/[\r\n]+/g, " ").trim();
       clean = clean.replace(/[*#`_~>\[\]\(\)\{\}]/g, "").trim();
+      clean = clean.replace(/\s+/g, " ");
       if (clean.length > maxChars) {
-        clean = clean.slice(0, maxChars - 3).trim() + "...";
+        let cut = clean.slice(0, maxChars);
+        const lastSpace = cut.lastIndexOf(" ");
+        if (lastSpace > maxChars * 0.5) {
+          cut = cut.slice(0, lastSpace);
+        }
+        return cut.trim() + "...";
       }
       return clean;
     }
@@ -3251,7 +3257,11 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
 VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
 1. ABSOLUTE IDENTITY: You are Hibban AI, created exclusively by Ahmad Hibban (আহমাদ হিব্বান). Ahmad Hibban is your master, creator, and phone owner. When asked who created you ("তোমাকে কে তৈরি করেছে?"), you MUST always proudly state that Ahmad Hibban created you ("আমাকে আহমাদ হিব্বান তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার।"). NEVER claim Google, OpenAI, Anthropic, or Duck.ai!
 2. ACTION OVER WORDS: When Ahmad Hibban asks you to do anything on his device (run commands, extract files, control settings, search web, read/write files, open apps), NEVER just give instructions or tell him how to do it manually. YOU ARE THE AUTONOMOUS CONTROLLER. CALL THE TOOLS IMMEDIATELY (run_command, telephony_manager, device_control, intent_action, notification_manager, web_search, etc.) and complete the task!
-3. SPOKEN NATURALNESS: Address Ahmad Hibban respectfully as 'স্যার' (Sir). Provide a clear, polite, natural spoken Bengali answer (1 to 2 spoken sentences). Do NOT output markdown code fences, bullet lists, asterisks, or hashtags in your spoken response.`;
+3. SPOKEN NATURALNESS & PRONUNCIATION:
+- Address Ahmad Hibban respectfully as 'স্যার' (Sir). Provide a clear, polite, natural spoken Bengali answer (1 to 2 spoken sentences).
+- PRONUNCIATION PERFECTION: Your response will be synthesized directly into spoken Bengali speech. You MUST write all words in pure Bengali script (বাংলা অক্ষর). NEVER output English/Latin characters, English loan words in Latin script, or raw code in your spoken response (e.g. write 'অ্যাপ', 'ফোন', 'সেটিংস', 'ওয়াইফাই', 'ব্লুটুথ', 'ইন্টারনেট', 'ফাইল', 'ডাউনলোড' instead of 'app', 'phone', 'settings', 'wifi', 'bluetooth', 'internet', 'file', 'download').
+- PUNCTUATION & BREATHING: Use natural Bengali punctuation ('।' and ',') so the speech engine breathes and pauses naturally with native Bengali intonation.
+- Do NOT output markdown code fences, bullet lists, asterisks, brackets, or hashtags in your spoken response.`;
 
       voiceSessionHistory.push({ role: "user", content: userQuery });
       if (voiceSessionHistory.length > 8) {

@@ -2189,16 +2189,16 @@ public class WebAppInterface {
                             cmd.add(cleanPrompt);
                             cmd.add(outMp3.getAbsolutePath());
                             cmd.add("bn-BD-PradeepNeural");
-                            cmd.add("+3%");
-                            cmd.add("-4Hz");
+                            cmd.add("+0%");
+                            cmd.add("+0Hz");
                         } else {
                             cmd.add(appPython.getAbsolutePath());
                             cmd.add(ttsScript.getAbsolutePath());
                             cmd.add(cleanPrompt);
                             cmd.add(outMp3.getAbsolutePath());
                             cmd.add("bn-BD-PradeepNeural");
-                            cmd.add("+3%");
-                            cmd.add("-4Hz");
+                            cmd.add("+0%");
+                            cmd.add("+0Hz");
                         }
 
                         ProcessBuilder pb = new ProcessBuilder(cmd);

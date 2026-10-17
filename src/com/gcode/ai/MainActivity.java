@@ -86,10 +86,13 @@ public class MainActivity extends Activity {
             );
         } catch (Throwable ignored) {}
 
+        // Attach content view immediately on frame 1 with setup.html rendered instantly
+        initWebView();
+        webView.loadUrl("file:///android_asset/setup.html");
+
         HibbanDaemonService.acquirePersistentWakeLock(this);
         checkAndRequestAllPermissions();
         HibbanDaemonService.start(this);
-        initWebView();
 
         File usrBash = new File(getFilesDir(), "usr/bin/bash");
         File libIcu = new File(getFilesDir(), "usr/lib/libicudata.so.78.3");
@@ -99,7 +102,6 @@ public class MainActivity extends Activity {
         boolean isAlreadyExtracted = marker.exists() && libIcu.exists() && libCares.exists() && usrBash.exists() && usrBash.length() > 0;
 
         if (isAlreadyExtracted) {
-            webView.loadUrl("file:///android_asset/setup.html");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -109,7 +111,6 @@ public class MainActivity extends Activity {
                 }
             }).start();
         } else {
-            webView.loadUrl("file:///android_asset/setup.html");
             startFirstLaunchExtraction();
         }
     }
