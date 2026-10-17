@@ -2816,8 +2816,8 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
         try { window.AndroidBridge.acquireWakeLock(); } catch (e) {}
       }
 
-      // Open in Standby - Clean screen, NO text anywhere!
-      setVoiceUIState("standby", "", "");
+      // Open and immediately start listening so user can speak right away!
+      startUserListening();
     }
 
     function endVoiceMode() {
