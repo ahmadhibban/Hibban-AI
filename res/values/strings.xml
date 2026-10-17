@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hibban AI</string>
-    <string name="accessibility_service_label">Hibban AI Autonomous Assistant</string>
-    <string name="accessibility_service_desc">Enables Hibban AI to automate UI interactions, perform screen reading, and assist with hands-free device workflows.</string>
+    <string name="app_name">Nexhib</string>
+    <string name="accessibility_service_label">Nexhib Autonomous Assistant</string>
+    <string name="accessibility_service_desc">Enables Nexhib to automate UI interactions, perform screen reading, and assist with hands-free device workflows.</string>
 </resources>

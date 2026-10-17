@@ -134,6 +134,7 @@ def normalize_bengali_speech_text(text: str) -> str:
         (r"\bDone\b", "সম্পন্ন হয়েছে"),
         (r"\bSuccess(ful)?\b", "সফল"),
         (r"\bFailed\b", "ব্যর্থ"),
+        (r"\bNexhib\b", "নেক্সহিব"),
         (r"\bHibban\b", "হিব্বান"),
         (r"\bAhmad\b", "আহমাদ"),
         (r"\bAhmed\b", "আহমেদ"),

@@ -824,7 +824,7 @@ public class WebAppInterface {
             if (wakeLock == null) {
                 PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
                 if (pm != null) {
-                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HibbanAI:TaskLock");
+                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Nexhib:TaskLock");
                 }
             }
             if (wakeLock != null && !wakeLock.isHeld()) {
@@ -869,11 +869,11 @@ public class WebAppInterface {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
 
-            String channelId = "hibban_ai_notifications";
+            String channelId = "nexhib_notifications";
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel channel = new NotificationChannel(
                         channelId,
-                        "Hibban AI Notifications",
+                        "Nexhib Notifications",
                         NotificationManager.IMPORTANCE_HIGH
                 );
                 channel.setDescription("Completed AI tasks");
@@ -897,7 +897,7 @@ public class WebAppInterface {
                 nb = new android.app.Notification.Builder(context);
             }
 
-            String notifTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Hibban AI";
+            String notifTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Nexhib";
             String notifText = (message != null && !message.trim().isEmpty()) ? message.trim() : "Your response is ready.";
 
             nb.setContentTitle(notifTitle)
@@ -1525,7 +1525,7 @@ public class WebAppInterface {
                 res.put("success", false);
                 res.put("need_permission", true);
                 res.put("permission_type", "ACCESS_NOTIFICATION_POLICY");
-                res.put("error", "Do Not Disturb (Notification Policy) access is not granted. Hibban AI has automatically opened the 'Do Not Disturb Access' settings screen. Please toggle Hibban AI to Allowed.");
+                res.put("error", "Do Not Disturb (Notification Policy) access is not granted. Nexhib has automatically opened the 'Do Not Disturb Access' settings screen. Please toggle Nexhib to Allowed.");
                 return res.toString();
             }
 
@@ -1640,7 +1640,7 @@ public class WebAppInterface {
                 openAccessibilitySettings();
                 res.put("success", false);
                 res.put("need_permission", true);
-                res.put("error", "Accessibility Service is not enabled. Hibban AI has automatically opened Accessibility settings on screen. Please toggle 'Hibban AI' on and try again.");
+                res.put("error", "Accessibility Service is not enabled. Nexhib has automatically opened Accessibility settings on screen. Please toggle 'Nexhib' on and try again.");
                 return res.toString();
             }
 
@@ -1697,7 +1697,7 @@ public class WebAppInterface {
                 openNotificationListenerSettings();
                 res.put("success", false);
                 res.put("need_permission", true);
-                res.put("error", "Notification Access is not enabled. Hibban AI has automatically opened Notification Access settings on screen. Please toggle 'Hibban AI' on and try again.");
+                res.put("error", "Notification Access is not enabled. Nexhib has automatically opened Notification Access settings on screen. Please toggle 'Nexhib' on and try again.");
                 return res.toString();
             }
             res.put("success", true);
@@ -1718,7 +1718,7 @@ public class WebAppInterface {
             if (context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
                 requestRuntimePermissionOnDemand(Manifest.permission.READ_CALL_LOG);
                 res.put("success", false);
-                res.put("error", "READ_CALL_LOG permission not granted. Hibban AI has automatically requested permission on screen now. Please tap Allow and retry.");
+                res.put("error", "READ_CALL_LOG permission not granted. Nexhib has automatically requested permission on screen now. Please tap Allow and retry.");
                 return res.toString();
             }
             int max = (limit > 0) ? limit : 15;
@@ -1763,7 +1763,7 @@ public class WebAppInterface {
             if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
                 requestRuntimePermissionOnDemand(Manifest.permission.READ_CONTACTS);
                 res.put("success", false);
-                res.put("error", "READ_CONTACTS permission not granted. Hibban AI has automatically requested permission on screen now. Please tap Allow and retry.");
+                res.put("error", "READ_CONTACTS permission not granted. Nexhib has automatically requested permission on screen now. Please tap Allow and retry.");
                 return res.toString();
             }
             int max = (limit > 0) ? limit : 25;

@@ -61,6 +61,11 @@ public class MainActivity extends Activity {
 
         // Set window background to match setup.html (#030712) to eliminate startup black screen flash
         getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xFF030712));
+        try {
+            if (getWindow().getDecorView() != null) {
+                getWindow().getDecorView().setBackgroundColor(0xFF030712);
+            }
+        } catch (Throwable ignored) {}
 
         // Dark status bar and navigation bar matching dark theme
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

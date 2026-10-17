@@ -1,4 +1,4 @@
-# Hibban AI 🤖⚡
+# Nexhib 🤖⚡
 ### Autonomous AI Developer & Universal Computing System with Standalone Linux & OmniRoute Gateway
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -10,9 +10,9 @@
 [![Release](https://img.shields.io/badge/Release-v3.2.0-brightgreen?style=flat-square)](https://github.com/ahmadhibban/Hibban-AI/releases/latest)
 [![Author](https://img.shields.io/badge/Author-Ahmad%20Hibban-4f46e5?style=flat-square)](https://github.com/ahmadhibban)
 
-> 🚀 **Direct APK Download**: [Download Hibban_AI.apk (Latest)](https://github.com/ahmadhibban/Hibban-AI/releases/latest) — *Install directly on any Android ARM64 device.*
+> 🚀 **Direct APK Download**: [Download Nexhib.apk (Latest)](https://github.com/ahmadhibban/Hibban-AI/releases/latest) — *Install directly on any Android ARM64 device.*
 
-**Hibban AI** is an unrestricted autonomous AI software developer and pair-programming assistant running natively on Android devices. It embeds a complete, real Linux distribution directly inside the application, enabling true autonomous terminal execution, script compilation, filesystem manipulation, and multimodal vision without requiring Termux, root permissions, or any external cross-app dependencies.
+**Nexhib** is an unrestricted autonomous AI software developer and pair-programming assistant running natively on Android devices. It embeds a complete, real Linux distribution directly inside the application, enabling true autonomous terminal execution, script compilation, filesystem manipulation, live Google search verification, and multimodal vision without requiring Termux, root permissions, or any external cross-app dependencies.
 
 Developed with passion by **[Ahmad Hibban (আহমাদ হিব্বান)](https://github.com/ahmadhibban)**.
 
@@ -87,7 +87,7 @@ The prebuilt, signed APK is available in the **[Releases](https://github.com/ahm
 
 | Asset | Platform | Version | Status |
 | :--- | :--- | :--- | :--- |
-| **[Hibban_AI.apk](https://github.com/ahmadhibban/Hibban-AI/releases/latest)** | Android (ARM64, Android 5.0+) | **Latest** | Stable Release |
+| **[Nexhib.apk](https://github.com/ahmadhibban/Hibban-AI/releases/latest)** | Android (ARM64, Android 5.0+) | **Latest** | Stable Release |
 
 ---
 
@@ -117,7 +117,7 @@ Hibban-AI/
 ├── res/                  # App drawables, launcher icons, strings
 ├── build_apk.sh          # Native Android build script (aapt + javac + d8 + apksigner)
 ├── debug.keystore        # Keystore for release APK signing
-├── HIBBAN_FEATURES.md    # Complete microscopic technical specification & capabilities
+├── NEXHIB_FEATURES.md    # Complete microscopic technical specification & capabilities
 └── README.md             # Project documentation
 ```
 
@@ -134,7 +134,7 @@ To compile, package, and sign the standalone APK:
 ```bash
 bash build_apk.sh
 ```
-The output APK will be placed in `apk/Hibban_AI.apk` and `/storage/emulated/0/Download/Hibban_AI.apk`.
+The output APK will be placed in `apk/Nexhib.apk` and `/storage/emulated/0/Download/Nexhib.apk`.
 
 ---
 

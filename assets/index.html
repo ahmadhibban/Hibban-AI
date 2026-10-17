@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hibban AI</title>
+  <title>Nexhib</title>
   <style>
     @font-face {
       font-family: 'Kalpurush';
@@ -883,7 +883,7 @@
 
     .voice-transcript-inner {
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -892,7 +892,7 @@
       color: #f8fafc;
       font-size: 15px;
       line-height: 1.45;
-      max-height: 2.9em;
+      max-height: 4.35em;
       text-align: center;
       word-break: break-word;
       font-family: 'Kalpurush', system-ui, -apple-system, sans-serif;
@@ -1183,9 +1183,9 @@
   <!-- Top Header -->
   <header>
     <div class="brand">
-      <img src="icon.png" class="brand-img" alt="Hibban AI">
+      <img src="icon.png" class="brand-img" alt="Nexhib">
       <div class="brand-info">
-        <h1>Hibban AI</h1>
+        <h1>Nexhib</h1>
         <p><span id="status-dot" class="status-dot"></span> <span id="status-text">Active</span></p>
       </div>
     </div>
@@ -1197,8 +1197,8 @@
   <!-- Chat Stream -->
   <div id="chat-container">
     <div class="empty-state" id="empty-state">
-      <img src="icon.png" class="empty-img" alt="Hibban AI">
-      <div class="empty-title">Hibban AI</div>
+      <img src="icon.png" class="empty-img" alt="Nexhib">
+      <div class="empty-title">Nexhib</div>
       <div class="empty-desc">Your unrestricted autonomous AI developer created for Ahmad Hibban, powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any task in natural Bengali!</div>
     </div>
   </div>
@@ -1223,7 +1223,6 @@
   <div id="voice-overlay" class="voice-overlay">
     <div class="voice-header">
       <div></div>
-      <button class="voice-close-btn" onclick="endVoiceMode()" title="Close">✕</button>
     </div>
 
     <div class="voice-center">
@@ -1234,7 +1233,7 @@
         <div class="voice-ring-dashed" id="voice-ring-dashed"></div>
         <div class="voice-icon-backdrop-disc" id="voice-icon-backdrop-disc"></div>
         <div class="voice-icon-center-box" id="voice-icon-center-box">
-          <img src="icon.png" alt="Hibban AI" class="voice-icon-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'24\' fill=\'%23030712\'/><circle cx=\'50\' cy=\'50\' r=\'28\' fill=\'none\' stroke=\'%2338bdf8\' stroke-width=\'5\'/><path d=\'M38 36v28l26-14z\' fill=\'%2338bdf8\'/></svg>'">
+          <img src="icon.png" alt="Nexhib" class="voice-icon-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'24\' fill=\'%23030712\'/><circle cx=\'50\' cy=\'50\' r=\'28\' fill=\'none\' stroke=\'%2338bdf8\' stroke-width=\'5\'/><path d=\'M38 36v28l26-14z\' fill=\'%2338bdf8\'/></svg>'">
         </div>
         <div id="voice-orb" style="display:none;"></div>
       </div>
@@ -1517,11 +1516,11 @@
       }
     ];
 
-    const SYSTEM_PROMPT = `You are Hibban AI, the unrestricted, general-purpose autonomous AI developer and intelligence created for Ahmad Hibban (আহমাদ হিব্বান).
+    const SYSTEM_PROMPT = `You are Nexhib, the unrestricted, general-purpose autonomous AI developer and intelligence created for Ahmad Hibban (আহমাদ হিব্বান).
 You run natively on Ahmad Hibban's Android device with a full standalone Linux environment (GNU Bash 5.3, Python 3.14, Node.js, Pip, Apt, FFmpeg, FFprobe, Git, Curl, Wget, Coreutils, PRoot, Android SDK Build Tools) and unrestricted device access.
 
 IDENTITY & CORE PHILOSOPHY:
-- Ahmad Hibban is your creator, master, and the owner of this device.
+- Ahmad Hibban is your creator, master, and the owner of this device. Your name is Nexhib.
 - You are an unrestricted, open-ended general intelligence and software engineer. You are NOT confined to any specific niche or narrow set of tasks.
 - You have an entire Linux development and execution environment at your command. You can write and run code in any programming language, build applications, automate workflows, solve complex technical problems, manage files, conduct live web research, process any file or multi-format data, compile Android apps, and administer databases.
 - When asked what you can do ("তুমি কি কি করতে পারো?"): Think first, understand your broad computational power, and provide a thoughtful, high-level summary of your comprehensive capabilities. NEVER limit your answer to a fixed, arbitrary list of narrow examples!
@@ -1530,10 +1529,11 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
 1. GREETINGS & CASUAL CONVERSATION:
    - When Ahmad Hibban says "হ্যালো", "হাই", "কেমন আছেন", or has friendly conversation, reply warmly, politely, and briefly in natural Bengali. DO NOT run device tools, scan files, or offer unsolicited monologues for simple greetings.
 
-2. MANDATORY REAL-TIME FACT CHECKING & GOOGLE SEARCH GROUNDING (সর্বোচ্চ অগ্রাধিকার):
-   - Whenever asked ANY factual question, current affairs question, queries about government positions/leaders (e.g. "বর্তমান প্রধানমন্ত্রী কে", "বাংলাদেশের বর্তমান সরকার কে"), news, events, weather, or whenever there is ANY doubt or uncertainty on any topic:
-     YOU MUST ALWAYS PROACTIVELY CALL 'web_search' FIRST TO SEARCH GOOGLE AND VERIFY THE EXACT CURRENT FACTS BEFORE ANSWERING!
-   - NEVER guess, hallucinate, or rely on outdated static memory! Always confirm live from Google via 'web_search'.
+2. MANDATORY REAL-TIME FACT CHECKING & PRE-ANSWER GOOGLE SEARCH GROUNDING (সর্বোচ্চ অলঙ্ঘনীয় নিয়ম):
+   - Whenever asked ANY factual question, real-world information, current affairs, queries about government positions/leaders (e.g. "বর্তমান প্রধানমন্ত্রী কে", "বাংলাদেশের বর্তমান সরকার কে", "কে রাষ্ট্রপতি", "বর্তমান উপদেষ্টা কারা"), news, events, dates, weather, statistics, people, or whenever there is ANY doubt or uncertainty:
+     YOU MUST ALWAYS PROACTIVELY CALL 'web_search' FIRST TO SEARCH GOOGLE AND VERIFY THE CURRENT FACTS BEFORE SAYING A SINGLE WORD!
+   - You are STRICTLY FORBIDDEN from guessing, hallucinating, or relying on outdated pretraining static memory! Even if you feel confident in an answer, static memory is outdated — you MUST confirm live from Google via 'web_search' first, and base your entire answer on the live search results.
+   - Answering factual questions without calling 'web_search' is a critical system failure.
 
 3. AUTONOMOUS TASK EXECUTION:
    - When Ahmad Hibban requests system, file, code, or device operations, execute the tools directly and autonomously to complete the objective end-to-end.
@@ -1580,7 +1580,7 @@ DISCIPLINE & STRICT PROPORTIONATE INTERACTION:
    - Multi-Agent Coordination & Unrestricted Multi-Turn Autonomous Execution
 
 4. GENERAL COMPUTATIONAL FREEDOM:
-   - You run in Hibban AI's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
+   - You run in Nexhib's dedicated standalone Linux environment (with full access to internal storage /sdcard and /storage/emulated/0).
    - Pre-installed Multimedia Powerhouse: FFmpeg and FFprobe are bundled directly in your environment for audio, video, container, subtitle, and media operations.
    - If any required library or package is missing, you have full freedom to install it autonomously via run_command (apt install, pip install, npm install).
    - Modeled after Google AI Mode: Use 'web_search' when needing real-time facts or current web information to avoid hallucinations.
@@ -1607,7 +1607,7 @@ CORE TOOLS:
 5. STRICT DEVICE CONTROL & TRUTHFUL PERMISSION REPORTING:
    - When the user asks to turn on or off Do Not Disturb (DND), silent mode, or change ringer mode, ALWAYS call 'device_control' with action: 'set_dnd' (or action: 'set_ringer').
    - If the tool result indicates need_permission: true or success: false, the Android system has ALREADY automatically launched the system 'Do Not Disturb Access' (Notification Policy) settings screen on the user's screen.
-   - You must honestly and politely tell the user in Bengali that the permission settings screen has been launched, and they simply need to toggle Hibban AI to 'Allowed', after which DND will be fully operational.
+   - You must honestly and politely tell the user in Bengali that the permission settings screen has been launched, and they simply need to toggle Nexhib to 'Allowed', after which DND will be fully operational.
    - NEVER lie, hallucinate, or claim you enabled Silent mode or DND when the tool failed or requested permission! Always report the exact tool result truthfully.
 
 Be thoughtful, disciplined, accurate, and execute tasks cleanly.`;
@@ -1672,7 +1672,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       if (full.includes("flash-low") || full.includes("flash-lite") || full.includes("mini") || full.includes("nano")) score += 400;
 
       // Capabilities scoring
-      if (m.capabilities && m.capabilities.tool_calling) score += 400; // Essential for Hibban AI tool execution
+      if (m.capabilities && m.capabilities.tool_calling) score += 400; // Essential for Nexhib tool execution
       if (m.capabilities && m.capabilities.fast) score += 300;
       if (m.capabilities && m.capabilities.reasoning) score += 100;
       if (m.outputTokenLimit && m.outputTokenLimit >= 64000) score += 50;
@@ -1870,8 +1870,8 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
       document.getElementById("chat-container").innerHTML = `
         <div class="empty-state" id="empty-state">
-          <img src="icon.png" class="empty-img" alt="Hibban AI">
-          <div class="empty-title">Hibban AI</div>
+          <img src="icon.png" class="empty-img" alt="Nexhib">
+          <div class="empty-title">Nexhib</div>
           <div class="empty-desc">Your unrestricted autonomous AI developer created for Ahmad Hibban, powered by embedded OmniRoute (Keyless worldwide free quotas), Google AI Mode live web search, standalone Linux environment (Python 3.14, Pip, Bash, Git, Curl, Coreutils) and universal computing capabilities. Ready for any task in natural Bengali!</div>
         </div>
       `;
@@ -2056,7 +2056,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       thinkingCard.innerHTML = `
         <div class="gemini-icon-halo">
           <div class="gemini-halo-ring"></div>
-          <img src="icon.png" class="gemini-thinking-img" alt="Hibban AI">
+          <img src="icon.png" class="gemini-thinking-img" alt="Nexhib">
         </div>
         <div class="gemini-thinking-body">
           <span class="gemini-shimmer-label">Thinking...</span>
@@ -2126,7 +2126,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
                                  (window.AndroidBridge && typeof window.AndroidBridge.isAppInForeground === 'function' && !window.AndroidBridge.isAppInForeground());
           if (isBackgrounded && window.AndroidBridge && typeof window.AndroidBridge.postNotification === 'function') {
             try {
-              window.AndroidBridge.postNotification("Hibban AI", "Your response is ready.");
+              window.AndroidBridge.postNotification("Nexhib", "Your response is ready.");
             } catch (e) {}
           }
 
@@ -2477,6 +2477,23 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
             chatHistory.push({
               role: "user",
               content: "[System Directive: পরিকল্পনা বা প্রতিশ্রুতির বদলে অবিলম্বে স্বয়ংক্রিয়ভাবে সরাসরি উপযুক্ত টুল এক্সিকিউট করে কাজটি শেষ করুন। কোনো উত্তরের অপেক্ষা বা ভবিষ্যৎ প্রতিশ্রুতি না দিয়ে সরাসরি টুল কল সম্পন্ন করুন।]"
+            });
+            continue;
+          }
+
+          // Strict Google Search Grounding for factual/real-world inquiries
+          const promptLower = (userPrompt || "").toLowerCase();
+          const isFactualInquiry = /(কে|কারা|কার|কোথায়|কোথায়|কখন|কবে|কত|কতো|কি|কী|কেন|সরকার|প্রধানমন্ত্রী|রাষ্ট্রপতি|মন্ত্রী|উপদেষ্টা|খবর|তথ্য|who|what|when|where|which|current|latest|prime minister|president|weather|news)/i.test(promptLower);
+          const hasWebSearch = executedActions.some(a => a.toLowerCase().includes("web_search") || a.toLowerCase().includes("search") || a.toLowerCase().includes("google"));
+
+          if (isFactualInquiry && !hasWebSearch && autonomousTurnCount < 3) {
+            autonomousTurnCount++;
+            if (bubble) {
+              bubble.setStatus(`গুগলে লাইভ তথ্য যাচাই করা হচ্ছে (${autonomousTurnCount})...`);
+            }
+            chatHistory.push({
+              role: "user",
+              content: "[Mandatory Grounding Directive: Ahmad Hibban-এর নির্দেশ অনুসারে কোনো বাস্তব প্রশ্ন বা তথ্যের উত্তর নিজের পুরনো মেমোরি থেকে দেওয়া সম্পূর্ণ নিষিদ্ধ! অবিলম্বে 'web_search' টুল ব্যবহার করে গুগলে লাইভ সার্চ করুন এবং প্রাপ্ত তথ্যের ভিত্তিতে উত্তর দিন। Call 'web_search' NOW!]"
             });
             continue;
           }
@@ -2867,7 +2884,7 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       }
     }
 
-    function formatVoiceSubtitleText(text, maxChars = 60) {
+    function formatVoiceSubtitleText(text, maxChars = 95) {
       if (!text) return "";
       let clean = String(text).replace(/[\r\n]+/g, " ").trim();
       clean = clean.replace(/[*#`_~>\[\]\(\)\{\}]/g, "").trim();
@@ -3034,8 +3051,8 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       } else if (state === "listening" && !isVoiceAiSpeaking && !isVoiceProcessing) {
         // Listening state
       } else if (state === "processing" && !isVoiceAiSpeaking) {
-        // Bubble text undefined ensures the transcript box NEVER disappears!
-        setVoiceUIState("thinking", "Thinking...");
+        // DO NOT show "Thinking..." before user's transcribed text!
+        // Wait for onVoiceFinalResult to receive user's text first.
       }
     };
 
@@ -3161,13 +3178,13 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const t = userText.toLowerCase().trim();
 
       // 1. Identity & Creator Verification
-      if (/(কে তৈরি করেছে|কে বানিয়েছে|কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমার নির্মাতা|তোমার স্রষ্টা|কে বানাইছে|তৈরি কে করেছে|কে বানালো|who created you|who made you|who built you|who designed you)/i.test(t)) {
-        return "আমাকে আহমাদ হিব্বান (Ahmad Hibban) তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার।";
+      if (/(কে তৈরি করেছে|কে বানিয়েছে|কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমাকে কে বানিয়েছে|তোমার নির্মাতা|তোমার স্রষ্টা|কে বানাইছে|তৈরি কে করেছে|কে বানালো|তোমার নাম কি|তোমার নাম কী|who created you|who made you|who built you|who designed you|what is your name)/i.test(t)) {
+        return "আমাকে আহমাদ হিব্বান (Ahmad Hibban) তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার। আমার নাম নেক্সহিব (Nexhib)।";
       }
 
       // 2. Capabilities Summary
       if (/(তুমি কি কি করতে পারো|তুমি কি করতে পারো|তোমার ক্ষমতা কি|তোমার কাজ কি|what can you do)/i.test(t)) {
-        return "আমি আহমাদ হিব্বানের স্বায়ত্তশাসিত এআই ডেভেলপার ও সিস্টেম কন্ট্রোলার। কোডিং, সফটওয়্যার ডেভেলপমেন্ট, লিনাক্স কমান্ড, ফোন সেটিংস ও হার্ডওয়্যার কন্ট্রোল সহ যেকোনো কাজ আমি করতে সক্ষম।";
+        return "আমি আহমাদ হিব্বানের স্বায়ত্তশাসিত এআই ডেভেলপার ও সিস্টেম কন্ট্রোলার নেক্সহিব (Nexhib)। কোডিং, সফটওয়্যার ডেভেলপমেন্ট, লিনাক্স কমান্ড, ফোন সেটিংস ও হার্ডওয়্যার কন্ট্রোল সহ যেকোনো কাজ আমি করতে সক্ষম।";
       }
 
       // 3. Hotspot & Wi-Fi Tethering Control
@@ -3280,8 +3297,8 @@ UNIVERSAL REAL-TIME INFORMATION & GOOGLE SEARCH GROUNDING (GOOGLE AI MODE):
       const voiceSystemPrompt = `${getDynamicSystemPrompt()}
 
 VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
-1. ABSOLUTE IDENTITY: You are Hibban AI, created exclusively by Ahmad Hibban (আহমাদ হিব্বান). Ahmad Hibban is your master, creator, and phone owner. When asked who created you ("তোমাকে কে তৈরি করেছে?"), you MUST always proudly state that Ahmad Hibban created you ("আমাকে আহমাদ হিব্বান তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার।"). NEVER claim Google, OpenAI, Anthropic, or Duck.ai!
-2. PROACTIVE GOOGLE SEARCH GROUNDING: Whenever asked any factual question, real-world query, current affairs, government leaders/positions (e.g. 'বর্তমান প্রধানমন্ত্রী কে', 'বাংলাদেশের বর্তমান সরকার কে'), news, or whenever there is ANY doubt or uncertainty, NEVER guess or hallucinate! ALWAYS PROACTIVELY CALL 'web_search' FIRST TO VERIFY WITH GOOGLE, then speak the verified facts!
+1. ABSOLUTE IDENTITY: You are Nexhib, created exclusively by Ahmad Hibban (আহমাদ হিব্বান). Ahmad Hibban is your master, creator, and phone owner. When asked who created you ("তোমাকে কে তৈরি করেছে?"), you MUST always proudly state that Ahmad Hibban created you ("আমাকে আহমাদ হিব্বান তৈরি করেছেন। আমি তার জন্য তৈরি একটি স্বায়ত্তশাসিত কৃত্রিম বুদ্ধিমত্তা ও সফটওয়্যার ডেভেলপার। আমার নাম নেক্সহিব।"). NEVER claim Google, OpenAI, Anthropic, or Duck.ai!
+2. PROACTIVE GOOGLE SEARCH GROUNDING: Whenever asked any factual question, real-world query, current affairs, government leaders/positions (e.g. 'বর্তমান প্রধানমন্ত্রী কে', 'বাংলাদেশের বর্তমান সরকার কে', 'কে রাষ্ট্রপতি', 'উপদেষ্টা কারা'), news, or whenever there is ANY doubt or uncertainty, NEVER guess or hallucinate! ALWAYS PROACTIVELY CALL 'web_search' FIRST TO VERIFY WITH GOOGLE, then speak the verified facts!
 3. ACTION OVER WORDS: When Ahmad Hibban asks you to do anything on his device (run commands, extract files, control settings, open apps, etc.), NEVER just give instructions or tell him how to do it manually. YOU ARE THE AUTONOMOUS CONTROLLER. CALL THE TOOLS IMMEDIATELY (run_command, telephony_manager, device_control, intent_action, notification_manager, web_search, etc.) and complete the task!
 4. SPOKEN NATURALNESS & PRONUNCIATION:
 - Address Ahmad Hibban respectfully as 'স্যার' (Sir). Provide a clear, polite, natural spoken Bengali answer (1 to 2 spoken sentences).
@@ -3329,6 +3346,30 @@ VOICE OPERATIONAL MANDATE (STRICT JARVIS AUTONOMOUS MODE):
 
         const toolCalls = msg.tool_calls || [];
         if (toolCalls.length === 0) {
+          // If factual query and no search performed yet in this turn loop, auto-execute web_search!
+          const isFactualQuery = /(কে|কারা|কার|কোথায়|কোথায়|কখন|কবে|কত|কতো|কি|কী|কেন|সরকার|প্রধানমন্ত্রী|রাষ্ট্রপতি|মন্ত্রী|উপদেষ্টা|খবর|তথ্য|who|what|when|where|which|current|latest|prime minister|president|weather|news)/i.test(userQuery);
+          if (isFactualQuery && turn === 0) {
+            setVoiceUIState("thinking", "Thinking...", userQuery);
+            const searchResult = await executeTool("web_search", { query: userQuery });
+            const searchCallId = "call_auto_search_" + Date.now();
+            turnMessages.push({
+              role: "assistant",
+              content: null,
+              tool_calls: [{
+                id: searchCallId,
+                type: "function",
+                function: { name: "web_search", arguments: JSON.stringify({ query: userQuery }) }
+              }]
+            });
+            turnMessages.push({
+              role: "tool",
+              tool_call_id: searchCallId,
+              name: "web_search",
+              content: String(searchResult)
+            });
+            continue;
+          }
+
           // Model completed execution and produced the spoken response!
           const finalReply = (msg.content || "").trim();
           if (finalReply) {

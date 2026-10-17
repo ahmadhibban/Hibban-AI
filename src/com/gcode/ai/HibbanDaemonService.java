@@ -63,7 +63,7 @@ public class HibbanDaemonService extends Service {
         acquirePersistentWakeLock(this);
 
         createNotificationChannel();
-        Notification notification = buildNotification("Hibban AI Engine Active", "OmniRoute Gateway & Background Execution on Port 20128");
+        Notification notification = buildNotification("Nexhib Engine Active", "OmniRoute Gateway & Background Execution on Port 20128");
         
         boolean foregroundStarted = false;
         if (Build.VERSION.SDK_INT >= 29) {
@@ -84,7 +84,7 @@ public class HibbanDaemonService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Hibban AI Engine Service",
+                    "Nexhib Engine Service",
                     NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Maintains background OmniRoute AI Gateway and autonomous task execution.");

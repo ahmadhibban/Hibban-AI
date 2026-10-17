@@ -75,6 +75,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
+            android:theme="@style/AppTheme"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
@@ -108,7 +109,7 @@
         <!-- Native Notification Streams & Alert Interception Service -->
         <service
             android:name=".HibbanNotificationListener"
-            android:label="Hibban AI Notification Auditor"
+            android:label="Nexhib Notification Auditor"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -119,7 +120,7 @@
         <!-- Native Background Engine Daemon & OmniRoute Watchdog Service -->
         <service
             android:name=".HibbanDaemonService"
-            android:label="Hibban AI Engine Daemon"
+            android:label="Nexhib Engine Daemon"
             android:enabled="true"
             android:exported="false" />
     </application>

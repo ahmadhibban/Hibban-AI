@@ -34,17 +34,19 @@ cd ..
 
 echo "==> 6. Signing APK with keystore..."
 mkdir -p "$DIR/apk"
-OUT_APK="$DIR/apk/Hibban_AI.apk"
+OUT_APK="$DIR/apk/Nexhib.apk"
 apksigner sign --ks debug.keystore --ks-pass pass:android --out "$OUT_APK" bin/app.unsigned.apk
 
 # Copy to root and Download folder for easy access
-cp -f "$OUT_APK" "$DIR/Hibban_AI.apk"
-cp -f "$OUT_APK" "/storage/emulated/0/Download/Hibban_AI.apk" 2>/dev/null || true
+cp -f "$OUT_APK" "$DIR/Nexhib.apk"
+cp -f "$OUT_APK" "/storage/emulated/0/Download/Nexhib.apk" 2>/dev/null || true
+rm -f "$DIR/Hibban_AI.apk" 2>/dev/null || true
+rm -f "/storage/emulated/0/Download/Hibban_AI.apk" 2>/dev/null || true
 
 echo "==> 7. Verifying APK..."
 apksigner verify -v "$OUT_APK"
 
 echo "=========================================================="
-echo " SUCCESS! Standalone Hibban AI APK created at: $OUT_APK"
+echo " SUCCESS! Standalone Nexhib APK created at: $OUT_APK"
 ls -lh "$OUT_APK"
 echo "=========================================================="
